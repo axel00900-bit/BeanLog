@@ -322,7 +322,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
  val shots by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); var add by remember{mutableStateOf(false)}
  Card(onClick=edit,modifier=Modifier.fillMaxWidth(),colors=if(muted)CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()) {
-  Column(Modifier.padding(12.dp).alpha(if(muted).55f else 1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+  Column(Modifier.padding(12.dp).alpha(if(muted) 0.55f else 1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
    Row(verticalAlignment=Alignment.CenterVertically) {
     Column(Modifier.weight(1f)) {
      Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
