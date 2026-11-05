@@ -30,7 +30,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.beanlog.ui.theme.CoffeeCream
+import com.example.beanlog.ui.theme.LatteVariant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
@@ -190,7 +190,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
             }
             items(sortedBeans, key = { it.first.id }) { (b, count) ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
-                    colors = if(count==0) CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()) {
+                    colors = CardDefaults.cardColors(containerColor=LatteVariant)) {
                     Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
                         if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
@@ -396,7 +396,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
  val shots by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); val context=LocalContext.current; var add by remember{mutableStateOf(false)}; var showHistory by remember{mutableStateOf(false)}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
-  colors=CardDefaults.cardColors(containerColor=CoffeeCream),
+  colors=CardDefaults.cardColors(containerColor=LatteVariant),
   elevation=CardDefaults.cardElevation(defaultElevation=0.dp)) {
   Column(Modifier.padding(12.dp).alpha(if(muted) 0.55f else 1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
    Row(verticalAlignment=Alignment.CenterVertically) {
