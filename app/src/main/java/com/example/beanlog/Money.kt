@@ -9,11 +9,18 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/** European + North American currencies covered by the free ECB rates. */
-val CURRENCIES = listOf(
-    "EUR", "DKK", "USD", "GBP", "CAD", "MXN", "CHF", "SEK",
-    "NOK", "ISK", "PLN", "CZK", "HUF", "RON", "BGN", "TRY"
-)
+/** Currencies currently supported in the app. */
+val CURRENCIES = listOf("USD", "EUR", "DKK")
+
+fun currencySymbol(currency: String): String = when (currency) {
+    "USD" -> "$"
+    "EUR" -> "€"
+    "DKK" -> "kr"
+    else -> currency
+}
+
+fun moneyWithCurrency(amount: Double, currency: String, digits: Int = 2): String =
+    if (currency == "DKK") "${money(amount, digits)} kr" else "${currencySymbol(currency)}${money(amount, digits)}"
 
 /** Live exchange rates from the free Frankfurter API (ECB data). Needs internet. */
 object Rates {
