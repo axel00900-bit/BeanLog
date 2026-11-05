@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.Icons.Outlined
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,14 +71,14 @@ fun App(dao: BeanDao) {
     val nav = rememberNavController()
     Box(
         modifier = Modifier.fillMaxSize().background(
-            Brush.verticalGradient(colors = listOf(Color(0xFFE8D5BD), Color(0xFFFFF8EC)))
+            Brush.verticalGradient(colors = listOf(Color(0xFFF1E5D7), Color(0xFFFFFCF6)))
         ),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = R.mipmap.bean_launcher_foreground),
             contentDescription = null,
-            modifier = Modifier.size(3120.dp).alpha(0.6f),
+            modifier = Modifier.size(3120.dp).alpha(0.82f),
             contentScale = ContentScale.Fit
         )
         NavHost(nav, startDestination = "list") {
@@ -150,7 +151,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { settingsOpen = true }) {
-                        Icon(Icons.Default.Settings, "Settings")
+                        Icon(Icons.Outlined.Settings, "Settings")
                     }
                 }
             )
@@ -241,6 +242,18 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     )
 }
 
+private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = DarkRoast,
+    unfocusedTextColor = DarkRoast,
+    focusedLabelColor = DarkRoast,
+    unfocusedLabelColor = DarkRoast.copy(alpha = 0.82f),
+    focusedBorderColor = DarkRoast,
+    unfocusedBorderColor = DarkRoast.copy(alpha = 0.55f),
+    cursorColor = DarkRoast,
+    focusedContainerColor = CoffeeCream.copy(alpha = 0.16f),
+    unfocusedContainerColor = CoffeeCream.copy(alpha = 0.10f)
+)
+
 // ---------- Add / edit bean ----------
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -297,28 +310,49 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) { Icon(Icons.Default.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
 
-            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(notes, { notes = it }, label = { Text("Flavour notes") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(notes, { notes = it }, label = { Text("Flavour notes") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             Text("Roast level", style = MaterialTheme.typography.labelLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ROAST_LEVELS.forEach { FilterChip(roast == it, { roast = it }, label = { Text(it) }) }
+                ROAST_LEVELS.forEach { level ->
+                    val roastColor = when (level) {
+                        "Light" -> Color(0xFFE8CFA8)
+                        "Medium-Light" -> Color(0xFFC99A68)
+                        "Medium" -> Color(0xFF986744)
+                        "Medium-Dark" -> Color(0xFF65432F)
+                        else -> Color(0xFF321D14)
+                    }
+                    val selected = roast == level
+                    FilterChip(
+                        selected = selected,
+                        onClick = { roast = level },
+                        label = { Text(level) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = roastColor.copy(alpha = 0.16f),
+                            labelColor = DarkRoast,
+                            selectedContainerColor = roastColor,
+                            selectedLabelColor = if (level == "Light") DarkRoast else CoffeeCream
+                        ),
+                        border = BorderStroke(1.dp, roastColor)
+                    )
+                }
             }
-            OutlinedTextField(score, { score = it }, label = { Text("Cupping score") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(score, { score = it }, label = { Text("Cupping score") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             HorizontalDivider(Modifier.padding(vertical=8.dp))
             Text("Coffee details (optional)",style=MaterialTheme.typography.titleMedium)
-            OutlinedTextField(origin,{origin=it},label={Text("Origin")},modifier=Modifier.fillMaxWidth())
-            OutlinedTextField(farm,{farm=it},label={Text("Farm")},modifier=Modifier.fillMaxWidth())
-            OutlinedTextField(variety,{variety=it},label={Text("Variety")},modifier=Modifier.fillMaxWidth())
-            OutlinedTextField(processing,{processing=it},label={Text("Processing")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(origin,{origin=it},label={Text("Origin")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(farm,{farm=it},label={Text("Farm")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(variety,{variety=it},label={Text("Variety")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(processing,{processing=it},label={Text("Processing")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Text("Recommended brew settings", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(cIn, { cIn = it }, label = { Text("In (g)") }, modifier = Modifier.weight(1f))
-                OutlinedTextField(cOut, { cOut = it }, label = { Text("Out (g)") }, modifier = Modifier.weight(1f))
-                OutlinedTextField(time, { time = it }, label = { Text("Time (s)") }, modifier = Modifier.weight(1f))
+                OutlinedTextField(cIn, { cIn = it }, label = { Text("In (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
+                OutlinedTextField(cOut, { cOut = it }, label = { Text("Out (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
+                OutlinedTextField(time, { time = it }, label = { Text("Time (s)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
             }
         }
     }
@@ -510,10 +544,10 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag")},
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
-  OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth())
-  Row{OutlinedTextField(price,{price=it},label={Text("Price")},modifier=Modifier.weight(1f));CurrencyMenu(currency,false){currency=it?:currency}}
-  OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth())
-  OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth())
+  OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  Row{OutlinedTextField(price,{price=it},label={Text("Price")},modifier=Modifier.weight(1f), colors = beanTextFieldColors());CurrencyMenu(currency,false){currency=it?:currency}}
+  OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   Text("Did you like this coffee?",style=MaterialTheme.typography.labelLarge)
   Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
    FilterChip(selected=liked==null,onClick={liked=null},label={Text("Not rated")})
@@ -538,11 +572,11 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
  var input by remember{mutableStateOf("18")};var output by remember{mutableStateOf("36")};var seconds by remember{mutableStateOf("28")};var grind by remember{mutableStateOf("")}
  val ratio=input.num()?.takeIf{it>0}?.let{output.num()?.div(it)}
  AlertDialog(onDismissRequest=dismiss,title={Text("Add shot")},text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){
-  OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth())
-  OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth())
+  OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   Text(ratio?.let{"Ratio 1:${String.format(java.util.Locale.US,"%.2f",it).trimEnd('0').trimEnd('.')}"}?:"Ratio will appear here")
-  OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth())
-  OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth())
+  OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
  }},
  confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim()))}){Text("Save")}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}})
