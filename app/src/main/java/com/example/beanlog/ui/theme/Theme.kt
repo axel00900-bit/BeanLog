@@ -9,21 +9,31 @@ import androidx.compose.runtime.Composable
 private val DarkColorScheme = darkColorScheme(
     primary = OatGold,
     onPrimary = Espresso,
+    primaryContainer = Color(0xFF604832),
+    onPrimaryContainer = CoffeeCream,
     secondary = SoftCaramel,
+    onSecondary = Espresso,
+    secondaryContainer = Color(0xFF594332),
+    onSecondaryContainer = CoffeeCream,
     tertiary = OatGold,
     background = Espresso,
-    surface = Color(0xFF30231C),
-    surfaceVariant = Color(0xFF514034),
+    surface = Color(0xFF30251E),
+    surfaceVariant = Color(0xFF514236),
     onBackground = CoffeeCream,
     onSurface = CoffeeCream,
+    onSurfaceVariant = Color(0xFFE2D2BE),
     outline = CoffeeOutline
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Caramel,
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFEBD8BF),
+    onPrimaryContainer = Espresso,
     secondary = SoftCaramel,
     onSecondary = Color.White,
+    secondaryContainer = Color(0xFFF1E3D0),
+    onSecondaryContainer = Espresso,
     tertiary = OatGold,
     background = CoffeeCream,
     surface = LatteSurface,
