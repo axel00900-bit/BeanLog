@@ -96,6 +96,7 @@ interface BeanDao {
 
     @Query("SELECT * FROM Shot WHERE bagId = :bagId ORDER BY id DESC")
     fun shots(bagId: Long): Flow<List<Shot>>
+    @Insert suspend fun insertShot(shot: Shot): Long
     @Upsert suspend fun saveShot(shot: Shot)
     @Delete suspend fun deleteShot(shot: Shot)
     @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
