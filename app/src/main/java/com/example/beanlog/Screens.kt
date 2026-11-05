@@ -46,6 +46,8 @@ import com.example.beanlog.ui.theme.DarkRoast
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 private val ROAST_LEVELS = listOf("Light", "Medium-Light", "Medium", "Medium-Dark", "Dark")
@@ -508,29 +510,50 @@ private fun shotSummary(shot:Shot):String =
 
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao) {
- AlertDialog(onDismissRequest=dismiss,title={Text("Shot history · ${isoToDisplay(bag.roastDate)}")},
-  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
-   Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}")
-   Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}")
-   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)") }
-   HorizontalDivider()
-   if(shots.isEmpty()) Text("No shots recorded yet")
-   else shots.sortedBy{it.id}.forEachIndexed{index,shot->
-    Column(verticalArrangement=Arrangement.spacedBy(3.dp)){
-     Text("Shot ${index+1}",style=MaterialTheme.typography.titleSmall)
-     Text(shotSummary(shot))
-     Row {
-      TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like")}
-      TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike")}
-      TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){Text("Delete")}
+ AlertDialog(
+  onDismissRequest=dismiss,
+  title={Text("Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
+  text={
+   Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
+    Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}")
+    Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}")
+    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)") }
+    HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
+    if(shots.isEmpty()) Text("No shots recorded yet")
+    else shots.sortedBy{it.id}.forEachIndexed{index,shot->
+     Card(
+      modifier=Modifier.fillMaxWidth(),
+      colors=CardDefaults.cardColors(containerColor=CoffeeCard,contentColor=CoffeeCardText),
+      border=BorderStroke(1.dp,DarkRoast.copy(alpha=0.35f)),
+      elevation=CardDefaults.cardElevation(defaultElevation=4.dp)
+     ){
+      Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){
+       Row(verticalAlignment=Alignment.CenterVertically){
+        Text("SHOT ${(index+1).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
+        Spacer(Modifier.weight(1f))
+        Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
+       }
+       Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
+       Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
+        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){Text("Delete",color=CoffeeCardText)}
+       }
+      }
      }
     }
    }
-  }},
+  },
   confirmButton={TextButton(onClick=dismiss){Text("Close")}},
-  dismissButton={TextButton(onClick={dismiss();edit()}){Text("Edit bag")}}
+  dismissButton={TextButton(onClick={dismiss();edit()}){Text("Edit bag")}},
+  shape=MaterialTheme.shapes.extraLarge,
+  colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
  )
 }
+private fun shotDateTime(timestamp:Long):String =
+ if(timestamp<=0L) "Date not recorded"
+ else SimpleDateFormat("d MMM yyyy · HH:mm",Locale.getDefault()).format(Date(timestamp))
+
 private fun ratioText(i:Double,o:Double)=if(i>0)String.format(java.util.Locale.US,"%.2f",o/i).trimEnd('0').trimEnd('.') else "–"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -545,7 +568,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  var liked by remember(initial?.id){mutableStateOf(initial?.liked)}
- AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag")},
+ AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
   OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
@@ -565,7 +588,9 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
    ?:Bag(beanId=0,roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
   save(bag)
  }){Text("Save")}},
- dismissButton={TextButton(onClick=dismiss){Text("Cancel")}})
+ dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
+ shape=MaterialTheme.shapes.extraLarge,
+ colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast))
  if(picker){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
   DatePickerDialog(onDismissRequest={picker=false},confirmButton={TextButton(onClick={state.selectedDateMillis?.let{date=millisToIso(it)};picker=false}){Text("OK")}},
   dismissButton={TextButton(onClick={picker=false}){Text("Cancel")}}){DatePicker(state)}
@@ -573,15 +598,28 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
 }
 @Composable
 private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
- var input by remember{mutableStateOf("18")};var output by remember{mutableStateOf("36")};var seconds by remember{mutableStateOf("28")};var grind by remember{mutableStateOf("")}
+ var input by remember{mutableStateOf("18")}
+ var output by remember{mutableStateOf("36")}
+ var seconds by remember{mutableStateOf("28")}
+ var grind by remember{mutableStateOf("")}
  val ratio=input.num()?.takeIf{it>0}?.let{output.num()?.div(it)}
- AlertDialog(onDismissRequest=dismiss,title={Text("Add shot")},text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){
-  OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  Text(ratio?.let{"Ratio 1:${String.format(java.util.Locale.US,"%.2f",it).trimEnd('0').trimEnd('.')}"}?:"Ratio will appear here")
-  OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
- }},
- confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim()))}){Text("Save")}},
- dismissButton={TextButton(onClick=dismiss){Text("Cancel")}})
+ AlertDialog(
+  onDismissRequest=dismiss,
+  title={Text("Add shot",color=DarkRoast)},
+  text={Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
+   Text("SHOT DETAILS",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
+   OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   Card(colors=CardDefaults.cardColors(containerColor=LatteVariant),border=BorderStroke(1.dp,DarkRoast.copy(alpha=0.20f))){
+    Text(ratio?.let{"Brew ratio   1:${String.format(java.util.Locale.US,"%.2f",it).trimEnd('0').trimEnd('.')}"}?:"Brew ratio will appear here",
+     modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.titleMedium,color=DarkRoast)
+   }
+   OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  }},
+  confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim()))}){Text("Save")}},
+  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
+  shape=MaterialTheme.shapes.extraLarge,
+  colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
+ )
 }
