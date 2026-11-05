@@ -654,58 +654,11 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      Text("Paid ${money(bag.price)} ${bag.currency} (${money(bag.price/bag.weightG,3)} ${bag.currency}/g)")
      cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
-     if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
-     Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}",style=MaterialTheme.typography.bodySmall)
-     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
-    }
-    IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
-    IconButton(onClick=delete){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
-   }
-   HorizontalDivider()
-   Row(verticalAlignment=Alignment.CenterVertically) {
-    Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
-    TextButton(onClick={add=true}){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
-   }
-   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
-   shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
-   if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
-  }
- }
- if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
- if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
-}
-private data class ShotSentiment(val emoji:String,val percent:Int,val liked:Int,val rated:Int)
-
-private fun shotSentiment(shots:List<Shot>):ShotSentiment? {
-    val rated=shots.filter{it.liked!=null}
-    if(rated.isEmpty()) return null
-    val likes=rated.count{it.liked==true}
-    val percent=(likes*100.0/rated.size).toInt()
-    val emoji=when {
-        percent>=80 -> "😁"
-        percent>=60 -> "🙂"
-        percent>=40 -> "😐"
-        percent>=20 -> "🙁"
-        else -> "😢"
-    }
-    return ShotSentiment(emoji,percent,likes,rated.size)
-}
-
-private fun shotSummary(shot:Shot):String =
-    "${money(shot.groundCoffeeG)} g in → ${money(shot.yieldG)} g out · 1:${ratioText(shot.groundCoffeeG,shot.yieldG)} · ${shot.timeSec}s" +
-        (shot.grindSetting.takeIf{it.isNotBlank()}?.let{" · Grind $it"} ?: "") +
-        (when(shot.liked){true->" · 👍";false->" · 👎";null->""})
-
-@Composable
-private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao) {
- AlertDialog(
-  onDismissRequest=dismiss,
-  title={Text("Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
-  text={
-   Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
-    Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}")
-    Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}")
-    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)") }
+     Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}",style=MaterialTheme.typography.bodyLarge)
+     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
+     TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=true))}}) {
+      Text(if(bag.liked==true) "✓ Liked" else "Like",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast,style=MaterialTheme.typography.bodyLarge)
+     }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No shots recorded yet")
     else shots.sortedBy{it.id}.forEachIndexed{index,shot->
