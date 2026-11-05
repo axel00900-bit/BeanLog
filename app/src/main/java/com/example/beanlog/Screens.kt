@@ -38,6 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardActions
+import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.NavHost
@@ -442,12 +447,19 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.82f)
 )
 
+private val beanNextKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+
+private fun beanNextKeyboardActions(focusManager: androidx.compose.ui.focus.FocusManager) = KeyboardActions(
+    onNext = { focusManager.moveFocus(FocusDirection.Next) }
+)
+
 // ---------- Add / edit bean ----------
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     var roastery by remember { mutableStateOf("") }
     var country by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -494,7 +506,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             }) { Text("Save") }
         })
     }) { pad ->
-        Column(Modifier.padding(pad).padding(16.dp).verticalScroll(rememberScrollState()),
+        Column(Modifier.padding(pad).imePadding().padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (photo != null) AsyncImage(File(photo!!), null,
                 Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Crop)
@@ -502,7 +514,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) { Icon(Icons.Default.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
 
-            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = beanNextKeyboardOptions, keyboardActions = beanNextKeyboardActions(focusManager))
             OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(notes, { notes = it }, label = { Text("Flavour notes") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
@@ -714,7 +726,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   onDismissRequest=dismiss,
   title={Text(if (bag.roastDate.isBlank()) "Shot history" else "Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
   text={
-   Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
+   Column(Modifier.fillMaxWidth().imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
@@ -758,6 +770,7 @@ private fun ratioText(i:Double,o:Double)=if(i>0)String.format(java.util.Locale.U
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
+ val focusManager = LocalFocusManager.current
  var date by remember(initial?.id){mutableStateOf(initial?.roastDate?.takeIf{it.isNotBlank()}?:todayIso())}
  var unknownDate by remember(initial?.id){mutableStateOf(initial?.roastDate.isNullOrBlank())}
  var picker by remember{mutableStateOf(false)}
@@ -768,7 +781,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
- text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
+ text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   Row(verticalAlignment=Alignment.CenterVertically) {
    OutlinedButton(onClick={picker=true},modifier=Modifier.weight(1f),enabled=!unknownDate){Text(if(unknownDate) "Roast date unknown" else "Roast date: ${isoToDisplay(date)}")}
    Row(verticalAlignment=Alignment.CenterVertically) {
@@ -788,7 +801,9 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
     label={Text("Amount (optional)")},
     modifier=Modifier.weight(1f),
     singleLine=true,
-    colors=beanTextFieldColors()
+    colors=beanTextFieldColors(),
+    keyboardOptions=beanNextKeyboardOptions,
+    keyboardActions=beanNextKeyboardActions(focusManager)
    )
    if (price.isNotBlank()) Box {
     OutlinedButton(
@@ -823,6 +838,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
 }
 @Composable
 private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
+ val focusManager = LocalFocusManager.current
  var input by remember{mutableStateOf("18")}
  var output by remember{mutableStateOf("36")}
  var seconds by remember{mutableStateOf("28")}
@@ -830,7 +846,7 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text("Add shot",color=DarkRoast)},
-  text={Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
+  text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
    Text("SHOT DETAILS",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
    OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
