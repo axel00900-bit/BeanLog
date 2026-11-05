@@ -81,7 +81,7 @@ fun App(dao: BeanDao) {
         Image(
             painter = painterResource(id = R.mipmap.bean_launcher_foreground),
             contentDescription = null,
-            modifier = Modifier.size(3120.dp).alpha(0.82f),
+            modifier = Modifier.size(3120.dp).alpha(0.12f),
             contentScale = ContentScale.Fit
         )
         NavHost(nav, startDestination = "list") {
@@ -254,8 +254,8 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = DarkRoast,
     unfocusedBorderColor = DarkRoast.copy(alpha = 0.55f),
     cursorColor = DarkRoast,
-    focusedContainerColor = CoffeeCream.copy(alpha = 0.16f),
-    unfocusedContainerColor = CoffeeCream.copy(alpha = 0.10f)
+    focusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.90f),
+    unfocusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.82f)
 )
 
 // ---------- Add / edit bean ----------
