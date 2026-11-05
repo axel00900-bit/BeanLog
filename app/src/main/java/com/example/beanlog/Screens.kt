@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -58,6 +59,7 @@ fun App(dao: BeanDao) {
 
 // ---------- List ----------
 private enum class BeanSortOption(val label: String) {
+    ROAST_DATE("Roast date"),
     RECENTLY_ADDED("Recently added"),
     NAME("Name")
 }
@@ -66,13 +68,18 @@ private enum class BeanSortOption(val label: String) {
 @Composable
 fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     val beans by dao.beansWithLatestBag().collectAsState(emptyList())
-    var sortOption by remember { mutableStateOf(BeanSortOption.RECENTLY_ADDED) }
+    var sortOption by remember { mutableStateOf(BeanSortOption.ROAST_DATE) }
     // Recently added defaults to newest first; Name defaults to A–Z.
     var ascending by remember { mutableStateOf(false) }
     var sortMenuExpanded by remember { mutableStateOf(false) }
 
     val sortedBeans = remember(beans, sortOption, ascending) {
         when (sortOption) {
+            BeanSortOption.ROAST_DATE -> beans.sortedWith(Comparator { a, b ->
+                val da=a.latestRoastDate; val db=b.latestRoastDate
+                when { da==null && db!=null -> 1; da!=null && db==null -> -1
+                    else -> { val c=(da ?: "").compareTo(db ?: ""); if(ascending)c else -c } }
+            })
             BeanSortOption.RECENTLY_ADDED -> beans.sortedWith(
                 compareBy<BeanWithLatestBag> { it.latestBagId == 0L }
                     .thenBy { if (ascending) it.latestBagId else -it.latestBagId }
@@ -83,7 +90,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     .thenBy { it.bean.roastery.lowercase() }
                 beans.sortedWith(if (ascending) byName else byName.reversed())
             }
-        }.map { it.bean }
+        }.map { it.bean to it.openBagCount }
     }
 
     Scaffold(
@@ -130,18 +137,14 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     }
                 }
             }
-            items(sortedBeans, key = { it.id }) { b ->
-                Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (b.photoPath != null)
-                            AsyncImage(File(b.photoPath), null, Modifier.size(64.dp), contentScale = ContentScale.Crop)
-                        else Icon(Icons.Default.Coffee, null, Modifier.size(64.dp))
+            items(sortedBeans, key = { it.first.id }) { (b, count) ->
+                Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
+                    colors = if(count==0) CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()) {
+                    Row(Modifier.padding(12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
+                        if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(64.dp),contentScale=ContentScale.Crop)
+                        else Icon(Icons.Default.Coffee,null,Modifier.size(64.dp))
                         Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(b.name, style = MaterialTheme.typography.titleMedium)
-                            Text("${b.roastery} · ${b.roasteryCountry}")
-                            Text(b.roastLevel, style = MaterialTheme.typography.bodySmall)
-                        }
+                        Column { Text(b.name,style=MaterialTheme.typography.titleMedium); Text("${b.roastery} · ${b.roasteryCountry}"); Text(b.roastLevel,style=MaterialTheme.typography.bodySmall) }
                     }
                 }
             }
@@ -165,6 +168,8 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
     var cIn by remember { mutableStateOf("") }
     var cOut by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
+    var origin by remember { mutableStateOf("") }; var farm by remember { mutableStateOf("") }
+    var variety by remember { mutableStateOf("") }; var processing by remember { mutableStateOf("") }
 
     LaunchedEffect(id) {
         if (id != 0L) dao.bean(id).first()?.let {
@@ -173,6 +178,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
             score = it.cuppingScore?.toString() ?: ""; photo = it.photoPath
             cIn = it.coffeeInG?.toString() ?: ""; cOut = it.coffeeOutG?.toString() ?: ""
             time = it.brewTimeSec?.toString() ?: ""
+            origin=it.origin; farm=it.farm; variety=it.variety; processing=it.processing
         }
     }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -185,7 +191,8 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
             TextButton(enabled = name.isNotBlank() && roastery.isNotBlank(), onClick = {
                 scope.launch {
                     dao.save(Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
-                        score.num(), photo, cIn.num(), cOut.num(), time.toIntOrNull()))
+                        score.num(), photo, cIn.num(), cOut.num(), time.toIntOrNull(),
+                        origin=origin.trim(), farm=farm.trim(), variety=variety.trim(), processing=processing.trim()))
                     onDone()
                 }
             }) { Text("Save") }
@@ -208,6 +215,12 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
                 ROAST_LEVELS.forEach { FilterChip(roast == it, { roast = it }, label = { Text(it) }) }
             }
             OutlinedTextField(score, { score = it }, label = { Text("Cupping score") }, modifier = Modifier.fillMaxWidth())
+            HorizontalDivider(Modifier.padding(vertical=8.dp))
+            Text("Coffee details (optional)",style=MaterialTheme.typography.titleMedium)
+            OutlinedTextField(origin,{origin=it},label={Text("Origin")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(farm,{farm=it},label={Text("Farm")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(variety,{variety=it},label={Text("Variety")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(processing,{processing=it},label={Text("Processing")},modifier=Modifier.fillMaxWidth())
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Text("Recommended brew settings", style = MaterialTheme.typography.titleMedium)
@@ -242,6 +255,8 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
     val bags by dao.bags(id).collectAsState(emptyList())
     val scope = rememberCoroutineScope()
     var showBagDialog by remember { mutableStateOf(false) }
+    var editingBag by remember { mutableStateOf<Bag?>(null) }
+    var showFinishedBags by remember { mutableStateOf(false) }
     var displayCur by remember { mutableStateOf<String?>(null) }   // null = show as paid
     var ratesOk by remember { mutableStateOf(Rates.loaded) }
     LaunchedEffect(Unit) { ratesOk = Rates.load() }
@@ -269,6 +284,7 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                 Text("${b.roastery} (${b.roasteryCountry})", style = MaterialTheme.typography.titleMedium)
                 Text("Roast: ${b.roastLevel}" + (b.cuppingScore?.let { " · Cup Score: $it" } ?: ""))
                 if (b.flavourNotes.isNotBlank()) Text("Notes: ${b.flavourNotes}")
+                listOf("Origin" to b.origin,"Farm" to b.farm,"Variety" to b.variety,"Processing" to b.processing).filter{it.second.isNotBlank()}.forEach{(k,v)->Text("$k: $v")}
                 Spacer(Modifier.height(8.dp))
                 Text("Recommended brew", style = MaterialTheme.typography.titleMedium)
                 Text("${b.coffeeInG ?: "–"} g in → ${b.coffeeOutG ?: "–"} g out in ${b.brewTimeSec ?: "–"} s")
@@ -282,87 +298,95 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                     Text("Exchange rates unavailable (check your internet connection).",
                         style = MaterialTheme.typography.bodySmall)
             }
-            items(bags) { bag ->
-                Card(Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Roasted ${isoToDisplay(bag.roastDate)}")
-                            Text("${bag.weightG} g" +
-                                    if (bag.lotNumber.isNotBlank()) " · Lot ${bag.lotNumber}" else "")
-                            Text("Paid ${money(bag.price)} ${bag.currency} " +
-                                    "(${money(bag.price / bag.weightG, 3)} ${bag.currency}/g)")
-                            displayCur?.let { cur ->
-                                if (cur != bag.currency) Rates.convert(bag.price, bag.currency, cur)?.let { v ->
-                                    Text("≈ ${money(v)} $cur (${money(v / bag.weightG, 3)} $cur/g)",
-                                        style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        }
-                        IconButton({ scope.launch { dao.deleteBag(bag) } }) { Icon(Icons.Default.Delete, "Delete bag") }
-                    }
+            items(bags.filter { !it.isFinished }, key={it.id}) { bag ->
+                BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}})
+            }
+            if(bags.any{it.isFinished}) {
+                item { TextButton(onClick={showFinishedBags=!showFinishedBags},modifier=Modifier.fillMaxWidth()) {
+                    Text("Finished bags (${bags.count{it.isFinished}})")
+                    Icon(if(showFinishedBags) Icons.Default.ExpandLess else Icons.Default.ExpandMore,null)
+                } }
+                if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
+                    BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
                 }
             }
         }
     }
 
-    if (showBagDialog) AddBagDialog(
-        onDismiss = { showBagDialog = false },
-        onSave = { scope.launch { dao.saveBag(it.copy(beanId = id)); showBagDialog = false } }
-    )
+    if(showBagDialog) BagDialog(null,{showBagDialog=false}) { scope.launch{dao.saveBag(it.copy(beanId=id));showBagDialog=false} }
+    editingBag?.let { bag -> BagDialog(bag,{editingBag=null}) { scope.launch{dao.saveBag(it.copy(beanId=id));editingBag=null} } }
 }
+
+@Composable
+private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false) {
+ val shots by dao.shots(bag.id).collectAsState(emptyList())
+ val scope=rememberCoroutineScope(); var add by remember{mutableStateOf(false)}
+ Card(onClick=edit,modifier=Modifier.fillMaxWidth(),colors=if(muted)CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()) {
+  Column(Modifier.padding(12.dp).alpha(if(muted).55f else 1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+   Row(verticalAlignment=Alignment.CenterVertically) {
+    Column(Modifier.weight(1f)) {
+     Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
+     Text("${bag.weightG} g"+if(bag.lotNumber.isNotBlank())" · Lot ${bag.lotNumber}" else "")
+     Text("Paid ${money(bag.price)} ${bag.currency} (${money(bag.price/bag.weightG,3)} ${bag.currency}/g)")
+     cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
+     if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
+    }
+    IconButton(onClick=delete){Icon(Icons.Default.Delete,"Delete bag")}
+   }
+   HorizontalDivider()
+   Row(verticalAlignment=Alignment.CenterVertically) {
+    Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
+    TextButton(onClick={add=true}){Icon(Icons.Default.Add,null);Text("Add shot")}
+   }
+   shots.forEach{shot->Row(verticalAlignment=Alignment.CenterVertically){
+    Text("${money(shot.groundCoffeeG)} g in → ${money(shot.yieldG)} g out · 1:${ratioText(shot.groundCoffeeG,shot.yieldG)} · ${shot.timeSec}s",modifier=Modifier.weight(1f))
+    IconButton(onClick={scope.launch{dao.deleteShot(shot)}}){Icon(Icons.Default.Delete,"Delete shot")}
+   }}
+  }
+ }
+ if(add)ShotDialog({add=false}){shot->scope.launch{dao.saveShot(shot.copy(bagId=bag.id));add=false}}
+}
+private fun ratioText(i:Double,o:Double)=if(i>0)String.format(java.util.Locale.US,"%.2f",o/i).trimEnd('0').trimEnd('.') else "–"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddBagDialog(onDismiss: () -> Unit, onSave: (Bag) -> Unit) {
-    var date by remember { mutableStateOf(todayIso()) }
-    var showPicker by remember { mutableStateOf(false) }
-    var weight by remember { mutableStateOf("250") }
-    var price by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf("EUR") }
-    var lot by remember { mutableStateOf("") }
-
-    val perGram = price.num()?.let { p -> weight.toIntOrNull()?.takeIf { it > 0 }?.let { p / it } }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("New bag") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { showPicker = true }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.CalendarMonth, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Roast date: ${isoToDisplay(date)}")
-                }
-                OutlinedTextField(weight, { weight = it }, label = { Text("Weight (g)") }, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(price, { price = it }, label = { Text("Price") }, modifier = Modifier.weight(1f))
-                    CurrencyMenu(currency, allowNone = false) { currency = it ?: currency }
-                }
-                Text(perGram?.let { "= ${money(it, 3)} $currency per gram" } ?: "Price per gram shows here",
-                    style = MaterialTheme.typography.bodyMedium)
-                OutlinedTextField(lot, { lot = it }, label = { Text("Lot number") }, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = {
-            TextButton(enabled = weight.toIntOrNull() != null && price.num() != null, onClick = {
-                onSave(Bag(beanId = 0, roastDate = date, weightG = weight.toInt(),
-                    price = price.num()!!, currency = currency, lotNumber = lot))
-            }) { Text("Save") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
-
-    if (showPicker) {
-        val state = rememberDatePickerState(initialSelectedDateMillis = isoToMillis(date))
-        DatePickerDialog(
-            onDismissRequest = { showPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let { date = millisToIso(it) }
-                    showPicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { showPicker = false }) { Text("Cancel") } }
-        ) { DatePicker(state) }
-    }
+private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
+ var date by remember(initial?.id){mutableStateOf(initial?.roastDate?:todayIso())}
+ var picker by remember{mutableStateOf(false)}
+ var weight by remember(initial?.id){mutableStateOf(initial?.weightG?.toString()?:"250")}
+ var price by remember(initial?.id){mutableStateOf(initial?.price?.toString()?:"")}
+ var currency by remember(initial?.id){mutableStateOf(initial?.currency?:"EUR")}
+ var lot by remember(initial?.id){mutableStateOf(initial?.lotNumber?:"")}
+ var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
+ AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag")},
+ text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
+  OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
+  OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth())
+  Row{OutlinedTextField(price,{price=it},label={Text("Price")},modifier=Modifier.weight(1f));CurrencyMenu(currency,false){currency=it?:currency}}
+  OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth())
+  Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
+ }},
+ confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0&&price.num()!=null,onClick={
+  val bag=initial?.copy(roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
+   ?:Bag(beanId=0,roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
+  save(bag)
+ }){Text("Save")}},
+ dismissButton={TextButton(onClick=dismiss){Text("Cancel")}})
+ if(picker){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
+  DatePickerDialog(onDismissRequest={picker=false},confirmButton={TextButton(onClick={state.selectedDateMillis?.let{date=millisToIso(it)};picker=false}){Text("OK")}},
+  dismissButton={TextButton(onClick={picker=false}){Text("Cancel")}}){DatePicker(state)}
+ }
+}
+@Composable
+private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
+ var input by remember{mutableStateOf("18")};var output by remember{mutableStateOf("36")};var seconds by remember{mutableStateOf("28")}
+ val ratio=input.num()?.takeIf{it>0}?.let{output.num()?.div(it)}
+ AlertDialog(onDismissRequest=dismiss,title={Text("Add shot")},text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){
+  OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth())
+  OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth())
+  Text(ratio?.let{"Ratio 1:${String.format(java.util.Locale.US,"%.2f",it).trimEnd('0').trimEnd('.')}"}?:"Ratio will appear here")
+  OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth())
+ }},
+ confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt()))}){Text("Save")}},
+ dismissButton={TextButton(onClick=dismiss){Text("Cancel")}})
 }
