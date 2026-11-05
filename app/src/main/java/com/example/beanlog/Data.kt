@@ -43,6 +43,8 @@ data class Bag(
     val currency: String = "EUR",
     val lotNumber: String = "",
     @ColumnInfo(defaultValue = "0") val isFinished: Boolean = false,
+    @ColumnInfo(defaultValue = "''") val recommendedGrindSetting: String = "",
+    val liked: Boolean? = null,
 )
 
 /** Individual espresso shot pulled from a specific bag. */
@@ -59,6 +61,8 @@ data class Shot(
     val groundCoffeeG: Double,
     val yieldG: Double,
     val timeSec: Int,
+    @ColumnInfo(defaultValue = "''") val grindSetting: String = "",
+    val liked: Boolean? = null,
 )
 
 /** Bean plus sorting information for the front page. */
@@ -96,7 +100,7 @@ interface BeanDao {
     @Delete suspend fun deleteShot(shot: Shot)
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 3, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 4, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -122,9 +126,18 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Bag ADD COLUMN recommendedGrindSetting TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Bag ADD COLUMN liked INTEGER")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN grindSetting TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN liked INTEGER")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                 .fallbackToDestructiveMigration(true)
                 .build()
     }
