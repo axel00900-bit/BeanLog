@@ -24,6 +24,7 @@ data class Bean(
     @ColumnInfo(defaultValue = "''") val farm: String = "",
     @ColumnInfo(defaultValue = "''") val variety: String = "",
     @ColumnInfo(defaultValue = "''") val processing: String = "",
+    @ColumnInfo(defaultValue = "0") val liked: Boolean = false,
 )
 
 /** A specific bag you bought of a bean. */
@@ -106,7 +107,7 @@ interface BeanDao {
     @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 5, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 6, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -147,9 +148,15 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Bean ADD COLUMN liked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration(true)
                 .build()
     }
