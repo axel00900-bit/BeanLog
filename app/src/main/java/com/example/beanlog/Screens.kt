@@ -247,7 +247,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
         }
             // Beans with at least one unfinished bag always stay above beans with no available bags.
             .sortedBy { if (it.openBagCount > 0) 0 else 1 }
-            .map { it.bean to it.openBagCount }
+            .map { Triple(it.bean, it.openBagCount, it.latestBagLiked) }
     }
 
     Scaffold(
@@ -312,7 +312,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     }
                 }
             }
-            items(sortedBeans, key = { it.first.id }) { (b, count) ->
+            items(sortedBeans, key = { it.first.id }) { (b, count, latestBagLiked) ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor=CoffeeCard, contentColor=CoffeeCardText),
                     border = BorderStroke(1.dp, DarkRoast.copy(alpha = 0.28f)),
@@ -320,10 +320,16 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
                         if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
-                        else Icon(Icons.Default.Coffee,null,Modifier.size(imageSize))
+                        else BeanActionIcon(BeanIconAction.BEAN, "Coffee bean", Modifier.size(imageSize))
                         Spacer(Modifier.width(if (count == 0) 8.dp else 12.dp))
-                        Column {
-                            Text(b.name,style=if (count == 0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
+                        Column(Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(b.name, modifier = Modifier.weight(1f), style=if (count == 0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
+                                if (latestBagLiked == true) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = "Liked coffee",
+                                        tint = Color(0xFF27834A), modifier = Modifier.size(22.dp))
+                                }
+                            }
                             Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}", style=if (count == 0) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium)
                             Text(b.roastLevel,style=MaterialTheme.typography.labelSmall)
                         }
@@ -497,6 +503,7 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
     var ratesOk by remember { mutableStateOf(Rates.loaded) }
     LaunchedEffect(Unit) { ratesOk = Rates.load() }
     val b = bean ?: return
+    val coffeeLiked = bags.firstOrNull { !it.isFinished }?.liked ?: bags.firstOrNull()?.liked
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -547,6 +554,20 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                 } }
                 if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
                     BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
+                }
+            }
+            if (coffeeLiked == true) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = "Liked coffee",
+                            tint = Color(0xFF27834A), modifier = Modifier.size(28.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Liked coffee", color = Color(0xFF27834A), style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
         }
