@@ -43,7 +43,7 @@ private fun countryFlag(country: String): String {
     val code = aliases[country.trim()] ?: Locale.getISOCountries().firstOrNull {
         Locale("", it).getDisplayCountry(Locale.ENGLISH).equals(country.trim(), ignoreCase = true)
     } ?: return ""
-    return code.uppercase().map { Character.toString(0x1F1E6 + it.code - 65) }.joinToString("")
+    return code.uppercase().map { String(Character.toChars(0x1F1E6 + it.code - 65)) }.joinToString("")
 }
 
 /** Copy the picked image into app storage so it stays available. */
@@ -383,7 +383,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
    if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
  }
- if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.saveShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
+ if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
 }
 private fun shotSummary(shot:Shot):String =
