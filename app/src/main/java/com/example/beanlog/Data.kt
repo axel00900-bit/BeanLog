@@ -39,9 +39,16 @@ data class Bag(
     val lotNumber: String = "",
 )
 
+/** Bean plus the insertion ID of its newest bag (0 when it has no bags). */
+data class BeanWithLatestBag(
+    @Embedded val bean: Bean,
+    val latestBagId: Long
+)
+
 @Dao
 interface BeanDao {
-    @Query("SELECT * FROM Bean ORDER BY roastery, name") fun beans(): Flow<List<Bean>>
+    @Query("SELECT Bean.*, COALESCE(MAX(Bag.id), 0) AS latestBagId FROM Bean LEFT JOIN Bag ON Bag.beanId = Bean.id GROUP BY Bean.id")
+    fun beansWithLatestBag(): Flow<List<BeanWithLatestBag>>
     @Query("SELECT * FROM Bean WHERE id = :id") fun bean(id: Long): Flow<Bean?>
     @Upsert suspend fun save(bean: Bean)
     @Delete suspend fun delete(bean: Bean)
