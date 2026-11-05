@@ -369,7 +369,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
      Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}",style=MaterialTheme.typography.bodySmall)
-     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} ${it.label} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
+     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
     IconButton(onClick=edit){Icon(Icons.Default.Edit,"Edit bag")}
     IconButton(onClick=delete){Icon(Icons.Default.Delete,"Delete bag")}
@@ -379,7 +379,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
     Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
     TextButton(onClick={add=true}){Icon(Icons.Default.Add,null);Text("Add shot")}
    }
-   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} ${it.label} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
+   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
    shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
    if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
@@ -387,7 +387,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
  if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
 }
-private data class ShotSentiment(val emoji:String,val label:String,val percent:Int,val liked:Int,val rated:Int)
+private data class ShotSentiment(val emoji:String,val percent:Int,val liked:Int,val rated:Int)
 
 private fun shotSentiment(shots:List<Shot>):ShotSentiment? {
     val rated=shots.filter{it.liked!=null}
@@ -415,7 +415,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
    Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}")
    Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}")
-   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} ${it.label} · ${it.percent}% liked (${it.liked}/${it.rated} shots)") }
+   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)") }
    HorizontalDivider()
    if(shots.isEmpty()) Text("No shots recorded yet")
    else shots.sortedBy{it.id}.forEachIndexed{index,shot->
