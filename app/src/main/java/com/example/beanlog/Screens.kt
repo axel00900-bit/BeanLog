@@ -12,6 +12,8 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -60,17 +62,30 @@ private fun copyToInternal(ctx: Context, uri: Uri): String {
 @Composable
 fun App(dao: BeanDao) {
     val nav = rememberNavController()
-    NavHost(nav, startDestination = "list") {
-        composable("list") {
-            BeanList(dao, onOpen = { nav.navigate("detail/$it") }, onAdd = { nav.navigate("edit/0") })
-        }
-        composable("detail/{id}") {
-            val id = it.arguments!!.getString("id")!!.toLong()
-            DetailScreen(dao, id, onEdit = { nav.navigate("edit/$id") }, onBack = { nav.popBackStack() })
-        }
-        composable("edit/{id}") {
-            val id = it.arguments!!.getString("id")!!.toLong()
-            EditScreen(dao, id, onDone = { nav.popBackStack() })
+    Box(
+        modifier = Modifier.fillMaxSize().background(
+            Brush.verticalGradient(colors = listOf(Color(0xFFE8D5BD), Color(0xFFFFF8EC)))
+        ),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.mipmap.bean_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.size(3120.dp).alpha(0.6f),
+            contentScale = ContentScale.Fit
+        )
+        NavHost(nav, startDestination = "list") {
+            composable("list") {
+                BeanList(dao, onOpen = { nav.navigate("detail/$it") }, onAdd = { nav.navigate("edit/0") })
+            }
+            composable("detail/{id}") {
+                val id = it.arguments!!.getString("id")!!.toLong()
+                DetailScreen(dao, id, onEdit = { nav.navigate("edit/$id") }, onBack = { nav.popBackStack() })
+            }
+            composable("edit/{id}") {
+                val id = it.arguments!!.getString("id")!!.toLong()
+                EditScreen(dao, id, onDone = { nav.popBackStack() })
+            }
         }
     }
 }
@@ -119,26 +134,13 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 modifier = Modifier.height(120.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 title = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(id = R.mipmap.bean_launcher_foreground),
-                            contentDescription = "BeanLog bean logo",
-                            modifier = Modifier.size(104.dp)
-                        )
-                        Text(
-                            "My Beans",
-                            modifier = Modifier.align(Alignment.CenterStart),
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                    }
+                    Text("My Beans", style = MaterialTheme.typography.headlineMedium)
                 },
                 actions = {
                     IconButton(onClick = { settingsOpen = true }) {
@@ -264,8 +266,10 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
         if (uri != null) photo = copyToInternal(ctx, uri)
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(if (id == 0L) "New bean" else "Edit bean") }, actions = {
+    Scaffold(containerColor = Color.Transparent, topBar = {
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            title = { Text(if (id == 0L) "New bean" else "Edit bean") }, actions = {
             TextButton(onClick = onDone) { Text("Cancel") }
             TextButton(enabled = name.isNotBlank() && roastery.isNotBlank(), onClick = {
                 scope.launch {
@@ -342,8 +346,11 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
     val b = bean ?: return
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(title = { Text(b.name) },
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                title = { Text(b.name) },
                 navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onEdit) { Icon(Icons.Default.Edit, "Edit") }
