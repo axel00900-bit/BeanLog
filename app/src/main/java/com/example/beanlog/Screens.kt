@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.beanlog.ui.theme.LatteVariant
 import com.example.beanlog.ui.theme.CoffeeCard
@@ -257,15 +259,20 @@ fun App(dao: BeanDao) {
         )
         NavHost(nav, startDestination = "list") {
             composable("list") {
-                BeanList(dao, onOpen = { nav.navigate("detail/$it") }, onAdd = { nav.navigate("edit/0") })
+                BeanList(dao, onOpen = { nav.navigate("detail/$it/false") }, onAdd = { nav.navigate("edit/0") })
             }
-            composable("detail/{id}") {
+            composable("detail/{id}/{addBag}") {
                 val id = it.arguments!!.getString("id")!!.toLong()
-                DetailScreen(dao, id, onEdit = { nav.navigate("edit/$id") }, onBack = { nav.popBackStack() })
+                val addBag = it.arguments!!.getString("addBag")!!.toBoolean()
+                DetailScreen(dao, id, autoOpenAddBag = addBag,
+                    onEdit = { nav.navigate("edit/$id") }, onBack = { nav.popBackStack() })
             }
             composable("edit/{id}") {
                 val id = it.arguments!!.getString("id")!!.toLong()
-                EditScreen(dao, id, onDone = { nav.popBackStack() })
+                EditScreen(dao, id, onDone = { savedId, isNew ->
+                    nav.popBackStack()
+                    if (isNew) nav.navigate("detail/$savedId/true")
+                })
             }
         }
     }
@@ -438,7 +445,7 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
 // ---------- Add / edit bean ----------
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
+fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var roastery by remember { mutableStateOf("") }
@@ -472,13 +479,17 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = { Text(if (id == 0L) "New bean" else "Edit bean") }, actions = {
-            TextButton(onClick = onDone) { Text("Cancel") }
+            TextButton(onClick = { onDone(id, false) }) { Text("Cancel") }
             TextButton(enabled = roastery.isNotBlank(), onClick = {
                 scope.launch {
-                    dao.save(Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
+                    val bean = Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
                         score.num(), photo, cIn.num(), cOut.num(), time.toIntOrNull(),
-                        origin=origin.trim(), farm=farm.trim(), variety=variety.trim(), processing=processing.trim()))
-                    onDone()
+                        origin=origin.trim(), farm=farm.trim(), variety=variety.trim(), processing=processing.trim())
+                    val savedId = if (id == 0L) dao.insertBean(bean) else {
+                        dao.save(bean)
+                        id
+                    }
+                    onDone(savedId, id == 0L)
                 }
             }) { Text("Save") }
         })
@@ -556,11 +567,14 @@ private fun CurrencyMenu(selected: String?, allowNone: Boolean, onPick: (String?
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit) {
+fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit: () -> Unit, onBack: () -> Unit) {
     val bean by dao.bean(id).collectAsState(null)
     val bags by dao.bags(id).collectAsState(emptyList())
     val scope = rememberCoroutineScope()
     var showBagDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(autoOpenAddBag) {
+        if (autoOpenAddBag) showBagDialog = true
+    }
     var editingBag by remember { mutableStateOf<Bag?>(null) }
     var showFinishedBags by remember { mutableStateOf(false) }
     var displayCur by remember { mutableStateOf<String?>(null) }   // null = show as paid
