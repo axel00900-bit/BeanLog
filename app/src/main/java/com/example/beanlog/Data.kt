@@ -91,6 +91,7 @@ interface BeanDao {
     fun beansWithLatestBag(): Flow<List<BeanWithLatestBag>>
 
     @Query("SELECT * FROM Bean WHERE id = :id") fun bean(id: Long): Flow<Bean?>
+    @Insert suspend fun insertBean(bean: Bean): Long
     @Upsert suspend fun save(bean: Bean)
     @Delete suspend fun delete(bean: Bean)
 
