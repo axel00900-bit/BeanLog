@@ -473,7 +473,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = { Text(if (id == 0L) "New bean" else "Edit bean") }, actions = {
             TextButton(onClick = onDone) { Text("Cancel") }
-            TextButton(enabled = name.isNotBlank() && roastery.isNotBlank(), onClick = {
+            TextButton(enabled = roastery.isNotBlank(), onClick = {
                 scope.launch {
                     dao.save(Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
                         score.num(), photo, cIn.num(), cOut.num(), time.toIntOrNull(),
