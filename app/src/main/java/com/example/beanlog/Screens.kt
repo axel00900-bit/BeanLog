@@ -755,29 +755,34 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
   OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  Box(Modifier.fillMaxWidth()) {
+  Row(
+   modifier=Modifier.fillMaxWidth(),
+   horizontalArrangement=Arrangement.spacedBy(8.dp),
+   verticalAlignment=Alignment.CenterVertically
+  ) {
    OutlinedTextField(
     value=price,
     onValueChange={price=it},
     label={Text("Amount")},
-    prefix={
-     Box(
-      Modifier.clickable { currencyMenuOpen=true }.padding(horizontal=8.dp).height(24.dp),
-      contentAlignment=Alignment.Center
-     ) { Text(currencySymbol(currency),style=MaterialTheme.typography.bodyLarge) }
-    },
-    modifier=Modifier.fillMaxWidth().height(56.dp),
+    modifier=Modifier.weight(1f).height(56.dp),
     textStyle=MaterialTheme.typography.bodyLarge.copy(textAlign=TextAlign.Center),
     singleLine=true,
     colors=beanTextFieldColors()
    )
-   DropdownMenu(expanded=currencyMenuOpen,onDismissRequest={currencyMenuOpen=false}) {
-    CURRENCIES.forEach { c ->
-     DropdownMenuItem(text={Text("${currencySymbol(c)} $c")},onClick={currency=c;currencyMenuOpen=false})
+   Box {
+    OutlinedButton(
+     onClick={currencyMenuOpen=true},
+     modifier=Modifier.height(56.dp),
+     contentPadding=PaddingValues(horizontal=14.dp,vertical=0.dp)
+    ) { Text(currencySymbol(currency),style=MaterialTheme.typography.bodyLarge) }
+    DropdownMenu(expanded=currencyMenuOpen,onDismissRequest={currencyMenuOpen=false}) {
+     CURRENCIES.forEach { c ->
+      DropdownMenuItem(text={Text("${currencySymbol(c)} $c")},onClick={currency=c;currencyMenuOpen=false})
+     }
     }
    }
   }
-  OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
  }},
