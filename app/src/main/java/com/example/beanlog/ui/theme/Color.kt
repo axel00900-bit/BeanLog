@@ -13,3 +13,8 @@ val OatGold = Color(0xFFD8BC91)
 val Espresso = Color(0xFF3D2B20)
 val MutedCoffee = Color(0xFF796858)
 val CoffeeOutline = Color(0xFFC9B69E)
+
+// Deep roast tones for elevated cards, line icons and controls.
+val DarkRoast = Color(0xFF29180F)
+val CoffeeCard = Color(0xFF563827)
+val CoffeeCardText = Color(0xFFFFF5E8)
