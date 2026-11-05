@@ -13,6 +13,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -754,9 +756,21 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
   OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   Box(Modifier.fillMaxWidth()) {
-   OutlinedTextField(price,{price=it},label={Text("Amount")},prefix={
-    TextButton(onClick={currencyMenuOpen=true},contentPadding=PaddingValues(horizontal=4.dp,vertical=0.dp)){Text(currencySymbol(currency))}
-   },modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(
+    value=price,
+    onValueChange={price=it},
+    label={Text("Amount")},
+    prefix={
+     Box(
+      Modifier.clickable { currencyMenuOpen=true }.padding(horizontal=8.dp).height(24.dp),
+      contentAlignment=Alignment.Center
+     ) { Text(currencySymbol(currency),style=MaterialTheme.typography.bodyLarge) }
+    },
+    modifier=Modifier.fillMaxWidth().height(56.dp),
+    textStyle=MaterialTheme.typography.bodyLarge.copy(textAlign=TextAlign.Center),
+    singleLine=true,
+    colors=beanTextFieldColors()
+   )
    DropdownMenu(expanded=currencyMenuOpen,onDismissRequest={currencyMenuOpen=false}) {
     CURRENCIES.forEach { c ->
      DropdownMenuItem(text={Text("${currencySymbol(c)} $c")},onClick={currency=c;currencyMenuOpen=false})
