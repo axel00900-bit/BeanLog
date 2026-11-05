@@ -72,6 +72,7 @@ data class BeanWithLatestBag(
     val latestBagId: Long,
     val latestRoastDate: String?,
     val openBagCount: Int,
+    val latestBagLiked: Boolean?,
 )
 
 @Dao
@@ -80,7 +81,9 @@ interface BeanDao {
         SELECT Bean.*,
             COALESCE(MAX(Bag.id), 0) AS latestBagId,
             MAX(Bag.roastDate) AS latestRoastDate,
-            COALESCE(SUM(CASE WHEN Bag.isFinished = 0 THEN 1 ELSE 0 END), 0) AS openBagCount
+            COALESCE(SUM(CASE WHEN Bag.isFinished = 0 THEN 1 ELSE 0 END), 0) AS openBagCount,
+            (SELECT liked FROM Bag AS LatestBag WHERE LatestBag.beanId = Bean.id
+                ORDER BY isFinished ASC, roastDate DESC, id DESC LIMIT 1) AS latestBagLiked
         FROM Bean LEFT JOIN Bag ON Bag.beanId = Bean.id
         GROUP BY Bean.id
     """)
