@@ -98,6 +98,7 @@ interface BeanDao {
     fun shots(bagId: Long): Flow<List<Shot>>
     @Upsert suspend fun saveShot(shot: Shot)
     @Delete suspend fun deleteShot(shot: Shot)
+    @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
 }
 
 @Database(entities = [Bean::class, Bag::class, Shot::class], version = 4, exportSchema = false)
