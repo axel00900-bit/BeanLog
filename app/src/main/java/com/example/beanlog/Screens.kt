@@ -157,6 +157,68 @@ private fun BeanActionIcon(
     }
 }
 
+/** Illustrated coffee bag placeholder for beans without a user photo. */
+@Composable
+private fun CoffeeBagIcon(modifier: Modifier = Modifier.size(64.dp)) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val outline = Color(0xFF4B3022)
+        val bag = Color(0xFFE4C39D)
+        val fold = Color(0xFFB98961)
+        val label = Color(0xFFFFF8EC)
+
+        // Main gusseted bag body.
+        val body = Path().apply {
+            moveTo(w * .23f, h * .20f)
+            lineTo(w * .77f, h * .20f)
+            lineTo(w * .83f, h * .88f)
+            quadraticTo(w * .50f, h * .98f, w * .17f, h * .88f)
+            close()
+        }
+        drawPath(body, bag)
+        drawPath(body, outline, style = Stroke(width = w * .045f))
+
+        // Folded/sealed top.
+        val top = Path().apply {
+            moveTo(w * .23f, h * .20f)
+            lineTo(w * .27f, h * .08f)
+            lineTo(w * .73f, h * .08f)
+            lineTo(w * .77f, h * .20f)
+            close()
+        }
+        drawPath(top, fold)
+        drawPath(top, outline, style = Stroke(width = w * .04f))
+        drawLine(outline, androidx.compose.ui.geometry.Offset(w * .29f, h * .15f),
+            androidx.compose.ui.geometry.Offset(w * .71f, h * .15f), w * .025f)
+
+        // Front label.
+        drawRoundRect(label, topLeft = androidx.compose.ui.geometry.Offset(w * .29f, h * .36f),
+            size = androidx.compose.ui.geometry.Size(w * .42f, h * .34f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * .035f, w * .035f))
+        drawRoundRect(outline, topLeft = androidx.compose.ui.geometry.Offset(w * .29f, h * .36f),
+            size = androidx.compose.ui.geometry.Size(w * .42f, h * .34f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * .035f, w * .035f),
+            style = Stroke(width = w * .025f))
+
+        // Small coffee bean emblem on the label.
+        val bean = Path().apply {
+            moveTo(w * .50f, h * .40f)
+            cubicTo(w * .62f, h * .39f, w * .66f, h * .51f, w * .57f, h * .59f)
+            cubicTo(w * .48f, h * .67f, w * .37f, h * .61f, w * .39f, h * .51f)
+            cubicTo(w * .40f, h * .45f, w * .45f, h * .41f, w * .50f, h * .40f)
+            close()
+        }
+        drawPath(bean, outline)
+        drawLine(label, androidx.compose.ui.geometry.Offset(w * .57f, h * .42f),
+            androidx.compose.ui.geometry.Offset(w * .45f, h * .60f), w * .018f, cap = StrokeCap.Round)
+
+        // Subtle label rules.
+        drawLine(fold, androidx.compose.ui.geometry.Offset(w * .37f, h * .75f),
+            androidx.compose.ui.geometry.Offset(w * .63f, h * .75f), w * .025f, cap = StrokeCap.Round)
+    }
+}
+
 private fun String.num() = replace(',', '.').toDoubleOrNull()
 
 private fun countryFlag(country: String): String {
@@ -320,7 +382,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
                         if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
-                        else BeanActionIcon(BeanIconAction.BEAN, "Coffee bean", Modifier.size(imageSize))
+                        else CoffeeBagIcon(Modifier.size(imageSize))
                         Spacer(Modifier.width(if (count == 0) 8.dp else 12.dp))
                         Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
