@@ -309,7 +309,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
         }
             // Beans with at least one unfinished bag always stay above beans with no available bags.
             .sortedBy { if (it.openBagCount > 0) 0 else 1 }
-            .map { Triple(it.bean, it.openBagCount, it.latestBagLiked) }
+            .map { Triple(it.bean, it.openBagCount, it.bean.liked) }
     }
 
     Scaffold(
@@ -374,7 +374,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     }
                 }
             }
-            items(sortedBeans, key = { it.first.id }) { (b, count, latestBagLiked) ->
+            items(sortedBeans, key = { it.first.id }) { (b, count, beanLiked) ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor=CoffeeCard, contentColor=CoffeeCardText),
                     border = BorderStroke(1.dp, DarkRoast.copy(alpha = 0.28f)),
@@ -387,7 +387,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                         Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(b.name, modifier = Modifier.weight(1f), style=if (count == 0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
-                                if (latestBagLiked == true) {
+                                if (beanLiked) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = "Liked coffee",
                                         tint = Color(0xFF27834A), modifier = Modifier.size(22.dp))
                                 }
@@ -565,7 +565,6 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
     var ratesOk by remember { mutableStateOf(Rates.loaded) }
     LaunchedEffect(Unit) { ratesOk = Rates.load() }
     val b = bean ?: return
-    val coffeeLiked = bags.firstOrNull { !it.isFinished }?.liked ?: bags.firstOrNull()?.liked
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -596,6 +595,16 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                 Spacer(Modifier.height(8.dp))
                 Text("Recommended brew", style = MaterialTheme.typography.titleMedium)
                 Text("${b.coffeeInG ?: "–"} g in → ${b.coffeeOutG ?: "–"} g out in ${b.brewTimeSec ?: "–"} s")
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { scope.launch { dao.save(b.copy(liked = !b.liked)) } },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (b.liked) Color(0xFF397A45) else DarkRoast,
+                        contentColor = Color(0xFFFFFCF6)
+                    )
+                ) {
+                    Text(if (b.liked) "✓ Liked" else "♡ Like")
+                }
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Bags", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -616,20 +625,6 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                 } }
                 if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
                     BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
-                }
-            }
-            if (coffeeLiked == true) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = "Liked coffee",
-                            tint = Color(0xFF27834A), modifier = Modifier.size(28.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Liked coffee", color = Color(0xFF27834A), style = MaterialTheme.typography.titleMedium)
-                    }
                 }
             }
         }
@@ -704,9 +699,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   text={
    Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}",style=MaterialTheme.typography.bodyLarge)
-    TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=true))}}) {
-     Text(if(bag.liked==true) "✓ Liked" else "Like",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast,style=MaterialTheme.typography.bodyLarge)
-    }
     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No shots recorded yet")
@@ -757,7 +749,6 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var lot by remember(initial?.id){mutableStateOf(initial?.lotNumber?:"")}
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
- var liked by remember(initial?.id){mutableStateOf(initial?.liked)}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
@@ -765,16 +756,10 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
   Row{OutlinedTextField(price,{price=it},label={Text("Price")},modifier=Modifier.weight(1f), colors = beanTextFieldColors());CurrencyMenu(currency,false){currency=it?:currency}}
   OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  Text("Did you like this coffee?",style=MaterialTheme.typography.labelLarge)
-  Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
-   FilterChip(selected=liked==null,onClick={liked=null},label={Text("Not rated")})
-   FilterChip(selected=liked==true,onClick={liked=true},label={Text("Liked")})
-   FilterChip(selected=liked==false,onClick={liked=false},label={Text("Disliked")})
-  }
   Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
  }},
  confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0&&price.num()!=null,onClick={
-  val bag=initial?.copy(roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=liked)
+  val bag=initial?.copy(roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished,recommendedGrindSetting=recommendedGrind)
    ?:Bag(beanId=0,roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
@@ -800,10 +785,6 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
    Text("SHOT DETAILS",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
    OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-   Card(colors=CardDefaults.cardColors(containerColor=LatteVariant),border=BorderStroke(1.dp,DarkRoast.copy(alpha=0.20f))){
-    Text(ratio?.let{"Brew ratio   1:${String.format(java.util.Locale.US,"%.2f",it).trimEnd('0').trimEnd('.')}"}?:"Brew ratio will appear here",
-     modifier=Modifier.padding(12.dp),style=MaterialTheme.typography.titleMedium,color=DarkRoast)
-   }
    OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   }},
