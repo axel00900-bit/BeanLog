@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
@@ -116,7 +117,16 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("My beans") }, actions = { IconButton(onClick={settingsOpen=true}) { Icon(Icons.Default.Settings,"Settings") } }) },
+        topBar = { TopAppBar(title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Image(
+                    painter = painterResource(id = R.mipmap.bean_launcher),
+                    contentDescription = "BeanLog bean logo",
+                    modifier = Modifier.size(36.dp)
+                )
+                Text("My Beans")
+            }
+        }, actions = { IconButton(onClick={settingsOpen=true}) { Icon(Icons.Default.Settings,"Settings") } }) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd) { Icon(Icons.Default.Add, "Add bean") }
         }
