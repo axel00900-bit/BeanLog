@@ -150,7 +150,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { settingsOpen = true }) {
-                        Icon(Icons.Outlined.Settings, "Settings")
+                        Icon(Icons.Default.Settings, "Settings")
                     }
                 }
             )
@@ -160,7 +160,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 onClick = onAdd,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) { Icon(Icons.Outlined.Add, "Add bean") }
+            ) { Icon(Icons.Default.Add, "Add bean") }
         }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(12.dp),
@@ -169,7 +169,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                     OutlinedButton(onClick = { sortMenuExpanded = true }) {
                         Text("Sort: ${sortOption.label} ${if (ascending) "↑" else "↓"}")
-                        Icon(Icons.Outlined.ArrowDropDown, contentDescription = "Choose sort order")
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose sort order")
                     }
                     DropdownMenu(
                         expanded = sortMenuExpanded,
@@ -193,7 +193,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                                 },
                                 leadingIcon = {
                                     if (sortOption == option) {
-                                        Icon(Icons.Outlined.Check, contentDescription = "Selected")
+                                        Icon(Icons.Default.Check, contentDescription = "Selected")
                                     }
                                 }
                             )
@@ -209,7 +209,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
                         if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
-                        else Icon(Icons.Outlined.Coffee,null,Modifier.size(imageSize))
+                        else Icon(Icons.Default.Coffee,null,Modifier.size(imageSize))
                         Spacer(Modifier.width(if (count == 0) 8.dp else 12.dp))
                         Column {
                             Text(b.name,style=if (count == 0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
@@ -295,7 +295,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
                 Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Crop)
             OutlinedButton(onClick = {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }) { Icon(Icons.Outlined.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
+            }) { Icon(Icons.Default.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
 
             OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth())
@@ -359,15 +359,15 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 title = { Text(b.name) },
-                navigationIcon = { IconButton(onBack) { Icon(Icons.Outlined.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 actions = {
-                    IconButton(onEdit) { Icon(Icons.Outlined.Edit, "Edit") }
-                    IconButton({ scope.launch { dao.delete(b); onBack() } }) { Icon(Icons.Outlined.Delete, "Delete") }
+                    IconButton(onEdit) { Icon(Icons.Default.Edit, "Edit") }
+                    IconButton({ scope.launch { dao.delete(b); onBack() } }) { Icon(Icons.Default.Delete, "Delete") }
                 })
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = { showBagDialog = true },
-                icon = { Icon(Icons.Outlined.Add, null) }, text = { Text("Add bag") })
+                icon = { Icon(Icons.Default.Add, null) }, text = { Text("Add bag") })
         }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp),
@@ -398,7 +398,7 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
             if(bags.any{it.isFinished}) {
                 item { TextButton(onClick={showFinishedBags=!showFinishedBags},modifier=Modifier.fillMaxWidth()) {
                     Text("Finished bags (${bags.count{it.isFinished}})")
-                    Icon(if(showFinishedBags) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,null)
+                    Icon(if(showFinishedBags) Icons.Default.ExpandLess else Icons.Default.ExpandMore,null)
                 } }
                 if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
                     BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
@@ -430,13 +430,13 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}",style=MaterialTheme.typography.bodySmall)
      shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
-    IconButton(onClick=edit){Icon(Icons.Outlined.Edit,"Edit bag")}
-    IconButton(onClick=delete){Icon(Icons.Outlined.Delete,"Delete bag")}
+    IconButton(onClick=edit){Icon(Icons.Default.Edit,"Edit bag")}
+    IconButton(onClick=delete){Icon(Icons.Default.Delete,"Delete bag")}
    }
    HorizontalDivider()
    Row(verticalAlignment=Alignment.CenterVertically) {
     Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
-    TextButton(onClick={add=true}){Icon(Icons.Outlined.Add,null);Text("Add shot")}
+    TextButton(onClick={add=true}){Icon(Icons.Default.Add,null);Text("Add shot")}
    }
    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
    shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
