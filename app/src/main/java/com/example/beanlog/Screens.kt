@@ -394,14 +394,14 @@ private fun shotSentiment(shots:List<Shot>):ShotSentiment? {
     if(rated.isEmpty()) return null
     val likes=rated.count{it.liked==true}
     val percent=(likes*100.0/rated.size).toInt()
-    val (emoji,label)=when {
-        percent>=80 -> "😁" to "Big smile"
-        percent>=60 -> "🙂" to "Smile"
-        percent>=40 -> "😐" to "Neutral"
-        percent>=20 -> "🙁" to "Frown"
-        else -> "😢" to "Sad"
+    val emoji=when {
+        percent>=80 -> "😁"
+        percent>=60 -> "🙂"
+        percent>=40 -> "😐"
+        percent>=20 -> "🙁"
+        else -> "😢"
     }
-    return ShotSentiment(emoji,label,percent,likes,rated.size)
+    return ShotSentiment(emoji,percent,likes,rated.size)
 }
 
 private fun shotSummary(shot:Shot):String =
