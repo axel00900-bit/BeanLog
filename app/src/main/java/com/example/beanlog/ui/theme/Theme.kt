@@ -2,39 +2,20 @@ package com.example.beanlog.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val DarkColorScheme = darkColorScheme(
-    primary = OatGold,
+// BeanLog uses one light, warm background throughout the app.
+private val BeanLogColorScheme = lightColorScheme(
+    primary = SoftCaramel,
     onPrimary = Espresso,
-    primaryContainer = Color(0xFF604832),
-    onPrimaryContainer = CoffeeCream,
-    secondary = SoftCaramel,
-    onSecondary = Espresso,
-    secondaryContainer = Color(0xFF594332),
-    onSecondaryContainer = CoffeeCream,
-    tertiary = OatGold,
-    background = Espresso,
-    surface = Color(0xFF30251E),
-    surfaceVariant = Color(0xFF514236),
-    onBackground = CoffeeCream,
-    onSurface = CoffeeCream,
-    onSurfaceVariant = Color(0xFFE2D2BE),
-    outline = CoffeeOutline
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Caramel,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFEBD8BF),
+    primaryContainer = Color(0xFFF1E3D0),
     onPrimaryContainer = Espresso,
-    secondary = SoftCaramel,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFF1E3D0),
+    secondary = OatGold,
+    onSecondary = Espresso,
+    secondaryContainer = LatteVariant,
     onSecondaryContainer = Espresso,
-    tertiary = OatGold,
+    tertiary = Caramel,
     background = CoffeeCream,
     surface = LatteSurface,
     surfaceVariant = LatteVariant,
@@ -45,14 +26,9 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun BeanLogTheme(
-    darkTheme: Boolean = false,
-    dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+fun BeanLogTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = BeanLogColorScheme,
         typography = Typography,
         content = content
     )
