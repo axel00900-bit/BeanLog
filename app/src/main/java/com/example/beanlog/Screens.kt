@@ -119,19 +119,24 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            CenterAlignedTopAppBar(
-                modifier = Modifier.height(92.dp),
+            TopAppBar(
+                modifier = Modifier.height(120.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                ),
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        Text("My Beans")
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Image(
                             painter = painterResource(id = R.mipmap.bean_launcher_foreground),
                             contentDescription = "BeanLog bean logo",
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.size(104.dp)
+                        )
+                        Text(
+                            "My Beans",
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            style = MaterialTheme.typography.headlineMedium
                         )
                     }
                 },
