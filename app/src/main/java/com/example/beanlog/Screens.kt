@@ -92,7 +92,7 @@ private fun BeanActionIcon(
             }
         }
         BeanIconAction.EDIT -> Canvas(modifier) {
-            val cream = Color(0xFFFFF8EC)
+            val cream = color
             rotate(-45f, pivot = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)) {
                 val w = size.width
                 val h = size.height
@@ -123,7 +123,7 @@ private fun BeanActionIcon(
             }
         }
         BeanIconAction.DELETE -> Canvas(modifier) {
-            val cream = Color(0xFFFFF8EC)
+            val cream = color
             val w = size.width
             val h = size.height
             drawLine(cream, androidx.compose.ui.geometry.Offset(w * .20f, h * .27f),
@@ -146,7 +146,7 @@ private fun BeanActionIcon(
                 androidx.compose.ui.geometry.Offset(w * .55f, h * .80f), w * .055f, cap = StrokeCap.Round)
         }
         BeanIconAction.SAVE -> Canvas(modifier) {
-            val cream = Color(0xFFFFF8EC)
+            val cream = color
             val check = Path().apply {
                 moveTo(size.width * .18f, size.height * .52f)
                 lineTo(size.width * .42f, size.height * .75f)
@@ -663,7 +663,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(18.dp),CoffeeCardText);Text("Delete",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(18.dp),DarkRoast);Text("Delete",color=CoffeeCardText)}
        }
       }
      }
