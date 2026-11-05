@@ -542,11 +542,11 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: () -> Unit) {
 private fun CurrencyMenu(selected: String?, allowNone: Boolean, onPick: (String?) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { open = true }) { Text(selected ?: "As paid") }
+        OutlinedButton(onClick = { open = true }) { Text(selected?.let { "${currencySymbol(it)} $it" } ?: "As paid") }
         DropdownMenu(open, { open = false }) {
             if (allowNone) DropdownMenuItem(text = { Text("As paid") }, onClick = { onPick(null); open = false })
             CURRENCIES.forEach { c ->
-                DropdownMenuItem(text = { Text(c) }, onClick = { onPick(c); open = false })
+                DropdownMenuItem(text = { Text("${currencySymbol(c)} $c") }, onClick = { onPick(c); open = false })
             }
         }
     }
@@ -646,7 +646,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
     Column(Modifier.weight(1f)) {
      Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
      Text("${bag.weightG} g"+if(bag.lotNumber.isNotBlank())" · Lot ${bag.lotNumber}" else "")
-     Text("Paid ${money(bag.price)} ${bag.currency} (${money(bag.price/bag.weightG,3)} ${bag.currency}/g)")
+     Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price/bag.weightG, 3)}/g)")
      cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
@@ -752,7 +752,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
   OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
   OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-  Row{OutlinedTextField(price,{price=it},label={Text("Price")},modifier=Modifier.weight(1f), colors = beanTextFieldColors());CurrencyMenu(currency,false){currency=it?:currency}}
+  Row{OutlinedTextField(price,{price=it},label={Text("Amount")},prefix={Text(currencySymbol(currency))},modifier=Modifier.weight(1f), colors = beanTextFieldColors());CurrencyMenu(currency,false){currency=it?:currency}}
   OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
