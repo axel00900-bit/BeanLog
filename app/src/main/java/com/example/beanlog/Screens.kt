@@ -40,8 +40,9 @@ private fun String.num() = replace(',', '.').toDoubleOrNull()
 private fun countryFlag(country: String): String {
     val aliases = mapOf("USA" to "US", "United States" to "US", "UK" to "GB", "England" to "GB",
         "South Korea" to "KR", "Czech Republic" to "CZ", "Vietnam" to "VN", "Ivory Coast" to "CI")
-    val code = aliases[country.trim()] ?: Locale.getISOCountries().firstOrNull {
-        Locale("", it).getDisplayCountry(Locale.ENGLISH).equals(country.trim(), ignoreCase = true)
+    val countryName = country.trim().substringAfterLast(",").trim()
+    val code = aliases[countryName] ?: Locale.getISOCountries().firstOrNull {
+        Locale("", it).getDisplayCountry(Locale.ENGLISH).equals(countryName, ignoreCase = true)
     } ?: return ""
     return code.uppercase().map { String(Character.toChars(0x1F1E6 + it.code - 65)) }.joinToString("")
 }
@@ -378,7 +379,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
     TextButton(onClick={add=true}){Icon(Icons.Default.Add,null);Text("Add shot")}
    }
    val rated=shots.filter{it.liked!=null}; val likes=rated.count{it.liked==true}
-   if(rated.isNotEmpty()) Text("Shot feedback: ${if(likes*2>=rated.size) "Mostly liked" else "Mostly disliked"} ($likes/${rated.size} liked)",style=MaterialTheme.typography.bodySmall)
+   if(rated.isNotEmpty()) Text("Personal shot feedback: ${when { likes*2>rated.size -> "Mostly liked"; likes*2<rated.size -> "Mostly disliked"; else -> "Even split" }} ($likes/${rated.size} liked)",style=MaterialTheme.typography.bodySmall)
    shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
    if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
