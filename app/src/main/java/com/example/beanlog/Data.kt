@@ -63,6 +63,7 @@ data class Shot(
     val timeSec: Int,
     @ColumnInfo(defaultValue = "''") val grindSetting: String = "",
     val liked: Boolean? = null,
+    @ColumnInfo(defaultValue = "0") val pulledAtMillis: Long = System.currentTimeMillis(),
 )
 
 /** Bean plus sorting information for the front page. */
@@ -102,7 +103,7 @@ interface BeanDao {
     @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 4, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 5, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -137,9 +138,15 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Shot ADD COLUMN pulledAtMillis INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration(true)
                 .build()
     }
