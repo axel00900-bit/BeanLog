@@ -715,7 +715,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   title={Text(if (bag.roastDate.isBlank()) "Shot history" else "Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
   text={
    Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
-    Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}",style=MaterialTheme.typography.bodyLarge)
+    if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No shots recorded yet")
@@ -762,7 +762,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var unknownDate by remember(initial?.id){mutableStateOf(initial?.roastDate.isNullOrBlank())}
  var picker by remember{mutableStateOf(false)}
  var weight by remember(initial?.id){mutableStateOf(initial?.weightG?.toString()?:"250")}
- var price by remember(initial?.id){mutableStateOf(initial?.price?.toString()?:"")}
+ var price by remember(initial?.id){mutableStateOf(initial?.price?.takeIf{it>0.0}?.toString()?:"")}
  var currency by remember(initial?.id){mutableStateOf(initial?.currency?:"EUR")}
  var currencyMenuOpen by remember(initial?.id){mutableStateOf(false)}
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
