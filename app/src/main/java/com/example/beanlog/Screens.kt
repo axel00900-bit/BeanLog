@@ -23,7 +23,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.Icons.Outlined
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,6 +41,7 @@ import coil.compose.AsyncImage
 import com.example.beanlog.ui.theme.LatteVariant
 import com.example.beanlog.ui.theme.CoffeeCard
 import com.example.beanlog.ui.theme.CoffeeCardText
+import com.example.beanlog.ui.theme.CoffeeCream
 import com.example.beanlog.ui.theme.DarkRoast
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -151,7 +154,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { settingsOpen = true }) {
-                        Icon(Icons.Outlined.Settings, "Settings")
+                        Icon(Icons.Default.Settings, "Settings", tint = DarkRoast)
                     }
                 }
             )
@@ -242,6 +245,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     )
 }
 
+@Composable
 private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = DarkRoast,
     unfocusedTextColor = DarkRoast,
