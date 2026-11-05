@@ -725,7 +725,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(18.dp),DarkRoast);Text("Delete",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(20.dp),Color.White)}
        }
       }
      }
