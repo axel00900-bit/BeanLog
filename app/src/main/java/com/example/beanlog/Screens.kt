@@ -650,7 +650,6 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
-     Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}",style=MaterialTheme.typography.bodySmall)
      shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
@@ -777,7 +776,6 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
  var output by remember{mutableStateOf("36")}
  var seconds by remember{mutableStateOf("28")}
  var grind by remember{mutableStateOf("")}
- val ratio=input.num()?.takeIf{it>0}?.let{output.num()?.div(it)}
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text("Add shot",color=DarkRoast)},
