@@ -660,10 +660,12 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
   Column(Modifier.padding(12.dp).alpha(if(muted) 0.55f else 1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
    Row(verticalAlignment=Alignment.CenterVertically) {
     Column(Modifier.weight(1f)) {
-     Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
-     Text("${bag.weightG} g"+if(bag.lotNumber.isNotBlank())" · Lot ${bag.lotNumber}" else "")
-     Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price / bag.weightG.coerceAtLeast(1), bag.currency, 3)}/g)")
-     cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
+     if (bag.roastDate.isNotBlank()) Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
+     Text("${bag.weightG} g")
+     if (bag.price > 0.0) {
+      Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price / bag.weightG.coerceAtLeast(1), bag.currency, 3)}/g)")
+      cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
+     }
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
      shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
@@ -710,7 +712,7 @@ private fun shotSummary(shot:Shot):String =
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao) {
  AlertDialog(
   onDismissRequest=dismiss,
-  title={Text("Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
+  title={Text(if (bag.roastDate.isBlank()) "Shot history" else "Shot history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
   text={
    Column(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     Text("Recommended grind: ${bag.recommendedGrindSetting.ifBlank{"Not set"}}",style=MaterialTheme.typography.bodyLarge)
@@ -756,18 +758,24 @@ private fun ratioText(i:Double,o:Double)=if(i>0)String.format(java.util.Locale.U
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
- var date by remember(initial?.id){mutableStateOf(initial?.roastDate?:todayIso())}
+ var date by remember(initial?.id){mutableStateOf(initial?.roastDate?.takeIf{it.isNotBlank()}?:todayIso())}
+ var unknownDate by remember(initial?.id){mutableStateOf(initial?.roastDate.isNullOrBlank())}
  var picker by remember{mutableStateOf(false)}
  var weight by remember(initial?.id){mutableStateOf(initial?.weightG?.toString()?:"250")}
  var price by remember(initial?.id){mutableStateOf(initial?.price?.toString()?:"")}
  var currency by remember(initial?.id){mutableStateOf(initial?.currency?:"EUR")}
  var currencyMenuOpen by remember(initial?.id){mutableStateOf(false)}
- var lot by remember(initial?.id){mutableStateOf(initial?.lotNumber?:"")}
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
-  OutlinedButton(onClick={picker=true},modifier=Modifier.fillMaxWidth()){Text("Roast date: ${isoToDisplay(date)}")}
+  Row(verticalAlignment=Alignment.CenterVertically) {
+   OutlinedButton(onClick={picker=true},modifier=Modifier.weight(1f),enabled=!unknownDate){Text(if(unknownDate) "Roast date unknown" else "Roast date: ${isoToDisplay(date)}")}
+   Row(verticalAlignment=Alignment.CenterVertically) {
+    Checkbox(checked=unknownDate,onCheckedChange={unknownDate=it})
+    Text("Unknown")
+   }
+  }
   OutlinedTextField(weight,{weight=it},label={Text("Weight (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   Row(
    modifier=Modifier.fillMaxWidth(),
@@ -777,12 +785,12 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
    OutlinedTextField(
     value=price,
     onValueChange={price=it},
-    label={Text("Amount")},
+    label={Text("Amount (optional)")},
     modifier=Modifier.weight(1f),
     singleLine=true,
     colors=beanTextFieldColors()
    )
-   Box {
+   if (price.isNotBlank()) Box {
     OutlinedButton(
      onClick={currencyMenuOpen=true},
      modifier=Modifier.height(56.dp),
@@ -795,19 +803,20 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
     }
    }
   }
-   OutlinedTextField(lot,{lot=it},label={Text("Lot number")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
  }},
- confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0&&price.num()!=null,onClick={
-  val bag=initial?.copy(roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished,recommendedGrindSetting=recommendedGrind)
-   ?:Bag(beanId=0,roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
+ confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0,onClick={
+  val savedDate = if (unknownDate) "" else date
+  val savedPrice = price.num() ?: 0.0
+  val bag=initial?.copy(roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind)
+   ?:Bag(beanId=0,roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
  shape=MaterialTheme.shapes.extraLarge,
  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
- if(picker){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
+ if(picker && !unknownDate){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
   DatePickerDialog(onDismissRequest={picker=false},confirmButton={TextButton(onClick={state.selectedDateMillis?.let{date=millisToIso(it)};picker=false}){Text("OK")}},
   dismissButton={TextButton(onClick={picker=false}){Text("Cancel")}}){DatePicker(state)}
  }
