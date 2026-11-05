@@ -118,16 +118,29 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Image(
-                    painter = painterResource(id = R.mipmap.bean_launcher_foreground),
-                    contentDescription = "BeanLog bean logo",
-                    modifier = Modifier.size(36.dp)
-                )
-                Text("My Beans")
-            }
-        }, actions = { IconButton(onClick={settingsOpen=true}) { Icon(Icons.Default.Settings,"Settings") } }) },
+        topBar = {
+            CenterAlignedTopAppBar(
+                modifier = Modifier.height(92.dp),
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text("My Beans")
+                        Image(
+                            painter = painterResource(id = R.mipmap.bean_launcher_foreground),
+                            contentDescription = "BeanLog bean logo",
+                            modifier = Modifier.size(72.dp)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { settingsOpen = true }) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAdd,
