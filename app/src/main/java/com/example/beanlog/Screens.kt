@@ -57,10 +57,35 @@ fun App(dao: BeanDao) {
 }
 
 // ---------- List ----------
+private enum class BeanSortOption(val label: String) {
+    RECENTLY_ADDED("Recently added"),
+    NAME("Name")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
-    val beans by dao.beans().collectAsState(emptyList())
+    val beans by dao.beansWithLatestBag().collectAsState(emptyList())
+    var sortOption by remember { mutableStateOf(BeanSortOption.RECENTLY_ADDED) }
+    // Recently added defaults to newest first; Name defaults to A–Z.
+    var ascending by remember { mutableStateOf(false) }
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+
+    val sortedBeans = remember(beans, sortOption, ascending) {
+        when (sortOption) {
+            BeanSortOption.RECENTLY_ADDED -> beans.sortedWith(
+                compareBy<BeanWithLatestBag> { it.latestBagId == 0L }
+                    .thenBy { if (ascending) it.latestBagId else -it.latestBagId }
+                    .thenBy { it.bean.name.lowercase() }
+            )
+            BeanSortOption.NAME -> {
+                val byName = compareBy<BeanWithLatestBag> { it.bean.name.lowercase() }
+                    .thenBy { it.bean.roastery.lowercase() }
+                beans.sortedWith(if (ascending) byName else byName.reversed())
+            }
+        }.map { it.bean }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("My beans") }) },
         floatingActionButton = {
@@ -69,7 +94,43 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(beans) { b ->
+            item {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    OutlinedButton(onClick = { sortMenuExpanded = true }) {
+                        Text("Sort: ${sortOption.label} ${if (ascending) "↑" else "↓"}")
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose sort order")
+                    }
+                    DropdownMenu(
+                        expanded = sortMenuExpanded,
+                        onDismissRequest = { sortMenuExpanded = false }
+                    ) {
+                        BeanSortOption.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(option.label + if (sortOption == option) {
+                                        " ${if (ascending) "↑" else "↓"}"
+                                    } else "")
+                                },
+                                onClick = {
+                                    if (sortOption == option) {
+                                        ascending = !ascending
+                                    } else {
+                                        sortOption = option
+                                        ascending = option == BeanSortOption.NAME
+                                    }
+                                    sortMenuExpanded = false
+                                },
+                                leadingIcon = {
+                                    if (sortOption == option) {
+                                        Icon(Icons.Default.Check, contentDescription = "Selected")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            items(sortedBeans, key = { it.id }) { b ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (b.photoPath != null)
