@@ -121,7 +121,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
         topBar = { TopAppBar(title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Image(
-                    painter = painterResource(id = R.mipmap.bean_launcher),
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
                     contentDescription = "BeanLog bean logo",
                     modifier = Modifier.size(36.dp)
                 )
