@@ -109,7 +109,10 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     .thenBy { it.bean.roastery.lowercase() }
                 beans.sortedWith(if (ascending) byName else byName.reversed())
             }
-        }.map { it.bean to it.openBagCount }
+        }
+            // Beans with at least one unfinished bag always stay above beans with no available bags.
+            .sortedBy { if (it.openBagCount > 0) 0 else 1 }
+            .map { it.bean to it.openBagCount }
     }
 
     Scaffold(
@@ -159,11 +162,16 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
             items(sortedBeans, key = { it.first.id }) { (b, count) ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
                     colors = if(count==0) CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()) {
-                    Row(Modifier.padding(12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
-                        if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(64.dp),contentScale=ContentScale.Crop)
-                        else Icon(Icons.Default.Coffee,null,Modifier.size(64.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column { Text(b.name,style=MaterialTheme.typography.titleMedium); Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}"); Text(b.roastLevel,style=MaterialTheme.typography.bodySmall) }
+                    Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
+                        val imageSize = if (count == 0) 44.dp else 64.dp
+                        if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
+                        else Icon(Icons.Default.Coffee,null,Modifier.size(imageSize))
+                        Spacer(Modifier.width(if (count == 0) 8.dp else 12.dp))
+                        Column {
+                            Text(b.name,style=if (count == 0) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
+                            Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}", style=if (count == 0) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium)
+                            Text(b.roastLevel,style=MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }
