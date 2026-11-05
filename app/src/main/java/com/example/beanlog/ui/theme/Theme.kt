@@ -7,22 +7,22 @@ import androidx.compose.runtime.Composable
 
 // BeanLog uses one light, warm background throughout the app.
 private val BeanLogColorScheme = lightColorScheme(
-    primary = SoftCaramel,
-    onPrimary = Espresso,
-    primaryContainer = Color(0xFFF1E3D0),
-    onPrimaryContainer = Espresso,
-    secondary = OatGold,
-    onSecondary = Espresso,
-    secondaryContainer = LatteVariant,
-    onSecondaryContainer = Espresso,
+    primary = DarkRoast,
+    onPrimary = CoffeeCream,
+    primaryContainer = CoffeeCard,
+    onPrimaryContainer = CoffeeCardText,
+    secondary = CoffeeCard,
+    onSecondary = CoffeeCardText,
+    secondaryContainer = Color(0xFF76543D),
+    onSecondaryContainer = CoffeeCream,
     tertiary = Caramel,
     background = CoffeeCream,
     surface = LatteSurface,
     surfaceVariant = LatteVariant,
     onBackground = Espresso,
-    onSurface = Espresso,
+    onSurface = DarkRoast,
     onSurfaceVariant = MutedCoffee,
-    outline = CoffeeOutline
+    outline = DarkRoast
 )
 
 @Composable
