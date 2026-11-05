@@ -10,6 +10,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,12 +18,15 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.Icons.Outlined
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
@@ -51,6 +55,83 @@ import java.util.Date
 import java.util.Locale
 
 private val ROAST_LEVELS = listOf("Light", "Medium-Light", "Medium", "Medium-Dark", "Dark")
+
+private enum class BeanIconAction { BEAN, ADD, EDIT, DELETE, SAVE, REFRESH }
+
+/** Custom coffee-bean glyphs for the app's primary actions. */
+@Composable
+private fun BeanActionIcon(
+    action: BeanIconAction,
+    contentDescription: String?,
+    modifier: Modifier = Modifier.size(24.dp),
+    color: Color = DarkRoast
+) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val cream = Color(0xFFFFEBD4)
+        if (action == BeanIconAction.ADD) {
+            drawLine(color, androidx.compose.ui.geometry.Offset(w * .5f, h * .10f),
+                androidx.compose.ui.geometry.Offset(w * .5f, h * .90f), w * .25f, cap = StrokeCap.Round)
+            drawLine(color, androidx.compose.ui.geometry.Offset(w * .10f, h * .5f),
+                androidx.compose.ui.geometry.Offset(w * .90f, h * .5f), w * .25f, cap = StrokeCap.Round)
+            val groove = Path().apply {
+                moveTo(w * .40f, h * .34f)
+                cubicTo(w * .60f, h * .40f, w * .40f, h * .60f, w * .60f, h * .66f)
+            }
+            drawPath(groove, cream, style = Stroke(width = w * .055f, cap = StrokeCap.Round))
+        } else {
+            val bean = Path().apply {
+                moveTo(w * .50f, h * .08f)
+                cubicTo(w * .91f, h * .10f, w * .94f, h * .48f, w * .72f, h * .82f)
+                cubicTo(w * .48f, h * 1.08f, w * .10f, h * .83f, w * .12f, h * .48f)
+                cubicTo(w * .13f, h * .20f, w * .30f, h * .07f, w * .50f, h * .08f)
+                close()
+            }
+            rotate(34f, pivot = androidx.compose.ui.geometry.Offset(w * .46f, h * .50f)) {
+                drawPath(bean, color)
+                val seam = Path().apply {
+                    moveTo(w * .39f, h * .13f)
+                    cubicTo(w * .17f, h * .34f, w * .78f, h * .57f, w * .48f, h * .89f)
+                }
+                drawPath(seam, cream, style = Stroke(width = w * .065f, cap = StrokeCap.Round))
+            }
+            when (action) {
+                BeanIconAction.EDIT -> {
+                    drawLine(cream, androidx.compose.ui.geometry.Offset(w * .48f, h * .72f),
+                        androidx.compose.ui.geometry.Offset(w * .91f, h * .29f), w * .13f, cap = StrokeCap.Round)
+                }
+                BeanIconAction.DELETE -> {
+                    drawOval(color, topLeft = androidx.compose.ui.geometry.Offset(w * .70f, h * .02f),
+                        size = androidx.compose.ui.geometry.Size(w * .16f, h * .11f))
+                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .69f, h * .69f),
+                        androidx.compose.ui.geometry.Offset(w * .96f, h * .69f), w * .075f, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .73f, h * .73f),
+                        androidx.compose.ui.geometry.Offset(w * .77f, h * .96f), w * .06f, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .92f, h * .73f),
+                        androidx.compose.ui.geometry.Offset(w * .88f, h * .96f), w * .06f, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .77f, h * .96f),
+                        androidx.compose.ui.geometry.Offset(w * .88f, h * .96f), w * .06f, cap = StrokeCap.Round)
+                }
+                BeanIconAction.SAVE -> {
+                    val check = Path().apply {
+                        moveTo(w * .57f, h * .62f)
+                        lineTo(w * .70f, h * .75f)
+                        lineTo(w * .94f, h * .48f)
+                    }
+                    drawPath(check, cream, style = Stroke(width = w * .09f, cap = StrokeCap.Round))
+                }
+                BeanIconAction.REFRESH -> {
+                    drawArc(color, 205f, 260f, false,
+                        topLeft = androidx.compose.ui.geometry.Offset(w * .58f, h * .02f),
+                        size = androidx.compose.ui.geometry.Size(w * .38f, h * .38f),
+                        style = Stroke(width = w * .065f, cap = StrokeCap.Round))
+                }
+                else -> Unit
+            }
+        }
+    }
+}
 
 private fun String.num() = replace(',', '.').toDoubleOrNull()
 
@@ -166,7 +247,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                 onClick = onAdd,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) { Icon(Icons.Default.Add, "Add bean") }
+            ) { BeanActionIcon(BeanIconAction.ADD, "Add bean") }
         }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(12.dp),
@@ -401,13 +482,13 @@ fun DetailScreen(dao: BeanDao, id: Long, onEdit: () -> Unit, onBack: () -> Unit)
                 title = { Text(b.name) },
                 navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 actions = {
-                    IconButton(onEdit) { Icon(Icons.Default.Edit, "Edit") }
-                    IconButton({ scope.launch { dao.delete(b); onBack() } }) { Icon(Icons.Default.Delete, "Delete") }
+                    IconButton(onEdit) { BeanActionIcon(BeanIconAction.EDIT, "Edit") }
+                    IconButton({ scope.launch { dao.delete(b); onBack() } }) { BeanActionIcon(BeanIconAction.DELETE, "Delete") }
                 })
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = { showBagDialog = true },
-                icon = { Icon(Icons.Default.Add, null) }, text = { Text("Add bag") })
+                icon = { BeanActionIcon(BeanIconAction.ADD, "Add") }, text = { Text("Add bag") })
         }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp),
@@ -470,13 +551,13 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      Text("Bag rating: ${when(bag.liked){true->"Liked";false->"Disliked";null->"Not rated"}}",style=MaterialTheme.typography.bodySmall)
      shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
-    IconButton(onClick=edit){Icon(Icons.Default.Edit,"Edit bag")}
-    IconButton(onClick=delete){Icon(Icons.Default.Delete,"Delete bag")}
+    IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
+    IconButton(onClick=delete){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
    }
    HorizontalDivider()
    Row(verticalAlignment=Alignment.CenterVertically) {
     Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
-    TextButton(onClick={add=true}){Icon(Icons.Default.Add,null);Text("Add shot")}
+    TextButton(onClick={add=true}){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
    }
    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
    shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
@@ -537,7 +618,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){Text("Delete",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(18.dp),CoffeeCardText);Text("Delete",color=CoffeeCardText)}
        }
       }
      }
@@ -547,7 +628,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   confirmButton={TextButton(onClick=dismiss){Text("Close")}},
   dismissButton={TextButton(onClick={dismiss();edit()}){Text("Edit bag")}},
   shape=MaterialTheme.shapes.extraLarge,
-  colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
+  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
 private fun shotDateTime(timestamp:Long):String =
@@ -587,7 +668,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
   val bag=initial?.copy(roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=liked)
    ?:Bag(beanId=0,roastDate=date,weightG=weight.toInt(),price=price.num()!!,currency=currency,lotNumber=lot,isFinished=finished)
   save(bag)
- }){Text("Save")}},
+ }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
  shape=MaterialTheme.shapes.extraLarge,
  colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast))
