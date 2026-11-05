@@ -671,7 +671,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
  shape=MaterialTheme.shapes.extraLarge,
- colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast))
+ containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
  if(picker){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
   DatePickerDialog(onDismissRequest={picker=false},confirmButton={TextButton(onClick={state.selectedDateMillis?.let{date=millisToIso(it)};picker=false}){Text("OK")}},
   dismissButton={TextButton(onClick={picker=false}){Text("Cancel")}}){DatePicker(state)}
@@ -701,6 +701,6 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
   confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim()))}){Text("Save")}},
   dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
   shape=MaterialTheme.shapes.extraLarge,
-  colors=AlertDialogDefaults.colors(containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
+  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
