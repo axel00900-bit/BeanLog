@@ -56,9 +56,9 @@ import java.util.Locale
 
 private val ROAST_LEVELS = listOf("Light", "Medium-Light", "Medium", "Medium-Dark", "Dark")
 
-private enum class BeanIconAction { BEAN, ADD, EDIT, DELETE, SAVE, REFRESH }
+private enum class BeanIconAction { BEAN, ADD, EDIT, DELETE, SAVE }
 
-/** Custom coffee-bean glyphs for the app's primary actions. */
+/** BeanLog's shared coffee-themed action icons. */
 @Composable
 private fun BeanActionIcon(
     action: BeanIconAction,
@@ -66,69 +66,93 @@ private fun BeanActionIcon(
     modifier: Modifier = Modifier.size(24.dp),
     color: Color = DarkRoast
 ) {
-    Canvas(modifier) {
-        val w = size.width
-        val h = size.height
-        val cream = Color(0xFFFFEBD4)
-        if (action == BeanIconAction.ADD) {
-            drawLine(color, androidx.compose.ui.geometry.Offset(w * .5f, h * .10f),
-                androidx.compose.ui.geometry.Offset(w * .5f, h * .90f), w * .25f, cap = StrokeCap.Round)
-            drawLine(color, androidx.compose.ui.geometry.Offset(w * .10f, h * .5f),
-                androidx.compose.ui.geometry.Offset(w * .90f, h * .5f), w * .25f, cap = StrokeCap.Round)
-            val groove = Path().apply {
-                moveTo(w * .40f, h * .34f)
-                cubicTo(w * .60f, h * .40f, w * .40f, h * .60f, w * .60f, h * .66f)
+    when (action) {
+        BeanIconAction.BEAN, BeanIconAction.ADD -> {
+            Box(modifier, contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = R.mipmap.bean_launcher_foreground),
+                    contentDescription = contentDescription,
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        if (action == BeanIconAction.ADD) DarkRoast else color
+                    ),
+                    contentScale = ContentScale.Fit
+                )
+                if (action == BeanIconAction.ADD) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val plus = Color(0xFFB98961)
+                        drawLine(plus, androidx.compose.ui.geometry.Offset(size.width * .5f, size.height * .28f),
+                            androidx.compose.ui.geometry.Offset(size.width * .5f, size.height * .72f),
+                            size.width * .105f, cap = StrokeCap.Round)
+                        drawLine(plus, androidx.compose.ui.geometry.Offset(size.width * .28f, size.height * .5f),
+                            androidx.compose.ui.geometry.Offset(size.width * .72f, size.height * .5f),
+                            size.width * .105f, cap = StrokeCap.Round)
+                    }
+                }
             }
-            drawPath(groove, cream, style = Stroke(width = w * .055f, cap = StrokeCap.Round))
-        } else {
-            val bean = Path().apply {
-                moveTo(w * .50f, h * .08f)
-                cubicTo(w * .91f, h * .10f, w * .94f, h * .48f, w * .72f, h * .82f)
-                cubicTo(w * .48f, h * 1.08f, w * .10f, h * .83f, w * .12f, h * .48f)
-                cubicTo(w * .13f, h * .20f, w * .30f, h * .07f, w * .50f, h * .08f)
+        }
+        BeanIconAction.EDIT -> Canvas(modifier) {
+            val cream = Color(0xFFFFF8EC)
+            rotate(-45f, pivot = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)) {
+                val w = size.width
+                val h = size.height
+                // Pencil point and long handle.
+                val pencil = Path().apply {
+                    moveTo(w * .39f, h * .39f)
+                    lineTo(w * .61f, h * .39f)
+                    lineTo(w * .61f, h * .78f)
+                    lineTo(w * .50f, h * .96f)
+                    lineTo(w * .39f, h * .78f)
+                    close()
+                }
+                drawPath(pencil, cream)
+                drawLine(color, androidx.compose.ui.geometry.Offset(w * .50f, h * .84f),
+                    androidx.compose.ui.geometry.Offset(w * .50f, h * .94f), w * .035f)
+                // Round portafilter basket, rim and perforations.
+                drawCircle(cream, radius = w * .235f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f))
+                drawCircle(color, radius = w * .185f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f))
+                drawCircle(cream, radius = w * .145f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f), style = Stroke(width = w * .025f))
+                for (row in 0..3) for (column in 0..3) {
+                    val x = w * (.405f + column * .063f)
+                    val y = h * (.155f + row * .063f)
+                    drawCircle(cream, radius = w * .012f, center = androidx.compose.ui.geometry.Offset(x, y))
+                }
+                // Neck connecting the basket to the pencil-handle.
+                drawRect(cream, topLeft = androidx.compose.ui.geometry.Offset(w * .43f, h * .43f),
+                    size = androidx.compose.ui.geometry.Size(w * .14f, h * .055f))
+            }
+        }
+        BeanIconAction.DELETE -> Canvas(modifier) {
+            val cream = Color(0xFFFFF8EC)
+            val w = size.width
+            val h = size.height
+            drawLine(cream, androidx.compose.ui.geometry.Offset(w * .20f, h * .27f),
+                androidx.compose.ui.geometry.Offset(w * .80f, h * .27f), w * .085f, cap = StrokeCap.Round)
+            drawLine(cream, androidx.compose.ui.geometry.Offset(w * .38f, h * .16f),
+                androidx.compose.ui.geometry.Offset(w * .62f, h * .16f), w * .075f, cap = StrokeCap.Round)
+            val bin = Path().apply {
+                moveTo(w * .27f, h * .34f)
+                lineTo(w * .33f, h * .86f)
+                quadraticTo(w * .34f, h * .92f, w * .41f, h * .92f)
+                lineTo(w * .59f, h * .92f)
+                quadraticTo(w * .66f, h * .92f, w * .67f, h * .86f)
+                lineTo(w * .73f, h * .34f)
                 close()
             }
-            rotate(34f, pivot = androidx.compose.ui.geometry.Offset(w * .46f, h * .50f)) {
-                drawPath(bean, color)
-                val seam = Path().apply {
-                    moveTo(w * .39f, h * .13f)
-                    cubicTo(w * .17f, h * .34f, w * .78f, h * .57f, w * .48f, h * .89f)
-                }
-                drawPath(seam, cream, style = Stroke(width = w * .065f, cap = StrokeCap.Round))
+            drawPath(bin, cream, style = Stroke(width = w * .075f))
+            drawLine(cream, androidx.compose.ui.geometry.Offset(w * .44f, h * .44f),
+                androidx.compose.ui.geometry.Offset(w * .45f, h * .80f), w * .055f, cap = StrokeCap.Round)
+            drawLine(cream, androidx.compose.ui.geometry.Offset(w * .56f, h * .44f),
+                androidx.compose.ui.geometry.Offset(w * .55f, h * .80f), w * .055f, cap = StrokeCap.Round)
+        }
+        BeanIconAction.SAVE -> Canvas(modifier) {
+            val cream = Color(0xFFFFF8EC)
+            val check = Path().apply {
+                moveTo(size.width * .18f, size.height * .52f)
+                lineTo(size.width * .42f, size.height * .75f)
+                lineTo(size.width * .84f, size.height * .25f)
             }
-            when (action) {
-                BeanIconAction.EDIT -> {
-                    drawLine(cream, androidx.compose.ui.geometry.Offset(w * .48f, h * .72f),
-                        androidx.compose.ui.geometry.Offset(w * .91f, h * .29f), w * .13f, cap = StrokeCap.Round)
-                }
-                BeanIconAction.DELETE -> {
-                    drawOval(color, topLeft = androidx.compose.ui.geometry.Offset(w * .70f, h * .02f),
-                        size = androidx.compose.ui.geometry.Size(w * .16f, h * .11f))
-                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .69f, h * .69f),
-                        androidx.compose.ui.geometry.Offset(w * .96f, h * .69f), w * .075f, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .73f, h * .73f),
-                        androidx.compose.ui.geometry.Offset(w * .77f, h * .96f), w * .06f, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .92f, h * .73f),
-                        androidx.compose.ui.geometry.Offset(w * .88f, h * .96f), w * .06f, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(w * .77f, h * .96f),
-                        androidx.compose.ui.geometry.Offset(w * .88f, h * .96f), w * .06f, cap = StrokeCap.Round)
-                }
-                BeanIconAction.SAVE -> {
-                    val check = Path().apply {
-                        moveTo(w * .57f, h * .62f)
-                        lineTo(w * .70f, h * .75f)
-                        lineTo(w * .94f, h * .48f)
-                    }
-                    drawPath(check, cream, style = Stroke(width = w * .09f, cap = StrokeCap.Round))
-                }
-                BeanIconAction.REFRESH -> {
-                    drawArc(color, 205f, 260f, false,
-                        topLeft = androidx.compose.ui.geometry.Offset(w * .58f, h * .02f),
-                        size = androidx.compose.ui.geometry.Size(w * .38f, h * .38f),
-                        style = Stroke(width = w * .065f, cap = StrokeCap.Round))
-                }
-                else -> Unit
-            }
+            drawPath(check, cream, style = Stroke(width = size.width * .11f, cap = StrokeCap.Round))
         }
     }
 }
