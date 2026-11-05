@@ -764,8 +764,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
     value=price,
     onValueChange={price=it},
     label={Text("Amount")},
-    modifier=Modifier.weight(1f).height(56.dp),
-    textStyle=MaterialTheme.typography.bodyLarge.copy(textAlign=TextAlign.Center),
+    modifier=Modifier.weight(1f),
     singleLine=true,
     colors=beanTextFieldColors()
    )
