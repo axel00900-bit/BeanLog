@@ -20,10 +20,10 @@ data class Bean(
     val coffeeInG: Double? = null,
     val coffeeOutG: Double? = null,
     val brewTimeSec: Int? = null,
-    val origin: String = "",
-    val farm: String = "",
-    val variety: String = "",
-    val processing: String = "",
+    @ColumnInfo(defaultValue = "''") val origin: String = "",
+    @ColumnInfo(defaultValue = "''") val farm: String = "",
+    @ColumnInfo(defaultValue = "''") val variety: String = "",
+    @ColumnInfo(defaultValue = "''") val processing: String = "",
 )
 
 /** A specific bag you bought of a bean. */
