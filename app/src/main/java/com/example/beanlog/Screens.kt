@@ -1065,11 +1065,15 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
     ) { uri ->
         if (uri != null) scope.launch {
             val result = runCatching {
-                withContext(Dispatchers.IO) {
+                val parsed = withContext(Dispatchers.IO) {
                     val input = context.contentResolver.openInputStream(uri)
                         ?: error("Could not open the selected backup.")
                     input.use { BeanLogBackup.read(it) }
                 }
+                val mergePreview = withContext(Dispatchers.IO) {
+                    BeanLogBackup.previewMerge(dao, parsed.second)
+                }
+                mergePreview to parsed.second
             }
             result.onSuccess { (preview, contents) ->
                 pendingPreview = preview
@@ -1244,8 +1248,14 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                     Text("• ${preview.bags} coffee bags")
                     Text("• ${preview.shots} shots")
                     Text("Choose how to restore this data.")
-                    Text("Merge adds missing items to your current collection and skips duplicates.",style=MaterialTheme.typography.bodySmall)
-                    Text("Replace permanently clears your current beans, bags and shot history before restoring this backup.",style=MaterialTheme.typography.bodySmall)
+                    Text(
+                        "Merge will add ${preview.beansToAdd} beans, ${preview.bagsToAdd} bags and ${preview.shotsToAdd} shots. Existing matches will be skipped.",
+                        style=MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        "Replace permanently clears your current beans, bags and shot history, then restores all ${preview.beans} beans, ${preview.bags} bags and ${preview.shots} shots from this backup.",
+                        style=MaterialTheme.typography.bodySmall
+                    )
                     if(restoreBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
             },
