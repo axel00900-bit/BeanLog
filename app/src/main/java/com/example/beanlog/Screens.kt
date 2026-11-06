@@ -83,7 +83,7 @@ private fun BeanActionIcon(
                     contentDescription = contentDescription,
                     modifier = Modifier.fillMaxSize(),
                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        if (action == BeanIconAction.ADD) DarkRoast else color
+                        color
                     ),
                     contentScale = ContentScale.Fit
                 )
@@ -731,10 +731,10 @@ private fun SectionSwitchBar(
             if (onAdd != null) {
                 FloatingActionButton(
                     onClick = onAdd,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF493323),
+                    contentColor = Color(0xFFFFF8EC)
                 ) {
-                    BeanActionIcon(BeanIconAction.ADD, "Add bean")
+                    BeanActionIcon(BeanIconAction.ADD, "Add bean", color = Color(0xFFFFF8EC))
                 }
             }
         }
