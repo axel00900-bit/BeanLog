@@ -13,7 +13,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-data class BackupPreview(val beans: Int, val bags: Int, val shots: Int)
+data class BackupPreview(
+    val beans: Int,
+    val bags: Int,
+    val shots: Int,
+    val beansToAdd: Int = beans,
+    val bagsToAdd: Int = bags,
+    val shotsToAdd: Int = shots
+)
 data class RestoreResult(val beansAdded: Int, val bagsAdded: Int, val shotsAdded: Int)
 
 data class BackupContents(
@@ -134,6 +141,57 @@ object BeanLogBackup {
         }
         val contents = BackupContents(beans, bags, shots, entries.filterKeys { it.startsWith("photos/") })
         return BackupPreview(beans.size, bags.size, shots.size) to contents
+    }
+
+    /** Counts which records a merge would add, using the same identity rules as restore. */
+    suspend fun previewMerge(dao: BeanDao, contents: BackupContents): BackupPreview {
+        val plannedBeans = dao.allBeans().toMutableList()
+        val beanTargets = mutableMapOf<Long, Long>()
+        var syntheticId = -1L
+        var beansToAdd = 0
+        contents.beans.forEach { source ->
+            val target = plannedBeans.firstOrNull { beanKey(it) == beanKey(source) }
+                ?: source.copy(id = syntheticId--).also {
+                    plannedBeans += it
+                    beansToAdd++
+                }
+            beanTargets[source.id] = target.id
+        }
+
+        val plannedBags = dao.allBags().toMutableList()
+        val bagTargets = mutableMapOf<Long, Long>()
+        var bagsToAdd = 0
+        contents.bags.forEach { source ->
+            val targetBeanId = beanTargets[source.beanId] ?: return@forEach
+            val target = plannedBags.firstOrNull {
+                it.beanId == targetBeanId && bagKey(it) == bagKey(source)
+            } ?: source.copy(id = syntheticId--, beanId = targetBeanId).also {
+                plannedBags += it
+                bagsToAdd++
+            }
+            bagTargets[source.id] = target.id
+        }
+
+        val plannedShots = dao.allShots().toMutableList()
+        var shotsToAdd = 0
+        contents.shots.forEach { source ->
+            val targetBagId = bagTargets[source.bagId] ?: return@forEach
+            val exists = plannedShots.any {
+                it.bagId == targetBagId && shotKey(it) == shotKey(source)
+            }
+            if (!exists) {
+                plannedShots += source.copy(id = syntheticId--, bagId = targetBagId)
+                shotsToAdd++
+            }
+        }
+        return BackupPreview(
+            beans = contents.beans.size,
+            bags = contents.bags.size,
+            shots = contents.shots.size,
+            beansToAdd = beansToAdd,
+            bagsToAdd = bagsToAdd,
+            shotsToAdd = shotsToAdd
+        )
     }
 
     suspend fun restore(context: Context, dao: BeanDao, contents: BackupContents, replace: Boolean): RestoreResult {
