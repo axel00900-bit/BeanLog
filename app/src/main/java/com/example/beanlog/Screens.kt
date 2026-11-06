@@ -701,17 +701,34 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val randomizedRoasters = remember { ROASTERS.shuffled() }
     var selectedRoaster by remember { mutableStateOf<RoasterProfile?>(null) }
     var search by remember { mutableStateOf("") }
-    var selectedCity by remember { mutableStateOf("All countries") }
-    var cityMenu by remember { mutableStateOf(false) }
-    val cities = listOf("All countries", "Denmark", "Portugal", "Aarhus", "Copenhagen", "Frederiksberg", "Værløse", "Charlottenlund", "Ebeltoft", "Odder", "Aalborg", "Aarup", "Odense", "Helsingør", "Lisbon", "Cascais", "São Domingos de Rana", "Oeiras", "Porto", "Vila Nova de Gaia", "Albufeira", "Lagos")
+    var selectedCountry by remember { mutableStateOf("All countries") }
+    var selectedArea by remember { mutableStateOf("All areas") }
+    var countryMenu by remember { mutableStateOf(false) }
+    var areaMenu by remember { mutableStateOf(false) }
+    val countries = remember(randomizedRoasters) {
+        listOf("All countries") + randomizedRoasters.map { it.country }.distinct().sorted()
+    }
+    val areasForCountry = remember(randomizedRoasters, selectedCountry) {
+        if (selectedCountry == "All countries") emptyList()
+        else randomizedRoasters.filter { it.country.equals(selectedCountry, ignoreCase = true) }
+            .flatMap { roaster ->
+                roaster.area.split("·").map { it.trim() } +
+                    roaster.locations.map { it.city.substringBefore(",").trim() }
+            }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+    }
     val visibleRoasters = randomizedRoasters.filter { roaster ->
         val matchesSearch = search.isBlank() || listOf(roaster.name, roaster.area, roaster.description)
             .any { it.contains(search.trim(), ignoreCase = true) } ||
             roaster.aliases.any { it.contains(search.trim(), ignoreCase = true) }
-        val matchesCity = selectedCity == "All countries" || roaster.country.equals(selectedCity, ignoreCase = true) ||
-            roaster.area.split("·").any { it.trim().equals(selectedCity, ignoreCase = true) } ||
-            roaster.locations.any { it.city.contains(selectedCity, ignoreCase = true) }
-        matchesSearch && matchesCity
+        val matchesCountry = selectedCountry == "All countries" ||
+            roaster.country.equals(selectedCountry, ignoreCase = true)
+        val matchesArea = selectedArea == "All areas" ||
+            roaster.area.split("·").any { it.trim().equals(selectedArea, ignoreCase = true) } ||
+            roaster.locations.any { it.city.substringBefore(",").trim().equals(selectedArea, ignoreCase = true) }
+        matchesSearch && matchesCountry && matchesArea
     }
 
     Scaffold(
@@ -750,19 +767,52 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                         colors = beanTextFieldColors()
                     )
                     Spacer(Modifier.height(8.dp))
-                    Box {
-                        OutlinedButton(onClick = { cityMenu = true }) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null)
-                            Spacer(Modifier.width(6.dp))
-                            Text(selectedCity)
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose city")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { countryMenu = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Public, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(selectedCountry, modifier = Modifier.weight(1f), maxLines = 1)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose country")
+                            }
+                            DropdownMenu(expanded = countryMenu, onDismissRequest = { countryMenu = false }) {
+                                countries.forEach { country ->
+                                    DropdownMenuItem(
+                                        text = { Text(country) },
+                                        onClick = {
+                                            selectedCountry = country
+                                            selectedArea = "All areas"
+                                            countryMenu = false
+                                        }
+                                    )
+                                }
+                            }
                         }
-                        DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
-                            cities.forEach { city ->
-                                DropdownMenuItem(
-                                    text = { Text(city) },
-                                    onClick = { selectedCity = city; cityMenu = false }
-                                )
+                        Box(Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { if (selectedCountry != "All countries") areaMenu = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = selectedCountry != "All countries"
+                            ) {
+                                Icon(Icons.Default.LocationOn, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text(selectedArea, modifier = Modifier.weight(1f), maxLines = 1)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose area")
+                            }
+                            DropdownMenu(expanded = areaMenu, onDismissRequest = { areaMenu = false }) {
+                                (listOf("All areas") + areasForCountry).forEach { area ->
+                                    DropdownMenuItem(
+                                        text = { Text(area) },
+                                        onClick = { selectedArea = area; areaMenu = false }
+                                    )
+                                }
                             }
                         }
                     }
