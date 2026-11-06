@@ -972,9 +972,9 @@ private fun SectionSwitchBar(
     onAdd: (() -> Unit)? = null
 ) {
     Surface(
-        color = Color(0xFFE2CFB7).copy(alpha = 0.96f),
+        color = Color.Transparent,
         tonalElevation = 0.dp,
-        shadowElevation = 6.dp
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding()
@@ -1167,10 +1167,13 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
             }
             items(sortedBeans, key = { it.first.id }) { (b, count, beanLiked) ->
                 Card(onClick = { onOpen(b.id) }, modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor=CoffeeCard, contentColor=CoffeeCardText),
-                    border = BorderStroke(1.dp, DarkRoast.copy(alpha = 0.28f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)) {
-                    Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (count == 0) CoffeeCard.copy(alpha = 0.78f) else CoffeeCard,
+                        contentColor = CoffeeCardText
+                    ),
+                    border = BorderStroke(1.dp, DarkRoast.copy(alpha = if (count == 0) 0.16f else 0.28f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = if (count == 0) 1.dp else 5.dp)) {
+                    Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .88f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
                         if (b.photoPath != null) BeanPhoto(b.photoPath, Modifier.size(imageSize * 0.9f, imageSize))
                         else CoffeeBagIcon(Modifier.size(imageSize))
