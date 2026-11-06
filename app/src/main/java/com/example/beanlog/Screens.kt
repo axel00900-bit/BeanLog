@@ -1347,8 +1347,24 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
       Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price / bag.weightG.coerceAtLeast(1), bag.currency, 3)}/g)")
       cur?.let { c ->
        if (c != bag.currency) {
-        Rates.convert(bag.price, bag.currency, c)?.let { converted ->
-         Text("≈ ${moneyWithCurrency(converted, c)} (approx.)",style=MaterialTheme.typography.bodySmall)
+        Rates.convert(bag.price, bag.currency, c)?.let { convertedTotal ->
+         Surface(
+          color=Color(0xFFEADCCB).copy(alpha=0.78f),
+          shape=MaterialTheme.shapes.medium,
+          modifier=Modifier.fillMaxWidth()
+         ) {
+          Column(Modifier.padding(horizontal=10.dp, vertical=7.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+           Text("Approximate conversion · $c",style=MaterialTheme.typography.labelMedium)
+           Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+            Text("Total bag price",style=MaterialTheme.typography.bodySmall)
+            Text(moneyWithCurrency(convertedTotal,c),style=MaterialTheme.typography.bodySmall)
+           }
+           Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+            Text("Price per gram",style=MaterialTheme.typography.bodySmall)
+            Text("${moneyWithCurrency(convertedTotal / bag.weightG.coerceAtLeast(1),c,3)}/g",style=MaterialTheme.typography.bodySmall)
+           }
+          }
+         }
         }
        }
       }
