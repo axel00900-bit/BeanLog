@@ -1025,6 +1025,25 @@ private fun beanNextKeyboardActions(focusManager: androidx.compose.ui.focus.Focu
     onNext = { focusManager.moveFocus(FocusDirection.Next) }
 )
 
+@Composable
+private fun FieldLabel(label: String, explanation: String) {
+    var showHelp by remember(label) { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(label)
+        Surface(Modifier.size(18.dp).clickable { showHelp = true }, shape = CircleShape,
+            color = DarkRoast.copy(alpha = 0.12f), contentColor = DarkRoast) {
+            Box(contentAlignment = Alignment.Center) { Text("?", style = MaterialTheme.typography.labelSmall) }
+        }
+    }
+    if (showHelp) AlertDialog(
+        onDismissRequest = { showHelp = false },
+        title = { Text(label, color = DarkRoast) },
+        text = { Text(explanation, color = DarkRoast) },
+        confirmButton = { TextButton(onClick = { showHelp = false }) { Text("Got it") } },
+        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+    )
+}
+
 // ---------- Add / edit bean ----------
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -1036,7 +1055,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     var country by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-    var roast by remember { mutableStateOf("Medium") }
+    var roast by remember { mutableStateOf("") }
     var score by remember { mutableStateOf("") }
     var photo by remember { mutableStateOf<String?>(null) }
     var originalPhoto by remember { mutableStateOf<String?>(null) }
@@ -1044,6 +1063,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     var cOut by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
     var origin by remember { mutableStateOf("") }; var farm by remember { mutableStateOf("") }
+    var region by remember { mutableStateOf("") }
     var variety by remember { mutableStateOf("") }; var processing by remember { mutableStateOf("") }
 
     LaunchedEffect(id) {
@@ -1053,7 +1073,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             score = it.cuppingScore?.toString() ?: ""; photo = it.photoPath; originalPhoto = it.photoPath
             cIn = it.coffeeInG?.toString() ?: ""; cOut = it.coffeeOutG?.toString() ?: ""
             time = it.brewTimeSec?.toString() ?: ""
-            origin=it.origin; farm=it.farm; variety=it.variety; processing=it.processing
+            origin=it.origin; farm=it.farm; region=it.region; variety=it.variety; processing=it.processing
         }
     }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -1079,7 +1099,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                 scope.launch {
                     val bean = Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
                         score.num(), photo, cIn.num(), cOut.num(), time.toIntOrNull(),
-                        origin=origin.trim(), farm=farm.trim(), variety=variety.trim(), processing=processing.trim())
+                        origin=origin.trim(), farm=farm.trim(), region=region.trim(), variety=variety.trim(), processing=processing.trim())
                     val savedId = if (id == 0L) dao.insertBean(bean) else {
                         dao.save(bean)
                         id
@@ -1105,8 +1125,8 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = beanNextKeyboardOptions, keyboardActions = beanNextKeyboardActions(focusManager))
             OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            OutlinedTextField(notes, { notes = it }, label = { Text("Flavour notes") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            Text("Roast level", style = MaterialTheme.typography.labelLarge)
+            OutlinedTextField(notes, { notes = it }, label = { FieldLabel("Flavour notes", "These are the flavours the roaster describes for the coffee. They give you an indication of what to look for when tasting your brewed coffee and help you understand whether your brewing recipe brings out the intended characteristics.") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            FieldLabel("Roast level", "Roast-level colours are approximate indications of how dark or light the coffee has been roasted. Lighter roasts can sometimes be more difficult to grind and extract, depending on your grinder and brewing equipment.")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ROAST_LEVELS.forEach { level ->
                     val roastColor = when (level) {
@@ -1119,7 +1139,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                     val selected = roast == level
                     FilterChip(
                         selected = selected,
-                        onClick = { roast = level },
+                        onClick = { roast = if (selected) "" else level },
                         label = { Text(level) },
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = roastColor.copy(alpha = 0.16f),
@@ -1131,16 +1151,17 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                     )
                 }
             }
-            OutlinedTextField(score, { score = it }, label = { Text("Cupping score") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(score, { score = it }, label = { FieldLabel("Cupping score", "A cupping score is a standardised 100-point quality rating given to specialty coffee by trained tasters, known as Q Graders, during a sensory evaluation process called cupping.") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             HorizontalDivider(Modifier.padding(vertical=8.dp))
             Text("Coffee details (optional)",style=MaterialTheme.typography.titleMedium)
-            OutlinedTextField(origin,{origin=it},label={Text("Origin")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            OutlinedTextField(farm,{farm=it},label={Text("Farm")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            OutlinedTextField(variety,{variety=it},label={Text("Variety")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            OutlinedTextField(processing,{processing=it},label={Text("Processing")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(origin,{origin=it},label={FieldLabel("Origin", "Where was the coffee grown? Origin is important for transparency and traceability. Different countries, regions and growing elevations can influence flavour.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(farm,{farm=it},label={FieldLabel("Farm", "Knowing the farm helps with transparency and traceability. Different farms can produce different flavour profiles, and farm information can help you understand how and where the coffee was produced.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(region,{region=it},label={FieldLabel("Region", "The wider geographical area where the coffee was grown. Regional climate, soil, elevation and local practices can influence flavour.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(variety,{variety=it},label={FieldLabel("Variety", "Arabica and Robusta are the two best-known coffee species. Within them, there are many varieties with different characteristics, plant structures, yields and potential flavour profiles.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            OutlinedTextField(processing,{processing=it},label={FieldLabel("Processing", "Coffee processing prepares the coffee seed after harvest. Common methods include Washed (fruit removed before drying), Natural (whole cherry dried around the seed), Honey (some fruit mucilage remains), Anaerobic fermentation (fermentation with limited oxygen) and Wet-hulled (parchment removed while the coffee is still wet). These methods can influence sweetness, acidity, body and fruit character.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Text("Recommended brew settings", style = MaterialTheme.typography.titleMedium)
+            FieldLabel("Recommended brew settings", "The roaster sometimes provides a recommended dose, yield and approximate brewing time. These are useful starting points. You can also enter your own recipe after experimenting and compare it with the shots you record in BeanLog to see which recipes work best and which you like or dislike.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(cIn, { cIn = it }, label = { Text("In (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
                 OutlinedTextField(cOut, { cOut = it }, label = { Text("Out (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
@@ -1173,8 +1194,9 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
     val bags by dao.bags(id).collectAsState(emptyList())
     val scope = rememberCoroutineScope()
     var showBagDialog by remember { mutableStateOf(false) }
+    var askToAddBag by remember { mutableStateOf(false) }
     LaunchedEffect(autoOpenAddBag) {
-        if (autoOpenAddBag) showBagDialog = true
+        if (autoOpenAddBag) askToAddBag = true
     }
     var editingBag by remember { mutableStateOf<Bag?>(null) }
     var showFinishedBags by remember { mutableStateOf(false) }
@@ -1211,13 +1233,18 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
             item {
                 if (b.photoPath != null) {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        BeanPhoto(b.photoPath, Modifier.size(156.dp, 184.dp))
+                        // Three times the 64 dp main-list thumbnail in both dimensions.
+                        BeanPhoto(b.photoPath, Modifier.size(173.dp, 192.dp))
                     }
                 }
                 Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}", style = MaterialTheme.typography.titleMedium)
-                Text("Roast: ${b.roastLevel}" + (b.cuppingScore?.let { " · Cup Score: $it" } ?: ""))
-                if (b.flavourNotes.isNotBlank()) Text("Notes: ${b.flavourNotes}")
-                listOf("Origin" to (b.origin.takeIf{it.isNotBlank()}?.let{ "${countryFlag(it)} $it" } ?: ""), "Farm" to b.farm,"Variety" to b.variety,"Processing" to b.processing).filter{it.second.isNotBlank()}.forEach{(k,v)->Text("$k: $v")}
+                if (b.roastLevel.isNotBlank()) Text("Roast: ${b.roastLevel}")
+                b.cuppingScore?.let { Text("Cupping score: $it") }
+                if (b.flavourNotes.isNotBlank()) Text("Flavour notes: ${b.flavourNotes}")
+                listOf(
+                    "Origin" to (b.origin.takeIf{it.isNotBlank()}?.let{ "${countryFlag(it)} $it" } ?: ""),
+                    "Farm" to b.farm, "Region" to b.region, "Variety" to b.variety, "Processing" to b.processing
+                ).filter{it.second.isNotBlank()}.forEach{(k,v)->Text("$k: $v")}
                 Spacer(Modifier.height(8.dp))
                 Text("Recommended brew", style = MaterialTheme.typography.titleMedium)
                 Text("${b.coffeeInG ?: "–"} g in → ${b.coffeeOutG ?: "–"} g out in ${b.brewTimeSec ?: "–"} s")
@@ -1256,6 +1283,14 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
         }
     }
 
+    if (askToAddBag) AlertDialog(
+        onDismissRequest = { askToAddBag = false },
+        title = { Text("Add a coffee bag?", color = DarkRoast) },
+        text = { Text("Would you like to add a coffee bag for this bean?", color = DarkRoast) },
+        confirmButton = { TextButton(onClick = { askToAddBag = false; showBagDialog = true }) { Text("Yes") } },
+        dismissButton = { TextButton(onClick = { askToAddBag = false }) { Text("No") } },
+        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+    )
     if(showBagDialog) BagDialog(null,{showBagDialog=false}) { scope.launch{dao.saveBag(it.copy(beanId=id));showBagDialog=false} }
     editingBag?.let { bag -> BagDialog(bag,{editingBag=null}) { scope.launch{dao.saveBag(it.copy(beanId=id));editingBag=null} } }
 }
@@ -1289,7 +1324,12 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
     TextButton(onClick={add=true}){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
    }
    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
-   shots.take(2).forEach{shot->Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)}
+   shots.take(2).forEach{shot->
+    Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
+     Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)
+     if (shot.note.isNotBlank()) Text("Note: ${shot.note}",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.78f))
+    }
+   }
    if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
  }
@@ -1318,6 +1358,25 @@ private fun shotSummary(shot:Shot):String =
         (shot.grindSetting.takeIf{it.isNotBlank()}?.let{" · Grind $it"} ?: "") +
         (when(shot.liked){true->" · 👍";false->" · 👎";null->""})
 
+private fun shotTasteTips(note: String): List<String> {
+    val text = note.lowercase()
+    val tips = mutableListOf<String>()
+    if (listOf("bitter", "harsh", "over-extract").any { it in text })
+        tips += "Bitter or harsh: try grinding a little coarser, shortening extraction, or lowering water temperature. Change one variable at a time."
+    if (listOf("sour", "sharp", "under-extract", "acidic").any { it in text })
+        tips += "Sour or sharp: try grinding a little finer, extending extraction, or raising water temperature. Naturally bright coffee can still taste pleasantly acidic."
+    if (listOf("watery", "weak", "thin").any { it in text })
+        tips += "Watery or weak: check dose and yield, and make sure the coffee is extracting evenly. A shorter yield can increase strength."
+    if (listOf("dry", "astringent").any { it in text })
+        tips += "Dry or astringent: check for uneven extraction and channeling. Improve distribution and puck preparation before changing several variables."
+    if (listOf("smooth", "balanced", "sweet", "nice").any { it in text })
+        tips += "You described a pleasant cup. Save this recipe as a reference and change only one thing when experimenting."
+    tips += "Tamping: distribute the grounds evenly, keep the tamper level, and press straight down with consistent pressure. A level puck matters more than pressing as hard as possible."
+    tips += "Puck preparation: break up clumps and distribute grounds evenly to reduce channeling. Keep the basket and portafilter clean."
+    tips += "These are starting points, not universal rules. Coffee, roast, grinder, water and personal taste all affect the result."
+    return tips
+}
+
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao) {
  AlertDialog(
@@ -1343,6 +1402,16 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
+       if (shot.note.isNotBlank()) Text(shot.note,style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
+       var showTips by remember(shot.id) { mutableStateOf(false) }
+       TextButton(onClick={showTips=!showTips},colors=ButtonDefaults.textButtonColors(contentColor=DarkRoast.copy(alpha=0.78f))) {
+        Text(if(showTips) "Hide tips" else "☼ Tips")
+       }
+       if(showTips) Surface(color=Color(0xFFEADCCB).copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
+        Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+         shotTasteTips(shot.note).forEach { Text("• $it",style=MaterialTheme.typography.bodySmall,color=DarkRoast) }
+        }
+       }
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
@@ -1370,7 +1439,7 @@ private fun ratioText(i:Double,o:Double)=if(i>0)String.format(java.util.Locale.U
 private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  val focusManager = LocalFocusManager.current
  var date by remember(initial?.id){mutableStateOf(initial?.roastDate?.takeIf{it.isNotBlank()}?:todayIso())}
- var unknownDate by remember(initial?.id){mutableStateOf(initial?.roastDate.isNullOrBlank())}
+ var unknownDate by remember(initial?.id){mutableStateOf(initial != null && initial.roastDate.isBlank())}
  var picker by remember{mutableStateOf(false)}
  var weight by remember(initial?.id){mutableStateOf(initial?.weightG?.toString()?:"250")}
  var price by remember(initial?.id){mutableStateOf(initial?.price?.takeIf{it>0.0}?.toString()?:"")}
@@ -1380,6 +1449,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
+  FieldLabel("Roast date", "Knowing the roast date helps you understand freshness and how the coffee changes as it rests and ages. The ideal resting time depends on the coffee, roast level and brewing method.")
   Row(verticalAlignment=Alignment.CenterVertically) {
    OutlinedButton(onClick={picker=true},modifier=Modifier.weight(1f),enabled=!unknownDate){Text(if(unknownDate) "Roast date unknown" else "Roast date: ${isoToDisplay(date)}")}
    Row(verticalAlignment=Alignment.CenterVertically) {
@@ -1441,6 +1511,7 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
  var output by remember{mutableStateOf("36")}
  var seconds by remember{mutableStateOf("28")}
  var grind by remember{mutableStateOf("")}
+ var note by remember{mutableStateOf("")}
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text("Add shot",color=DarkRoast)},
@@ -1450,8 +1521,9 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(note,{note=it},label={Text("Tasting notes (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
   }},
-  confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim()))}){Text("Save")}},
+  confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))}){Text("Save")}},
   dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
   shape=MaterialTheme.shapes.extraLarge,
   containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
