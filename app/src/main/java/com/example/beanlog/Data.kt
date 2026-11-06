@@ -95,6 +95,13 @@ interface BeanDao {
     @Query("SELECT * FROM Bean WHERE id = :id") fun bean(id: Long): Flow<Bean?>
     @Insert suspend fun insertBean(bean: Bean): Long
     @Upsert suspend fun save(bean: Bean)
+    @Query("SELECT * FROM Bean") suspend fun allBeans(): List<Bean>
+    @Query("SELECT * FROM Bag") suspend fun allBags(): List<Bag>
+    @Query("SELECT * FROM Shot") suspend fun allShots(): List<Shot>
+    @Insert suspend fun insertBag(bag: Bag): Long
+    @Query("DELETE FROM Shot") suspend fun clearShots()
+    @Query("DELETE FROM Bag") suspend fun clearBags()
+    @Query("DELETE FROM Bean") suspend fun clearBeans()
     @Delete suspend fun delete(bean: Bean)
 
     @Query("SELECT * FROM Bag WHERE beanId = :beanId ORDER BY isFinished ASC, roastDate DESC")
