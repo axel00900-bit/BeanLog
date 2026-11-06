@@ -691,8 +691,6 @@ private val ROASTERS = listOf(
     )
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun roasterBroadArea(roaster: RoasterProfile): String {
     val places = (listOf(roaster.area) + roaster.locations.map { it.city })
         .joinToString(" ").lowercase()
@@ -716,6 +714,7 @@ private fun roasterBroadArea(roaster: RoasterProfile): String {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val context = LocalContext.current
