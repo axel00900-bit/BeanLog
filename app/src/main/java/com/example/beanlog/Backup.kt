@@ -16,7 +16,7 @@ import java.util.zip.ZipOutputStream
 data class BackupPreview(val beans: Int, val bags: Int, val shots: Int)
 data class RestoreResult(val beansAdded: Int, val bagsAdded: Int, val shotsAdded: Int)
 
-private data class BackupContents(
+data class BackupContents(
     val beans: List<Bean>,
     val bags: List<Bag>,
     val shots: List<Shot>,
