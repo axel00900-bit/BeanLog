@@ -1243,7 +1243,8 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery *") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = beanNextKeyboardOptions, keyboardActions = beanNextKeyboardActions(focusManager))
             OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-            OutlinedTextField(notes, { notes = it }, label = { FieldLabel("Flavour notes", "These are the flavours the roaster describes for the coffee. They give you an indication of what to look for when tasting your brewed coffee and help you understand whether your brewing recipe brings out the intended characteristics.") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+            FieldLabel("Flavour notes", "These are the flavours the roaster describes for the coffee. They give you an indication of what to look for when tasting your brewed coffee and help you understand whether your brewing recipe brings out the intended characteristics.")
+            OutlinedTextField(notes, { notes = it }, placeholder = { Text("e.g. chocolate, citrus, caramel") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             FieldLabel("Roast level", "Roast-level colours are approximate indications of how dark or light the coffee has been roasted. Lighter roasts can sometimes be more difficult to grind and extract, depending on your grinder and brewing equipment.")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ROAST_LEVELS.forEach { level ->
@@ -1381,12 +1382,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 }
                 if (displayCur != null) {
                     Text(
-                        buildString {
-                            append("Converted amounts use approximate ECB reference rates")
-                            Rates.rateDate?.let { append(" dated $it") }
-                            append(". Rates refresh about weekly when internet is available.")
-                            if (!ratesOk) append(" Showing the last saved rates.")
-                        },
+                        "Conversions are approximate. Exchange rates are updated with app updates. Check online for exact rates.",
                         style = MaterialTheme.typography.bodySmall,
                         color = DarkRoast.copy(alpha = 0.78f)
                     )
