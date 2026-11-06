@@ -716,6 +716,7 @@ private fun roasterBroadArea(roaster: RoasterProfile): String {
     }
 }
 
+@Composable
 private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
