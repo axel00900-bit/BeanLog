@@ -63,6 +63,8 @@ import com.example.beanlog.ui.theme.CoffeeCream
 import com.example.beanlog.ui.theme.DarkRoast
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -987,6 +989,46 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
     var settingsOpen by remember { mutableStateOf(false) }
     var remindersOn by remember { mutableStateOf(shotRemindersEnabled(context)) }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val scope = rememberCoroutineScope()
+    var backupMessage by remember { mutableStateOf<String?>(null) }
+    var restoreError by remember { mutableStateOf<String?>(null) }
+    var pendingBackup by remember { mutableStateOf<BackupContents?>(null) }
+    var pendingPreview by remember { mutableStateOf<BackupPreview?>(null) }
+    var restoreBusy by remember { mutableStateOf(false) }
+    val createBackupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val output = context.contentResolver.openOutputStream(uri)
+                        ?: error("Could not open the selected location.")
+                    output.use { BeanLogBackup.write(dao, it) }
+                }
+            }
+            backupMessage = if (result.isSuccess) "Your BeanLog backup was saved successfully." else
+                "The backup could not be created: ${result.exceptionOrNull()?.localizedMessage ?: "unknown error"}"
+        }
+    }
+    val openBackupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val input = context.contentResolver.openInputStream(uri)
+                        ?: error("Could not open the selected backup.")
+                    input.use { BeanLogBackup.read(it) }
+                }
+            }
+            result.onSuccess { (preview, contents) ->
+                pendingPreview = preview
+                pendingBackup = contents
+            }.onFailure {
+                restoreError = it.localizedMessage ?: "This file could not be read as a BeanLog backup."
+            }
+        }
+    }
 
     val sortedBeans = remember(beans, sortOption, ascending) {
         when (sortOption) {
@@ -1098,7 +1140,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
     if(settingsOpen) AlertDialog(
         onDismissRequest={settingsOpen=false},
         title={Text("Settings")},
-        text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)){
+        text={Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
             Row(verticalAlignment=Alignment.CenterVertically){
                 Text("Shot feedback reminder (30 min)",modifier=Modifier.weight(1f))
                 Switch(checked=remindersOn,onCheckedChange={enabled->
@@ -1110,9 +1152,98 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                 })
             }
             Text("When enabled, BeanLog asks whether you liked each shot 30 minutes after it is saved. Notifications must also be allowed by Android.",style=MaterialTheme.typography.bodySmall)
+            HorizontalDivider()
+            Text("Backup & Restore",style=MaterialTheme.typography.titleMedium,color=DarkRoast)
+            Text("Save your beans, bags, shot history, notes and coffee photos in one backup file.",style=MaterialTheme.typography.bodySmall)
+            OutlinedButton(
+                onClick={
+                    settingsOpen=false
+                    val filename="BeanLog-backup-${SimpleDateFormat("yyyyMMdd-HHmm",Locale.US).format(Date())}.zip"
+                    createBackupLauncher.launch(filename)
+                },
+                modifier=Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Backup,contentDescription=null)
+                Spacer(Modifier.width(8.dp))
+                Text("Back up BeanLog")
+            }
+            OutlinedButton(
+                onClick={
+                    settingsOpen=false
+                    openBackupLauncher.launch(arrayOf("application/zip","application/octet-stream"))
+                },
+                modifier=Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Restore,contentDescription=null)
+                Spacer(Modifier.width(8.dp))
+                Text("Restore from backup")
+            }
+            Text("Choose a location such as your phone, Google Drive, Dropbox or another file service.",style=MaterialTheme.typography.bodySmall)
         }},
         confirmButton={TextButton(onClick={settingsOpen=false}){Text("Done")}}
     )
+    pendingBackup?.let { contents ->
+        val preview = pendingPreview
+        if (preview != null) AlertDialog(
+            onDismissRequest={if(!restoreBusy){pendingBackup=null;pendingPreview=null}},
+            title={Text("Restore BeanLog backup?",color=DarkRoast)},
+            text={
+                Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    Text("This backup contains:")
+                    Text("• ${preview.beans} coffee beans")
+                    Text("• ${preview.bags} coffee bags")
+                    Text("• ${preview.shots} shots")
+                    Text("Choose how to restore this data.")
+                    Text("Merge adds missing items to your current collection and skips duplicates.",style=MaterialTheme.typography.bodySmall)
+                    Text("Replace permanently clears your current beans, bags and shot history before restoring this backup.",style=MaterialTheme.typography.bodySmall)
+                    if(restoreBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+            },
+            confirmButton={
+                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                    TextButton(enabled=!restoreBusy,onClick={
+                        restoreBusy=true
+                        scope.launch {
+                            val result=runCatching {
+                                withContext(Dispatchers.IO) { BeanLogBackup.restore(context,dao,contents,false) }
+                            }
+                            restoreBusy=false
+                            pendingBackup=null;pendingPreview=null
+                            backupMessage=result.fold(
+                                { "Merge complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} shots." },
+                                { "Restore failed: ${it.localizedMessage ?: "unknown error"}" }
+                            )
+                        }
+                    }) { Text("Merge") }
+                    TextButton(enabled=!restoreBusy,onClick={
+                        restoreBusy=true
+                        scope.launch {
+                            val result=runCatching {
+                                withContext(Dispatchers.IO) { BeanLogBackup.restore(context,dao,contents,true) }
+                            }
+                            restoreBusy=false
+                            pendingBackup=null;pendingPreview=null
+                            backupMessage=result.fold(
+                                { "Restore complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} shots." },
+                                { "Restore failed: ${it.localizedMessage ?: "unknown error"}" }
+                            )
+                        }
+                    }) { Text("Replace all",color=Color(0xFF9B2C20)) }
+                }
+            },
+            dismissButton={TextButton(enabled=!restoreBusy,onClick={pendingBackup=null;pendingPreview=null}){Text("Cancel")}},
+            containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+        )
+    }
+    (backupMessage ?: restoreError)?.let { message ->
+        AlertDialog(
+            onDismissRequest={backupMessage=null;restoreError=null},
+            title={Text(if(message.contains("failed",true)||message.contains("could not",true)) "Backup / restore" else "BeanLog backup",color=DarkRoast)},
+            text={Text(message,color=DarkRoast)},
+            confirmButton={TextButton(onClick={backupMessage=null;restoreError=null}){Text("OK")}},
+            containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+        )
+    }
 }
 
 @Composable
