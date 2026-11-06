@@ -487,6 +487,9 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
 
     Scaffold(
         containerColor = Color.Transparent,
+        bottomBar = {
+            SectionSwitchBar(label = "My Beans", isRoasters = true, onClick = onBack)
+        },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -682,6 +685,47 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
 }
 
 
+@Composable
+private fun SectionSwitchBar(label: String, isRoasters: Boolean, onClick: () -> Unit) {
+    Surface(
+        color = Color(0xFFE2CFB7).copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
+        shadowElevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+                .padding(start = 14.dp, top = 9.dp, bottom = 9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                onClick = onClick,
+                color = Color(0xFF493323),
+                contentColor = Color(0xFFFFF8EC),
+                shape = MaterialTheme.shapes.large,
+                shadowElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    if (isRoasters) {
+                        BeanActionIcon(
+                            BeanIconAction.BEAN,
+                            "My Beans",
+                            modifier = Modifier.size(23.dp),
+                            color = Color(0xFFFFF8EC)
+                        )
+                    } else {
+                        Icon(Icons.Default.Storefront, contentDescription = "Roasters")
+                    }
+                    Text(label, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
+
 // ---------- List ----------
 private enum class BeanSortOption(val label: String) {
     ROAST_DATE("Roast date"),
@@ -735,14 +779,14 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                     Text("My Beans", style = MaterialTheme.typography.headlineMedium)
                 },
                 actions = {
-                    IconButton(onClick = onRoasters) {
-                        Icon(Icons.Default.Storefront, "Roasters", tint = DarkRoast)
-                    }
                     IconButton(onClick = { settingsOpen = true }) {
                         Icon(Icons.Default.Settings, "Settings", tint = DarkRoast)
                     }
                 }
             )
+        },
+        bottomBar = {
+            SectionSwitchBar(label = "Roasters", isRoasters = false, onClick = onRoasters)
         },
         floatingActionButton = {
             FloatingActionButton(
