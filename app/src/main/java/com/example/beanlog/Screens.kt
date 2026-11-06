@@ -688,6 +688,160 @@ private val ROASTERS = listOf(
         website = "https://clifftopcoffee.com",
         locations = listOf(RoasterLocation("LACO Business Hub", "LACO Business Hub, Chinicato", "Lagos, Portugal", "Roastery (visitor access limited)", "Open Tuesdays and on special occasions")),
         note = "Another specialty roastery operates in Albufeira. Micro-roastery status, awards and Instagram still need verification."
+    ),
+    // Benelux — Netherlands
+    RoasterProfile(
+        name = "DAK Coffee Roasters", area = "Amsterdam", country = "Netherlands", micro = "Unknown",
+        description = "Amsterdam specialty roaster with a strong focus on expressive coffees, sourcing and roasting. Its showroom offers coffee to drink and beans to take home.",
+        website = "https://www.dakcoffeeroasters.com",
+        locations = listOf(RoasterLocation("DAK Showroom", "Bellamyplein 16H, 1053 AS", "Amsterdam, Netherlands", "Showroom / coffee bar")),
+        note = "The Nieuwendammerdijk roasting facility is not open to the public, so it is not listed as a customer-facing location."
+    ),
+    RoasterProfile(
+        name = "Friedhats Coffee Roasters", area = "Amsterdam", country = "Netherlands", micro = "Unknown",
+        description = "Independent Amsterdam specialty roaster known for distinctive, carefully sourced coffees and a playful approach to roasting.",
+        website = "https://friedhats.com",
+        locations = listOf(RoasterLocation("Fuku Café", "Bos en Lommerweg 136, 1055 ED", "Amsterdam, Netherlands", "Coffee shop / retail")),
+        note = "The roastery itself is not open for general visits; visits are arranged for wholesale accounts by appointment."
+    ),
+    RoasterProfile(
+        name = "LOT61 Coffee Roasters", area = "Amsterdam · Leidschendam · Almere", country = "Netherlands", micro = "Unknown",
+        description = "Amsterdam-founded specialty coffee roaster with cafés, retail coffee and a dedicated roasting operation.",
+        website = "https://lot61.com",
+        locations = listOf(
+            RoasterLocation("Centraal Station", "Oosterdoksstraat 4, 1011 DK", "Amsterdam, Netherlands", "Coffee shop"),
+            RoasterLocation("Kinkerstraat", "Kinkerstraat 112, 1053 ED", "Amsterdam, Netherlands", "Coffee shop"),
+            RoasterLocation("Hendrik Jacobszstraat", "Hendrik Jacobszstraat 18, 1075 PD", "Amsterdam, Netherlands", "Coffee shop"),
+            RoasterLocation("Westfield", "Liguster 52, 2262 AC", "Leidschendam, Netherlands", "Coffee shop"),
+            RoasterLocation("Almere", "Stationsplein 42, 1315 KT", "Almere, Netherlands", "Coffee shop")
+        ),
+        note = "The Archangelkade roasting address is not listed as a shop."
+    ),
+    RoasterProfile(
+        name = "Rum Baba Coffee Roasters", area = "Amsterdam · Haarlem", country = "Netherlands", micro = "Unknown",
+        description = "Independent Amsterdam specialty roastery with a focus on carefully sourced coffees, expressive roast profiles and neighbourhood coffee bars.",
+        website = "https://rumbaba.nl",
+        locations = listOf(
+            RoasterLocation("Elandsgracht", "Elandsgracht 134", "Amsterdam, Netherlands", "Brew bar / shop"),
+            RoasterLocation("East", "Pretoriusstraat 15", "Amsterdam, Netherlands", "Bakery / coffee shop")
+        ),
+        note = "The Haarlem roastery is available for order pickup by appointment; it is not listed as a regular walk-in café."
+    ),
+    RoasterProfile(
+        name = "Manhattan Coffee Roasters", area = "Rotterdam", country = "Netherlands", micro = "Unknown",
+        description = "Rotterdam specialty coffee roaster known for carefully selected lots and distinctive, modern roasting.",
+        website = "https://manhattancoffeeroasters.com",
+        note = "A Rotterdam base is listed by specialty-coffee directories, but a current public-facing shop address has not yet been confirmed."
+    ),
+    // Benelux — Belgium
+    RoasterProfile(
+        name = "Andy Roasters", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Antwerp roaster founded by coffee professionals, roasting its own coffees and serving them in its cafés.",
+        website = "https://andy-roasters.be",
+        locations = listOf(
+            RoasterLocation("Flagship Store", "Amerikalei 82, 2000", "Antwerp, Belgium", "Coffee shop"),
+            RoasterLocation("Cafe Betty", "Belpairestraat 28, 2600", "Berchem, Antwerp, Belgium", "Coffee shop")
+        )
+    ),
+    RoasterProfile(
+        name = "Caffenation Specialty Coffee Roasters", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Antwerp-born specialty roaster with a long-standing focus on freshly roasted coffee, espresso and filter.",
+        website = "https://caffenation.be",
+        locations = listOf(
+            RoasterLocation("PAKT", "Lamorinièrestraat 161, 2018", "Antwerp, Belgium", "Coffee bar / roastery / offices"),
+            RoasterLocation("City Centre", "Mechelsesteenweg 16, 2000", "Antwerp, Belgium", "Coffee bar")
+        )
+    ),
+    RoasterProfile(
+        name = "Wide Awake Coffee Roasters", area = "Brussels · Ixelles", country = "Belgium", micro = "Unknown",
+        description = "Brussels specialty coffee roaster with cafés focused on hospitality, carefully prepared coffee and a changing selection.",
+        website = "https://wideawake.coffee",
+        locations = listOf(
+            RoasterLocation("Saint-Catherine", "Rue Sainte-Catherine 2, 1000", "Brussels, Belgium", "Flagship café / shop"),
+            RoasterLocation("Flagey", "Rue Lesbroussart 34, 1050", "Ixelles, Belgium", "Espresso bar")
+        ),
+        note = "The roastery address at Parc Magellan, Rue de Ransbeek 230 1A, is not listed as a public shop."
+    ),
+    // Benelux — Luxembourg
+    RoasterProfile(
+        name = "Feierboun Coffeeroasters", area = "Luxembourg City · Bascharage", country = "Luxembourg", micro = "Unknown",
+        description = "Luxembourg specialty roaster established in 2020, producing single-farm coffees and specialty blends with an emphasis on responsible sourcing.",
+        website = "https://www.feierboun.lu",
+        locations = listOf(
+            RoasterLocation("Luxembourg City Coffeeshop", "3 Rue des Bains, L-1212", "Luxembourg City, Luxembourg", "Coffee shop"),
+            RoasterLocation("Roastery & Headquarters", "34 Boulevard J-F Kennedy, L-4930", "Bascharage, Luxembourg", "Roastery (by appointment)")
+        )
+    ),
+    // Germany
+    RoasterProfile(
+        name = "Bonanza Coffee Roasters", area = "Berlin", country = "Germany", micro = "Unknown",
+        description = "Berlin specialty coffee pioneer, roasting since 2006 with an emphasis on clarity, precision and expressive coffees.",
+        website = "https://bonanzacoffee.de",
+        locations = listOf(
+            RoasterLocation("Mitte", "Alte Schönhauser Straße 15, 10119", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Jägerstraße", "Jägerstraße 58–60, 10117", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Roastery", "Adalbertstraße 70, 10999", "Berlin, Germany", "Roastery café"),
+            RoasterLocation("Oderberger", "Oderberger Straße 35, 10435", "Berlin, Germany", "Coffee shop")
+        )
+    ),
+    RoasterProfile(
+        name = "THE BARN Coffee Roasters", area = "Berlin · Munich", country = "Germany", micro = "Unknown",
+        description = "Berlin specialty coffee roaster founded in 2010, known for transparent sourcing, single-origin coffees and a network of cafés.",
+        website = "https://thebarn.de",
+        locations = listOf(
+            RoasterLocation("Roastery", "Wattstraße 10–13, 13355", "Berlin, Germany", "Roastery (not open to the public)"),
+            RoasterLocation("Mitte", "Auguststraße 58, 10119", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Rosenthaler Platz", "Weinbergsweg 1, 10119", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Hackescher Markt", "Neue Schönhauser Straße 12, 10178", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Neukölln", "Friedelstraße 27, 12047", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Checkpoint Charlie", "Friedrichstraße 215, 10969", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("München Altstadt", "Tal 15, 80331", "Munich, Germany", "Coffee shop"),
+            RoasterLocation("München Glockenbachviertel", "Müllerstraße 38, 80469", "Munich, Germany", "Coffee shop")
+        ),
+        note = "The Wattstraße production roastery is not open to the public; cafés are listed separately."
+    ),
+    RoasterProfile(
+        name = "Five Elephant", area = "Berlin", country = "Germany", micro = "Unknown",
+        description = "Berlin specialty coffee roaster and bakery founded in 2010, combining carefully sourced coffee with a strong café and food programme.",
+        website = "https://www.fiveelephant.com",
+        locations = listOf(
+            RoasterLocation("Mitte", "Alte Schönhauser Straße 14, 10119", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Kollwitz", "Kollwitzstraße 98, 10435", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Schwedter", "Schwedter Straße 11, 10119", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Kreuzberg", "Glogauer Straße 5, 10999", "Berlin, Germany", "Coffee shop / bakery")
+        )
+    ),
+    RoasterProfile(
+        name = "Flying Roasters", area = "Berlin", country = "Germany", micro = "Unknown",
+        description = "Berlin roastery sourcing directly from producing cooperatives, with a focus on organic coffee and fair working conditions.",
+        website = "https://flyingroasters.de",
+        locations = listOf(RoasterLocation("Kaffeeladen", "Hochstraße 34, 13357", "Berlin, Germany", "Coffee shop / retail"))
+    ),
+    RoasterProfile(
+        name = "19grams Coffee Roasters", area = "Berlin", country = "Germany", micro = "Unknown",
+        description = "Berlin coffee roaster whose story began in Friedrichshain in 2002. Operates cafés where customers can drink coffee and buy freshly roasted beans.",
+        website = "https://19grams.coffee",
+        locations = listOf(
+            RoasterLocation("Alex Roastery & Lab", "Karl-Liebknecht-Straße 13, 10178", "Berlin, Germany", "Roastery café / lab"),
+            RoasterLocation("Boxi", "Boxhagener Straße 74, 10245", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Chaussee", "Chausseestraße 36, 10115", "Berlin, Germany", "Coffee shop"),
+            RoasterLocation("Schlesi", "Schlesische Straße 38, 10997", "Berlin, Germany", "Coffee shop")
+        )
+    ),
+    // Sweden
+    RoasterProfile(
+        name = "Drop Coffee Roasters", area = "Stockholm", country = "Sweden", micro = "Unknown",
+        description = "Independent Stockholm specialty roastery and café, roasting in small batches since 2013. Known for transparent sourcing and clear, bright roast profiles.",
+        website = "https://www.dropcoffee.com",
+        locations = listOf(RoasterLocation("Mariatorget Café", "Wollmar Yxkullsgatan 10, 118 50", "Stockholm, Sweden", "Coffee shop / roastery café")),
+        awards = "Silver medal at the World Coffee Roasting Championship."
+    ),
+    RoasterProfile(
+        name = "Koppi Roasters", area = "Helsingborg", country = "Sweden", micro = "Unknown",
+        description = "Specialty coffee roastery founded in 2007 by Anne Lunell and Charles Nystrand, working closely with coffee producers and roasting to highlight each coffee's origin.",
+        website = "https://koppi.se",
+        locations = listOf(RoasterLocation("Koppi Roastery", "Cindersgatan 8, 252 25", "Helsingborg, Sweden", "Roastery (visits by appointment)")),
+        note = "The roastery is visited by appointment; no regular public café address is listed."
     )
 )
 
@@ -708,6 +862,31 @@ private fun roasterBroadArea(roaster: RoasterProfile): String {
             listOf("lisbon", "lisboa", "oeiras", "cascais", "são domingos de rana").any { it in places } -> "Greater Lisbon"
             listOf("porto", "gaia", "vila nova de gaia").any { it in places } -> "Greater Porto"
             listOf("albufeira", "lagos", "algarve").any { it in places } -> "Algarve"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "netherlands" -> when {
+            "amsterdam" in places || "leidschendam" in places || "almere" in places -> "Greater Amsterdam"
+            "rotterdam" in places -> "Rotterdam"
+            "haarlem" in places -> "Haarlem"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "belgium" -> when {
+            "antwerp" in places || "antwerpen" in places || "berchem" in places -> "Antwerp"
+            "brussels" in places || "ixelles" in places -> "Brussels"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "luxembourg" -> when {
+            "luxembourg city" in places || "luxemburg-city" in places || "bascharage" in places -> "Luxembourg"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "germany" -> when {
+            "berlin" in places -> "Berlin"
+            "munich" in places || "münchen" in places -> "Munich"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "sweden" -> when {
+            "stockholm" in places || "rosersberg" in places -> "Stockholm"
+            "helsingborg" in places -> "Skåne"
             else -> roaster.area.substringBefore("·").trim()
         }
         else -> roaster.area.substringBefore("·").trim()
