@@ -423,6 +423,7 @@ private data class RoasterProfile(
     val name: String,
     val area: String,
     val micro: String,
+    val country: String = "Denmark",
     val description: String,
     val instagram: String? = null,
     val website: String? = null,
@@ -433,7 +434,7 @@ private data class RoasterProfile(
     val note: String = ""
 )
 
-private val DANISH_ROASTERS = listOf(
+private val ROASTERS = listOf(
     RoasterProfile(
         name = "La Cabra", area = "Aarhus · Copenhagen", micro = "No",
         description = "Founded in Aarhus in 2012 by Esben Piper. Light, clear Nordic-style roasting with a focus on origin and transparency. Also operates bakery cafés.",
@@ -578,6 +579,120 @@ private val DANISH_ROASTERS = listOf(
         description = "A roastery reported to supply the Lagoni coffee bar in Helsingør.",
         note = "Customer-facing address, website and Instagram still needed."
     )
+,
+    // Portugal
+
+    RoasterProfile(
+        name = "Fábrica Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Unknown",
+        description = "Founded in 2015 and described as Portugal's first specialty roastery. Focuses on direct partnerships with farmers and roasting in Lisbon.",
+        locations = listOf(
+            RoasterLocation("Portas de Santo Antão", "R. das Portas de Santo Antão 136", "Lisbon, Portugal", "Coffee shop"),
+            RoasterLocation("Rua do Comércio", "R. do Comércio 111", "Lisbon, Portugal", "Coffee shop")
+        ),
+        note = "Micro-roastery status is unconfirmed. No prizes recorded. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Comete Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Yes",
+        description = "Roaster and coffee shop known for light, Scandinavian-style roasts. Part of the specialty coffee movement since 2022, shipping across Portugal and Europe.",
+        locations = listOf(RoasterLocation("Comete", "R. Dr. Almeida Amaral 15A", "Lisbon, Portugal", "Coffee shop / roastery")),
+        note = "Micro-roastery status is likely, based on descriptions by reviewers. Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Olisipo Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Yes",
+        description = "Small-batch roaster focused on sustainable, seasonal specialty coffee, also supplying other specialty cafés. Founded by Antony Watson and Sofia Gonçalves.",
+        locations = listOf(RoasterLocation("Olisipo", "Rua do Cruzeiro 84", "Lisbon, Portugal", "Coffee shop / roastery")),
+        note = "Opening hours are unclear: reports mention Saturdays only, while map listings show weekday hours. Check before visiting. No prizes recorded; website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Torra Roasting & Coffee", area = "Lisbon", country = "Portugal", micro = "Unknown",
+        description = "Lisbon specialty coffee roaster.",
+        locations = listOf(RoasterLocation("Torra", "Tv. do Conde da Ponte 1", "Lisbon, Portugal", "Coffee shop")),
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Micro-roastery status, website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Baobá Specialty Coffee Roasters", area = "Lisbon · Marvila", country = "Portugal", micro = "Unknown",
+        description = "Coffee sourced from its own farm in Brazil and roasted in Lisbon, with a farm-to-cup approach.",
+        locations = listOf(
+            RoasterLocation("Marvila roastery shop", "R. Zófimo Pedroso 18-22", "Marvila, Lisbon, Portugal", "Coffee shop / roastery"),
+            RoasterLocation("Baobá Café Bica", "Rua de S. Paulo 256-258", "Lisbon, Portugal", "Coffee shop")
+        ),
+        note = "Micro-roastery status and awards are unconfirmed. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Simpli Coffee Roasters", area = "Lisbon · Picoas", country = "Portugal", micro = "Unknown",
+        description = "Founded in 2017. Sells its coffee in its own coffee shops alongside food.",
+        locations = listOf(
+            RoasterLocation("Picoas", "Av. Fontes Pereira de Melo 41", "Picoas, Lisbon, Portugal", "Coffee shop"),
+            RoasterLocation("Braamcamp", "R. Braamcamp 64", "Lisbon, Portugal", "Coffee shop")
+        ),
+        note = "Micro-roastery status and awards are unconfirmed. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "SoLo Brewing", area = "Lisbon", country = "Portugal", micro = "Unknown",
+        description = "Experimental coffee lab and brunch spot focused on creative roasting, origin transparency and sustainable practices. Sells beans, brewing accessories and roasting experiences, shipping to Portugal and Spain.",
+        website = "https://solobrewing.pt",
+        locations = listOf(RoasterLocation("SoLo Brewing", "R. Pinheiro Chagas 16B", "Lisbon, Portugal", "Coffee lab / brunch / coffee shop")),
+        awards = "Best Coffee Roaster in Portugal 2025, Porto Coffee Week.",
+        note = "Micro-roastery status and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Unity Coffee Roasters", area = "Cascais · Oeiras", country = "Portugal", micro = "Unknown",
+        description = "Roastery using a Giesen roaster, with a flagship café in Cascais and an Oeiras café opened in December 2024.",
+        awards = "Finalist for Best Coffee Roaster in Portugal 2025, Porto Coffee Week.",
+        note = "Exact customer-facing addresses, website and Instagram still need verification. Micro-roastery status is unconfirmed."
+    ),
+    RoasterProfile(
+        name = "Buraca Roasters", area = "São Domingos de Rana", country = "Portugal", micro = "Unknown",
+        description = "Roastery and coffee shop with brunch, where visitors can watch the beans being roasted. Also supplies wholesale.",
+        locations = listOf(RoasterLocation("Buraca", "Jardins do Buzano 148 A", "São Domingos de Rana, Portugal", "Coffee shop / roastery")),
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Micro-roastery status, website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Senzu Coffee Roasters", area = "Porto", country = "Portugal", micro = "Yes",
+        description = "High-end specialty coffee roaster focused on coffee education. Supplies Michelin-starred restaurants and collaborates with craft brewers and chocolate makers. Roasting is led by Diogo Amorim, who also teaches roasting; founded around 2017–2019, originally as Luso Coffee Roasters.",
+        locations = listOf(RoasterLocation("Senzu", "Rua do Rosário 211", "Porto, Portugal", "Coffee shop / roastery")),
+        awards = "Portuguese Roaster of the Year 2023; Best Coffee Roaster in Portugal 2024, Porto Coffee Week; also reported as Best Coffee Roaster at Lisbon Coffee Week.",
+        note = "Micro-roaster description reported. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "SO Coffee Roasters", area = "Porto · Lisbon", country = "Portugal", micro = "Unknown",
+        description = "Founded in Porto in 2019 by three friends. Design-led roastery and coffee shops in Porto and Lisbon, with beans sold online and a mission to make specialty coffee accessible.",
+        locations = listOf(
+            RoasterLocation("Sá de Noronha", "R. de Sá de Noronha 119", "Porto, Portugal", "Coffee shop / roastery"),
+            RoasterLocation("Rua da Restauração", "Rua da Restauração 455", "Porto, Portugal", "Coffee shop")
+        ),
+        awards = "Team members won the Portuguese Barista Championship 2022 (Rui Pedrosa) and SCA Portugal Brewers Cup 2024 (Luiz Lahutte Motta).",
+        note = "A Lisbon shop was also reported, but its address has not yet been supplied. Micro-roastery status, website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Combi Coffee Roasters", area = "Porto", country = "Portugal", micro = "Unknown",
+        description = "Porto specialty coffee roaster that opened a second, larger location with its roasting operation.",
+        locations = listOf(RoasterLocation("Combi", "R. do Morgado de Mateus 29", "Porto, Portugal", "Coffee shop / roastery")),
+        note = "Micro-roastery status, awards, website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "7g Roaster", area = "Vila Nova de Gaia", country = "Portugal", micro = "Unknown",
+        description = "Specialty coffee roaster in Vila Nova de Gaia, across the river from Porto.",
+        locations = listOf(
+            RoasterLocation("Rua de França 10", "R. de França 10", "Vila Nova de Gaia, Portugal", "Coffee shop"),
+            RoasterLocation("Rua de França 52", "R. de França 52", "Vila Nova de Gaia, Portugal", "Coffee shop")
+        ),
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Micro-roastery status, website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Al-Gharb Coffee Roasters", area = "Albufeira · Algarve", country = "Portugal", micro = "Yes",
+        description = "Micro-roastery, coffee shop and brunch restaurant bringing specialty coffee to the Algarve. Roasts on a hot-air (fluid-bed) roaster; co-founder and roast master is Henning Schlueter.",
+        locations = listOf(RoasterLocation("Al-Gharb", "Beco do Sol 3", "Albufeira, Portugal", "Coffee shop / micro-roastery / brunch")),
+        awards = "Best Challenge Roast at Porto Coffee Week's Best Coffee Roaster Competition; finalist for Best Coffee Roaster in Portugal 2025.",
+        note = "Micro-roastery status reported. Website and Instagram still need verification."
+    ),
+    RoasterProfile(
+        name = "Clifftop Coffee Roasters", area = "Lagos · Algarve", country = "Portugal", micro = "Unknown",
+        description = "Specialty coffee roaster in the Algarve, shipping across Europe and describing itself as the region's only specialty roastery.",
+        website = "https://clifftopcoffee.com",
+        locations = listOf(RoasterLocation("LACO Business Hub", "LACO Business Hub, Chinicato", "Lagos, Portugal", "Roastery (visitor access limited)", "Open Tuesdays and on special occasions")),
+        note = "Another specialty roastery operates in Albufeira. Micro-roastery status, awards and Instagram still need verification."
+    )
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -587,17 +702,17 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val beans by dao.beansWithLatestBag().collectAsState(emptyList())
     // The order is shuffled for each fresh directory entry, then remains stable while browsing.
-    val randomizedRoasters = remember { DANISH_ROASTERS.shuffled() }
+    val randomizedRoasters = remember { ROASTERS.shuffled() }
     var selectedRoaster by remember { mutableStateOf<RoasterProfile?>(null) }
     var search by remember { mutableStateOf("") }
-    var selectedCity by remember { mutableStateOf("All Denmark") }
+    var selectedCity by remember { mutableStateOf("All countries") }
     var cityMenu by remember { mutableStateOf(false) }
-    val cities = listOf("All Denmark", "Aarhus", "Copenhagen", "Frederiksberg", "Værløse", "Charlottenlund", "Ebeltoft", "Odder", "Aalborg", "Aarup", "Odense", "Helsingør")
+    val cities = listOf("All countries", "Denmark", "Portugal", "Aarhus", "Copenhagen", "Frederiksberg", "Værløse", "Charlottenlund", "Ebeltoft", "Odder", "Aalborg", "Aarup", "Odense", "Helsingør", "Lisbon", "Cascais", "São Domingos de Rana", "Oeiras", "Porto", "Vila Nova de Gaia", "Albufeira", "Lagos")
     val visibleRoasters = randomizedRoasters.filter { roaster ->
         val matchesSearch = search.isBlank() || listOf(roaster.name, roaster.area, roaster.description)
             .any { it.contains(search.trim(), ignoreCase = true) } ||
             roaster.aliases.any { it.contains(search.trim(), ignoreCase = true) }
-        val matchesCity = selectedCity == "All Denmark" ||
+        val matchesCity = selectedCity == "All countries" || roaster.country.equals(selectedCity, ignoreCase = true) ||
             roaster.area.split("·").any { it.trim().equals(selectedCity, ignoreCase = true) } ||
             roaster.locations.any { it.city.contains(selectedCity, ignoreCase = true) }
         matchesSearch && matchesCity
@@ -627,7 +742,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(9.dp)
             ) {
                 item {
-                    Text("Discover coffee roasters across Denmark", color = DarkRoast.copy(alpha = .78f),
+                    Text("Discover coffee roasters", color = DarkRoast.copy(alpha = .78f),
                         style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
