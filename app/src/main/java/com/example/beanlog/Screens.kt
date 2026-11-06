@@ -1580,7 +1580,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 }
             }
             items(bags.filter { !it.isFinished }, key={it.id}) { bag ->
-                BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}})
+                BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}})
             }
             if(bags.any{it.isFinished}) {
                 item { TextButton(onClick={showFinishedBags=!showFinishedBags},modifier=Modifier.fillMaxWidth()) {
@@ -1588,7 +1588,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                     Icon(if(showFinishedBags) Icons.Default.ExpandLess else Icons.Default.ExpandMore,null)
                 } }
                 if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
-                    BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
+                    BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
                 }
             }
         }
@@ -1625,10 +1625,11 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
 }
 
 @Composable
-private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false) {
+private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false) {
  val shots by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); val context=LocalContext.current
  var add by remember{mutableStateOf(false)}
+ var shotDefaults by remember{mutableStateOf<Shot?>(null)}
  var showHistory by remember{mutableStateOf(false)}
  var confirmDeleteBag by remember{mutableStateOf(false)}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
@@ -1675,7 +1676,23 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
    HorizontalDivider()
    Row(verticalAlignment=Alignment.CenterVertically) {
     Text("Shots (${shots.size})",modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
-    TextButton(onClick={add=true}){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
+    TextButton(onClick={
+      scope.launch {
+       val current = shots.maxByOrNull { it.id }
+       val defaults = if(current != null) current
+       else {
+        val recommended = if(bean.coffeeInG != null && bean.coffeeOutG != null && bean.brewTimeSec != null)
+         Shot(bagId=bag.id,groundCoffeeG=bean.coffeeInG,yieldG=bean.coffeeOutG,timeSec=bean.brewTimeSec,grindSetting=bag.recommendedGrindSetting)
+        else null
+        recommended ?: run {
+         val allBags = dao.allBags().filter { it.beanId==bean.id && it.id!=bag.id }.map { it.id }.toSet()
+         dao.allShots().filter { it.bagId in allBags }.maxByOrNull { it.id }
+        } ?: Shot(bagId=bag.id,groundCoffeeG=18.0,yieldG=36.0,timeSec=28,grindSetting=bag.recommendedGrindSetting)
+       }
+       shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",pulledAtMillis=System.currentTimeMillis())
+       add=true
+      }
+     }){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
    }
    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
    shots.take(2).forEach{shot->
@@ -1687,7 +1704,7 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
    if(shots.size>2) Text("Tap bag to see all ${shots.size} shots",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
  }
- if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
+ if(add)ShotDialog(shotDefaults,{add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
  if(confirmDeleteBag) AlertDialog(
   onDismissRequest={confirmDeleteBag=false},
@@ -1765,13 +1782,15 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
        var showTips by remember(shot.id) { mutableStateOf(false) }
+       var editingFeedback by remember { mutableStateOf<Shot?>(null) }
+       var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
        Row(
         modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.spacedBy(6.dp)
        ) {
         if (shot.note.isNotBlank()) {
-         Text(shot.note,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
+         Text(shot.note,modifier=Modifier.weight(1f).clickable { editingFeedback=shot; feedbackText=shot.note },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
         }
         Surface(
          modifier=Modifier.clickable { showTips=!showTips },
@@ -1783,6 +1802,17 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
           modifier=Modifier.padding(horizontal=10.dp,vertical=7.dp),
           style=MaterialTheme.typography.labelMedium)
         }
+       }
+       if(shot.note.isBlank()) TextButton(onClick={editingFeedback=shot;feedbackText=""}) { Text("+ Add feedback",color=CoffeeCardText) }
+       editingFeedback?.let { target ->
+        AlertDialog(
+         onDismissRequest={editingFeedback=null},
+         title={Text("Edit feedback",color=DarkRoast)},
+         text={OutlinedTextField(feedbackText,{feedbackText=it},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,label={Text("Feedback")},colors=beanTextFieldColors())},
+         confirmButton={TextButton(onClick={scope.launch{dao.saveShot(target.copy(note=feedbackText.trim()));editingFeedback=null}}){Text("Save")}},
+         dismissButton={TextButton(onClick={editingFeedback=null}){Text("Cancel")}},
+         containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+        )
        }
        if(showTips) Surface(color=Color(0xFFEADCCB).copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
@@ -1907,13 +1937,13 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  }
 }
 @Composable
-private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
- val focusManager = LocalFocusManager.current
- var input by remember{mutableStateOf("18")}
- var output by remember{mutableStateOf("36")}
- var seconds by remember{mutableStateOf("28")}
- var grind by remember{mutableStateOf("")}
+private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
+ var input by remember(initial){mutableStateOf(initial?.groundCoffeeG?.let{money(it)} ?: "18")}
+ var output by remember(initial){mutableStateOf(initial?.yieldG?.let{money(it)} ?: "36")}
+ var seconds by remember(initial){mutableStateOf((initial?.timeSec ?: 28).toString())}
+ var grind by remember(initial){mutableStateOf(initial?.grindSetting ?: "")}
  var note by remember{mutableStateOf("")}
+ var showFeedback by remember{mutableStateOf(false)}
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text("Add shot",color=DarkRoast)},
@@ -1923,7 +1953,11 @@ private fun ShotDialog(dismiss:()->Unit,save:(Shot)->Unit) {
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-   OutlinedTextField(note,{note=it},label={Text("Tasting notes (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
+   if(showFeedback) {
+    OutlinedTextField(note,{note=it},label={Text("Feedback (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
+   } else {
+    TextButton(onClick={showFeedback=true}) { Text("+ Add feedback") }
+   }
   }},
   confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))}){Text("Save")}},
   dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
