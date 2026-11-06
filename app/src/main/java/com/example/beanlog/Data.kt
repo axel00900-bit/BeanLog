@@ -22,6 +22,7 @@ data class Bean(
     val brewTimeSec: Int? = null,
     @ColumnInfo(defaultValue = "''") val origin: String = "",
     @ColumnInfo(defaultValue = "''") val farm: String = "",
+    @ColumnInfo(defaultValue = "''") val region: String = "",
     @ColumnInfo(defaultValue = "''") val variety: String = "",
     @ColumnInfo(defaultValue = "''") val processing: String = "",
     @ColumnInfo(defaultValue = "0") val liked: Boolean = false,
@@ -65,6 +66,7 @@ data class Shot(
     @ColumnInfo(defaultValue = "''") val grindSetting: String = "",
     val liked: Boolean? = null,
     @ColumnInfo(defaultValue = "0") val pulledAtMillis: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "''") val note: String = "",
 )
 
 /** Bean plus sorting information for the front page. */
@@ -108,7 +110,7 @@ interface BeanDao {
     @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 6, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 7, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -155,9 +157,16 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Bean ADD COLUMN region TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN note TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .fallbackToDestructiveMigration(true)
                 .build()
     }
