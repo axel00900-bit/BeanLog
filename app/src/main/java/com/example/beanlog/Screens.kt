@@ -1234,7 +1234,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 if (b.photoPath != null) {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         // Three times the 64 dp main-list thumbnail in both dimensions.
-                        BeanPhoto(b.photoPath, Modifier.size(173.dp, 192.dp))
+                        BeanPhoto(b.photoPath, Modifier.size(192.dp, 192.dp))
                     }
                 }
                 Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}", style = MaterialTheme.typography.titleMedium)
@@ -1402,10 +1402,25 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
-       if (shot.note.isNotBlank()) Text(shot.note,style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
        var showTips by remember(shot.id) { mutableStateOf(false) }
-       TextButton(onClick={showTips=!showTips},colors=ButtonDefaults.textButtonColors(contentColor=DarkRoast.copy(alpha=0.78f))) {
-        Text(if(showTips) "Hide tips" else "☼ Tips")
+       Row(
+        modifier=Modifier.fillMaxWidth(),
+        verticalAlignment=Alignment.CenterVertically,
+        horizontalArrangement=Arrangement.spacedBy(6.dp)
+       ) {
+        if (shot.note.isNotBlank()) {
+         Text(shot.note,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
+        }
+        Surface(
+         modifier=Modifier.clickable { showTips=!showTips },
+         color=Color(0xFFEADCCB).copy(alpha=0.58f),
+         contentColor=DarkRoast.copy(alpha=0.86f),
+         shape=MaterialTheme.shapes.small
+        ) {
+         Text(if(showTips) "Hide tips" else "☼ Tips",
+          modifier=Modifier.padding(horizontal=10.dp,vertical=7.dp),
+          style=MaterialTheme.typography.labelMedium)
+        }
        }
        if(showTips) Surface(color=Color(0xFFEADCCB).copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
