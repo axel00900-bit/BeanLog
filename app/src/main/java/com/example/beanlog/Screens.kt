@@ -693,6 +693,29 @@ private val ROASTERS = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun roasterBroadArea(roaster: RoasterProfile): String {
+    val places = (listOf(roaster.area) + roaster.locations.map { it.city })
+        .joinToString(" ").lowercase()
+    return when (roaster.country.lowercase()) {
+        "denmark" -> when {
+            listOf("aarhus", "odder", "silkeborg", "herning").any { it in places } -> "Greater Aarhus"
+            listOf("copenhagen", "frederiksberg", "nordhavn", "charlottenlund").any { it in places } -> "Greater Copenhagen"
+            listOf("aalborg").any { it in places } -> "North Jutland"
+            listOf("aarup", "odense", "funen").any { it in places } -> "Funen"
+            listOf("helsingør", "værløse").any { it in places } -> "North Zealand"
+            listOf("ebeltoft").any { it in places } -> "Djursland"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        "portugal" -> when {
+            listOf("lisbon", "lisboa", "oeiras", "cascais", "são domingos de rana").any { it in places } -> "Greater Lisbon"
+            listOf("porto", "gaia", "vila nova de gaia").any { it in places } -> "Greater Porto"
+            listOf("albufeira", "lagos", "algarve").any { it in places } -> "Algarve"
+            else -> roaster.area.substringBefore("·").trim()
+        }
+        else -> roaster.area.substringBefore("·").trim()
+    }
+}
+
 private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
@@ -711,11 +734,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
     val areasForCountry = remember(randomizedRoasters, selectedCountry) {
         if (selectedCountry == "All countries") emptyList()
         else randomizedRoasters.filter { it.country.equals(selectedCountry, ignoreCase = true) }
-            .flatMap { roaster ->
-                roaster.area.split("·").map { it.trim() } +
-                    roaster.locations.map { it.city.substringBefore(",").trim() }
-            }
-            .filter { it.isNotBlank() }
+            .map { roasterBroadArea(it) }
             .distinct()
             .sorted()
     }
@@ -726,8 +745,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
         val matchesCountry = selectedCountry == "All countries" ||
             roaster.country.equals(selectedCountry, ignoreCase = true)
         val matchesArea = selectedArea == "All areas" ||
-            roaster.area.split("·").any { it.trim().equals(selectedArea, ignoreCase = true) } ||
-            roaster.locations.any { it.city.substringBefore(",").trim().equals(selectedArea, ignoreCase = true) }
+            roasterBroadArea(roaster).equals(selectedArea, ignoreCase = true)
         matchesSearch && matchesCountry && matchesArea
     }
 
