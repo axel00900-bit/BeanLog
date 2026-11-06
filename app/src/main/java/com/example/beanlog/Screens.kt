@@ -470,12 +470,6 @@ private val ROASTERS = listOf(
         aliases = listOf("KaffeMekka", "Berry and Bean")
     ),
     RoasterProfile(
-        name = "Europa Kaffe & Te", area = "Aarhus", micro = "Unknown",
-        description = "Coffee roastery associated with Europa cafés and shops. Not strictly specialty coffee; customer reviews are mixed.",
-        instagram = "https://www.instagram.com/europakaffeogte.dk/", website = "https://europakaffeogte.dk",
-        note = "Karen Blixens Boulevard 5 was supplied as an address, but it is not yet confirmed as a customer-facing place to buy coffee."
-    ),
-    RoasterProfile(
         name = "Coffee Collective", area = "Copenhagen · Frederiksberg · Aarhus", micro = "No",
         description = "Founded in 2007. Focuses on transparent farmer relationships and its Direct Trade approach, with light roasts and filter coffee.",
         instagram = "https://www.instagram.com/coffeecollectif/", website = "https://coffeecollective.dk",
@@ -592,10 +586,10 @@ private val ROASTERS = listOf(
         note = "Micro-roastery status is unconfirmed. No prizes recorded. Website and Instagram still need verification."
     ),
     RoasterProfile(
-        name = "Comete Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Yes",
+        name = "Comete Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Unknown",
         description = "Roaster and coffee shop known for light, Scandinavian-style roasts. Part of the specialty coffee movement since 2022, shipping across Portugal and Europe.",
         locations = listOf(RoasterLocation("Comete", "R. Dr. Almeida Amaral 15A", "Lisbon, Portugal", "Coffee shop / roastery")),
-        note = "Micro-roastery status is likely, based on descriptions by reviewers. Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+        note = "Likely a micro-roastery, based on descriptions by reviewers. Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
     ),
     RoasterProfile(
         name = "Olisipo Coffee Roasters", area = "Lisbon", country = "Portugal", micro = "Yes",
@@ -805,7 +799,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                                         style = MaterialTheme.typography.labelSmall, color = DarkRoast)
                                 }
                             }
-                            Text(roaster.area, style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .72f))
+                            Text("${roaster.area} · ${roaster.country}", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .72f))
                             Text(roaster.description, style = MaterialTheme.typography.bodyMedium, color = DarkRoast)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically) {
@@ -839,7 +833,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
-                    Text(roaster.area, color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.bodySmall)
+                    Text("${roaster.area} · ${roaster.country}", color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.bodySmall)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(color = Color(0xFFE3D2BE), shape = MaterialTheme.shapes.small) {
                             Text(
