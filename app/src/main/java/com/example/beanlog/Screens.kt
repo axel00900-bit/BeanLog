@@ -686,7 +686,12 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
 
 
 @Composable
-private fun SectionSwitchBar(label: String, isRoasters: Boolean, onClick: () -> Unit) {
+private fun SectionSwitchBar(
+    label: String,
+    isRoasters: Boolean,
+    onClick: () -> Unit,
+    onAdd: (() -> Unit)? = null
+) {
     Surface(
         color = Color(0xFFE2CFB7).copy(alpha = 0.96f),
         tonalElevation = 0.dp,
@@ -694,8 +699,9 @@ private fun SectionSwitchBar(label: String, isRoasters: Boolean, onClick: () -> 
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding()
-                .padding(start = 14.dp, top = 9.dp, bottom = 9.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Surface(
                 onClick = onClick,
@@ -720,6 +726,15 @@ private fun SectionSwitchBar(label: String, isRoasters: Boolean, onClick: () -> 
                         Icon(Icons.Default.Storefront, contentDescription = "Roasters")
                     }
                     Text(label, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+            if (onAdd != null) {
+                FloatingActionButton(
+                    onClick = onAdd,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    BeanActionIcon(BeanIconAction.ADD, "Add bean")
                 }
             }
         }
@@ -786,14 +801,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
             )
         },
         bottomBar = {
-            SectionSwitchBar(label = "Roasters", isRoasters = false, onClick = onRoasters)
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAdd,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) { BeanActionIcon(BeanIconAction.ADD, "Add bean") }
+            SectionSwitchBar(label = "Roasters", isRoasters = false, onClick = onRoasters, onAdd = onAdd)
         }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(12.dp),
