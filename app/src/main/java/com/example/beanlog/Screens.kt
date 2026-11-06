@@ -859,15 +859,6 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                                     style = MaterialTheme.typography.titleMedium,
                                     color = DarkRoast
                                 )
-                                val microLabel = when (roaster.micro) {
-                                    "Yes" -> "Micro-roastery"
-                                    "No" -> "Not micro"
-                                    else -> "Micro: unknown"
-                                }
-                                Surface(color = Color(0xFFE3D2BE), shape = MaterialTheme.shapes.small) {
-                                    Text(microLabel, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall, color = DarkRoast)
-                                }
                             }
                             Text("${roaster.area} · ${roaster.country}", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .72f))
                             Text(roaster.description, style = MaterialTheme.typography.bodyMedium, color = DarkRoast)
@@ -904,15 +895,6 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
             ) {
                 item {
                     Text("${roaster.area} · ${roaster.country}", color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.bodySmall)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(color = Color(0xFFE3D2BE), shape = MaterialTheme.shapes.small) {
-                            Text(
-                                when (roaster.micro) { "Yes" -> "Micro-roastery"; "No" -> "Not a micro-roastery"; else -> "Micro-roastery: unknown" },
-                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                                color = DarkRoast, style = MaterialTheme.typography.labelMedium
-                            )
-                        }
-                    }
                     Spacer(Modifier.height(4.dp))
                     Text(roaster.description, color = DarkRoast, style = MaterialTheme.typography.bodyLarge)
                     if (roaster.awards.isNotBlank()) {
@@ -1713,7 +1695,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
      }){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add shot")}
    }
    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
-   shots.take(2).forEach{shot->
+   shots.sortedByDescending { it.id }.take(2).forEach{shot->
     Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
      Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)
      if (shot.note.isNotBlank()) Text("Note: ${shot.note}",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.78f))
@@ -1785,7 +1767,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No shots recorded yet")
-    else shots.sortedBy{it.id}.forEachIndexed{index,shot->
+    else shots.sortedByDescending { it.id }.forEachIndexed{index,shot->
      Card(
       modifier=Modifier.fillMaxWidth(),
       colors=CardDefaults.cardColors(containerColor=CoffeeCard,contentColor=CoffeeCardText),
