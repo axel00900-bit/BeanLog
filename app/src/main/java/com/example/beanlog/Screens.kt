@@ -264,7 +264,12 @@ fun App(dao: BeanDao) {
         )
         NavHost(nav, startDestination = "list") {
             composable("list") {
-                BeanList(dao, onOpen = { nav.navigate("detail/$it/false") }, onAdd = { nav.navigate("edit/0") })
+                BeanList(dao, onOpen = { nav.navigate("detail/$it/false") },
+                    onAdd = { nav.navigate("edit/0") },
+                    onRoasters = { nav.navigate("roasters/${System.currentTimeMillis()}") })
+            }
+            composable("roasters/{session}") {
+                RoasterDirectoryScreen(dao, onBack = { nav.popBackStack() })
             }
             composable("detail/{id}/{addBag}") {
                 val id = it.arguments!!.getString("id")!!.toLong()
@@ -283,6 +288,400 @@ fun App(dao: BeanDao) {
     }
 }
 
+
+
+// ---------- Danish roastery directory ----------
+private data class RoasterLocation(
+    val name: String,
+    val address: String,
+    val city: String,
+    val type: String,
+    val hours: String = ""
+)
+
+private data class RoasterLink(val label: String, val url: String)
+
+private data class RoasterProfile(
+    val name: String,
+    val area: String,
+    val micro: String,
+    val description: String,
+    val instagram: String? = null,
+    val website: String? = null,
+    val locations: List<RoasterLocation> = emptyList(),
+    val aliases: List<String> = emptyList(),
+    val awards: String = "",
+    val extraLinks: List<RoasterLink> = emptyList(),
+    val note: String = ""
+)
+
+private val DANISH_ROASTERS = listOf(
+    RoasterProfile(
+        name = "La Cabra", area = "Aarhus · Copenhagen", micro = "No",
+        description = "Founded in Aarhus in 2012 by Esben Piper. Light, clear Nordic-style roasting with a focus on origin and transparency. Also operates bakery cafés.",
+        instagram = "https://www.instagram.com/lacabracoffee/", website = "https://lacabra.com",
+        locations = listOf(
+            RoasterLocation("Nordhavn", "Århusgade 118X, 2150", "Nordhavn, Denmark", "Café / coffee shop", "Mon–Fri 07:30–18:00 · Sat–Sun 08:00–17:00"),
+            RoasterLocation("Møntergade", "Møntergade 3A, 1116", "Copenhagen K, Denmark", "Café / coffee shop", "Mon–Fri 08:00–18:00 · Sat–Sun 09:00–17:00"),
+            RoasterLocation("Kampanilen", "Irma Pedersens Gade 120, 8000", "Aarhus C, Denmark", "Café / coffee shop", "Mon–Sat 08:00–18:00 · Sun 09:00–17:00"),
+            RoasterLocation("Graven", "Graven 20, 8000", "Aarhus C, Denmark", "Café / coffee shop", "Mon–Sat 08:00–18:00 · Sun 09:00–17:00")
+        ),
+        aliases = listOf("La Cabra Coffee"),
+        awards = "Top 10 specialty cafés in Denmark, European Coffee Trip Awards 2025. OAD Cheap Eats in Europe: #19 in 2024 and #30 in 2025. Reported international exports to 60+ countries."
+    ),
+    RoasterProfile(
+        name = "Stillers Coffee", area = "Aarhus", micro = "No",
+        description = "Coffee-focused craft and expertise. Roasts on site and sells beans, brewing equipment and accessories.",
+        instagram = "https://www.instagram.com/stillerscoffee/", website = "https://stillerscoffee.dk",
+        locations = listOf(RoasterLocation("Klostergade", "Klostergade 32 E", "Aarhus, Denmark", "Café / shop / roastery")),
+        aliases = listOf("Stillers", "Stillers coffee")
+    ),
+    RoasterProfile(
+        name = "Mood Coffee Roasters", area = "Aarhus", micro = "Unknown",
+        description = "A small coffee shop where customers can taste and smell coffee before buying. Micro-roastery status is being kept as unknown.",
+        instagram = "https://www.instagram.com/moodcoffee_aarhus/", website = "https://moodcoffeeroasters.dk",
+        locations = listOf(RoasterLocation("Ankersgade", "Ankersgade 12B", "Aarhus C, Denmark", "Coffee shop")),
+        note = "The roastery's website has described it as a micro-roastery, but the directory status remains Unknown as requested."
+    ),
+    RoasterProfile(
+        name = "Berry & Bean", area = "Aarhus", micro = "Unknown",
+        description = "Roastery and wholesaler selling coffee, equipment, tea and specialty products. Customer feedback mentions helpful service and consistent roasts.",
+        instagram = "https://www.instagram.com/berrybeandk/", website = "https://berrybean.dk",
+        locations = listOf(RoasterLocation("KaffeMekka", "Bredskiftevej 22B, 8210", "Aarhus V, Denmark", "Shop / wholesale")),
+        aliases = listOf("KaffeMekka", "Berry and Bean")
+    ),
+    RoasterProfile(
+        name = "Europa Kaffe & Te", area = "Aarhus", micro = "Unknown",
+        description = "Coffee roastery associated with Europa cafés and shops. Not strictly specialty coffee; customer reviews are mixed.",
+        instagram = "https://www.instagram.com/europakaffeogte.dk/", website = "https://europakaffeogte.dk",
+        note = "Karen Blixens Boulevard 5 was supplied as an address, but it is not yet confirmed as a customer-facing place to buy coffee."
+    ),
+    RoasterProfile(
+        name = "Coffee Collective", area = "Copenhagen · Frederiksberg · Aarhus", micro = "No",
+        description = "Founded in 2007. Focuses on transparent farmer relationships and its Direct Trade approach, with light roasts and filter coffee.",
+        instagram = "https://www.instagram.com/coffeecollectif/", website = "https://coffeecollective.dk",
+        locations = listOf(
+            RoasterLocation("Godthåbsvej", "Godthåbsvej 34 B", "Frederiksberg, Denmark", "Roastery café"),
+            RoasterLocation("Aarhus shop", "Guldsmedgade 13", "Aarhus, Denmark", "Coffee shop")
+        ),
+        aliases = listOf("Coffee Collective Aarhus"),
+        awards = "Klaus Thomsen: World Barista Champion 2006. Casper Rasmussen: World Cup Tasters Champion 2008. Sprudgie Best Packaging 2015. Bernikow café in ECT Awards 2025 top 10. Also reported #2 in a Roastful ranking; year not specified."
+    ),
+    RoasterProfile(
+        name = "April Coffee Roasters", area = "Copenhagen", micro = "Unknown",
+        description = "Founded in 2016 by Patrik Rolf. Very light, delicate, tea-like coffees and close collaboration with coffee farms.",
+        instagram = "https://www.instagram.com/aprilcoffeecph/",
+        aliases = listOf("April Coffee"),
+        awards = "Danish Roasting Championship 2019; reported World Brewers Cup silver 2019; Patrik Rolf was a 2022 World Brewers Cup finalist. Café in ECT Awards 2025 top 10.",
+        note = "Website and customer-facing address have not yet been verified. Micro-roastery status is unclear."
+    ),
+    RoasterProfile(
+        name = "Prolog Coffee", area = "Copenhagen", micro = "Unknown",
+        description = "Founded in 2016 by Sebastian Quistorff and Jonas Gehl. Focuses on precise filter and espresso in a relaxed coffee bar.",
+        instagram = "https://www.instagram.com/prologcoffee.cph/",
+        locations = listOf(RoasterLocation("Høkerboderne", "Høkerboderne 16", "Copenhagen, Denmark", "Coffee bar")),
+        awards = "Prolog Coffee Bar in the European Coffee Trip Awards 2025 top 10.",
+        note = "Refshaleøen has been mentioned as a roasting area, but roasting-facility addresses are deliberately not recorded."
+    ),
+    RoasterProfile(
+        name = "Impact Roasters", area = "Copenhagen", micro = "Unknown",
+        description = "Founded in 2015 by Daniel and Nidzara. Focuses on quality coffee from the Ethiopian highlands and development projects in southern Ethiopia.",
+        instagram = "https://www.instagram.com/impact_roasters/",
+        note = "Three Copenhagen locations were mentioned, but exact customer-facing addresses and which ones sell beans still need confirmation. Flintholm Allé café was listed in ECT Awards 2025 top 10."
+    ),
+    RoasterProfile(
+        name = "Pontes Roastery & Coffee Bar", area = "Copenhagen", micro = "Yes",
+        description = "Small coffee bar and micro-roastery opened in 2025 by Brian Christie and Andreas May. Roasts tiny batches on a 1 kg machine. House espresso: Hidden Hour.",
+        instagram = "https://www.instagram.com/pontes_coffee/",
+        locations = listOf(RoasterLocation("Toftegårds Plads", "Toftegårds Plads 2", "Copenhagen, Denmark", "Coffee bar / micro-roastery")),
+        awards = "European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark."
+    ),
+    RoasterProfile(
+        name = "Kontra Coffee", area = "Copenhagen", micro = "Unknown",
+        description = "Sources high-quality coffee from sustainable and ethical suppliers.",
+        instagram = "https://www.instagram.com/kontracoffee/",
+        note = "Customer-facing address and further company details have not yet been collected."
+    ),
+    RoasterProfile(
+        name = "Copenhagen Coffee Lab", area = "Copenhagen", micro = "Unknown",
+        description = "Described as a growing coffee wholesaler.",
+        instagram = "https://www.instagram.com/cphcoffeelab/",
+        note = "Customer-facing locations and additional company details have not yet been collected. No website is currently listed."
+    ),
+    RoasterProfile(
+        name = "Aoife Coffee", area = "Ebeltoft · Aarhus", micro = "Yes",
+        description = "Third-wave coffee from a harbour-side micro-roastery. The name is Irish for 'beauty'. The Aarhus shop offers naturally processed beans and pastries from a neighbouring bakery.",
+        instagram = "https://www.instagram.com/aoife.coffee/",
+        locations = listOf(
+            RoasterLocation("Ebeltoft", "Stockflethsvej 14", "Ebeltoft, Denmark", "Coffee shop / roastery"),
+            RoasterLocation("Aarhus", "Volden 21", "Aarhus C, Denmark", "Coffee shop")
+        ),
+        awards = "European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark.",
+        note = "No website listed, as requested."
+    ),
+    RoasterProfile(
+        name = "Komma Kaffe", area = "Værløse", micro = "Yes",
+        description = "Family-owned, founded in 2020 by Omar and Mathilde. Direct-trade specialty coffee from an organic-certified roastery.",
+        note = "Approx. two employees according to the supplied information. Website, Instagram and customer-facing shop address still needed."
+    ),
+    RoasterProfile(
+        name = "KaffeBrænderiet", area = "Charlottenlund", micro = "Unknown",
+        description = "A roastery whose café was listed among Denmark's top 10 specialty cafés at the European Coffee Trip Awards 2025.",
+        awards = "European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark.",
+        note = "Further company details, links and customer-facing address still needed."
+    ),
+    RoasterProfile(
+        name = "Clever Coffee", area = "Odder", micro = "Unknown",
+        description = "Specialty coffee with a positive impact. Based in Odder since 2014, founded by Lars Frello. Certified B Corp; one coffee was reportedly purchased at 175% of the market price.",
+        note = "B Corp is a company certification, not a competition award. Website, Instagram and customer-facing address still needed."
+    ),
+    RoasterProfile(
+        name = "Behag din smag", area = "Aalborg", micro = "Unknown",
+        description = "Award-winning café, named Denmark's winning café at the European Coffee Trip Awards 2025.",
+        note = "It is not yet confirmed whether the café roasts its own coffee. Kept as an unverified roaster candidate."
+    ),
+    RoasterProfile(
+        name = "Holy Bean Coffee Roasters", area = "Aarup · Funen", micro = "Unknown",
+        description = "Well-established, women-owned roastery on Funen, supplying several Odense cafés with single-origin coffees.",
+        note = "Customer-facing address, website and Instagram still needed."
+    ),
+    RoasterProfile(
+        name = "Kaffe Lars", area = "Near Odense", micro = "Unknown",
+        description = "Traditional roaster slow-roasting since 1912, using a vintage German gas-powered drum roaster from 1941.",
+        note = "Customer-facing address, website and Instagram still needed."
+    ),
+    RoasterProfile(
+        name = "Karma Kaffe", area = "Odense", micro = "Unknown",
+        description = "Says its coffee is roasted at one of Denmark's oldest roasteries, so it may not roast its own beans.",
+        note = "Kept as a coffee brand candidate until its own-roasting status and customer-facing sales locations are confirmed."
+    ),
+    RoasterProfile(
+        name = "Strandvejsristeriet", area = "Helsingør", micro = "Unknown",
+        description = "A roastery reported to supply the Lagoni coffee bar in Helsingør.",
+        note = "Customer-facing address, website and Instagram still needed."
+    )
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val beans by dao.beansWithLatestBag().collectAsState(emptyList())
+    // The order is shuffled for each fresh directory entry, then remains stable while browsing.
+    val randomizedRoasters = remember { DANISH_ROASTERS.shuffled() }
+    var selectedRoaster by remember { mutableStateOf<RoasterProfile?>(null) }
+    var search by remember { mutableStateOf("") }
+    var selectedCity by remember { mutableStateOf("All Denmark") }
+    var cityMenu by remember { mutableStateOf(false) }
+    val cities = listOf("All Denmark", "Aarhus", "Copenhagen", "Frederiksberg", "Værløse", "Charlottenlund", "Ebeltoft", "Odder", "Aalborg", "Aarup", "Odense", "Helsingør")
+    val visibleRoasters = randomizedRoasters.filter { roaster ->
+        val matchesSearch = search.isBlank() || listOf(roaster.name, roaster.area, roaster.description)
+            .any { it.contains(search.trim(), ignoreCase = true) } ||
+            roaster.aliases.any { it.contains(search.trim(), ignoreCase = true) }
+        val matchesCity = selectedCity == "All Denmark" ||
+            roaster.area.split("·").any { it.trim().equals(selectedCity, ignoreCase = true) } ||
+            roaster.locations.any { it.city.contains(selectedCity, ignoreCase = true) }
+        matchesSearch && matchesCity
+    }
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                title = { Text(selectedRoaster?.name ?: "Roasters", style = MaterialTheme.typography.headlineSmall) },
+                navigationIcon = {
+                    IconButton(onClick = { if (selectedRoaster != null) selectedRoaster = null else onBack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = DarkRoast)
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (selectedRoaster == null) {
+            LazyColumn(
+                Modifier.fillMaxSize().padding(padding),
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                item {
+                    Text("Discover coffee roasters across Denmark", color = DarkRoast.copy(alpha = .78f),
+                        style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = search, onValueChange = { search = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("Search roasters or cities") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        colors = beanTextFieldColors()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Box {
+                        OutlinedButton(onClick = { cityMenu = true }) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null)
+                            Spacer(Modifier.width(6.dp))
+                            Text(selectedCity)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose city")
+                        }
+                        DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
+                            cities.forEach { city ->
+                                DropdownMenuItem(
+                                    text = { Text(city) },
+                                    onClick = { selectedCity = city; cityMenu = false }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("${visibleRoasters.size} roasters", style = MaterialTheme.typography.titleSmall, color = DarkRoast)
+                        Text("Random order", style = MaterialTheme.typography.labelSmall, color = DarkRoast.copy(alpha = .7f))
+                    }
+                }
+                items(visibleRoasters, key = { it.name }) { roaster ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = LatteVariant, contentColor = DarkRoast),
+                        border = BorderStroke(1.dp, DarkRoast.copy(alpha = .24f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    roaster.name,
+                                    modifier = Modifier.weight(1f).clickable {
+                                        val url = roaster.instagram
+                                        if (url != null) uriHandler.openUri(url) else selectedRoaster = roaster
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = DarkRoast
+                                )
+                                val microLabel = when (roaster.micro) {
+                                    "Yes" -> "Micro-roastery"
+                                    "No" -> "Not micro"
+                                    else -> "Micro: unknown"
+                                }
+                                Surface(color = Color(0xFFE3D2BE), shape = MaterialTheme.shapes.small) {
+                                    Text(microLabel, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        style = MaterialTheme.typography.labelSmall, color = DarkRoast)
+                                }
+                            }
+                            Text(roaster.area, style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .72f))
+                            Text(roaster.description, style = MaterialTheme.typography.bodyMedium, color = DarkRoast)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = { selectedRoaster = roaster }) {
+                                    Text("View profile")
+                                    Icon(Icons.Default.ChevronRight, contentDescription = null)
+                                }
+                                Text(
+                                    if (roaster.instagram != null) "Instagram ↗" else "Instagram not added",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = DarkRoast.copy(alpha = .7f)
+                                )
+                            }
+                        }
+                    }
+                }
+                if (visibleRoasters.isEmpty()) item {
+                    Text("No roasters match this search.", modifier = Modifier.padding(20.dp), color = DarkRoast)
+                }
+            }
+        } else {
+            val roaster = selectedRoaster!!
+            val connectedBeans = beans.filter { row ->
+                val name = row.bean.roastery.trim()
+                name.equals(roaster.name, ignoreCase = true) ||
+                    roaster.aliases.any { it.equals(name, ignoreCase = true) }
+            }
+            LazyColumn(
+                Modifier.fillMaxSize().padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    Text(roaster.area, color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.bodySmall)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(color = Color(0xFFE3D2BE), shape = MaterialTheme.shapes.small) {
+                            Text(
+                                when (roaster.micro) { "Yes" -> "Micro-roastery"; "No" -> "Not a micro-roastery"; else -> "Micro-roastery: unknown" },
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                                color = DarkRoast, style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(roaster.description, color = DarkRoast, style = MaterialTheme.typography.bodyLarge)
+                    if (roaster.awards.isNotBlank()) {
+                        Text("Awards & recognition", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                        Text(roaster.awards, color = DarkRoast)
+                    }
+                    if (roaster.note.isNotBlank()) {
+                        Text(roaster.note, color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Text("Links", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                    if (roaster.instagram != null) {
+                        TextButton(onClick = { uriHandler.openUri(roaster.instagram) }) {
+                            Text("Instagram ↗")
+                        }
+                    }
+                    if (roaster.website != null) {
+                        TextButton(onClick = { uriHandler.openUri(roaster.website) }) {
+                            Text("Website ↗")
+                        }
+                    }
+                    roaster.extraLinks.forEach { link ->
+                        TextButton(onClick = { uriHandler.openUri(link.url) }) { Text("${link.label} ↗") }
+                    }
+                    Text("Locations (${roaster.locations.size})", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                    if (roaster.locations.isEmpty()) {
+                        Text("Customer-facing addresses still need to be added.", color = DarkRoast.copy(alpha = .7f))
+                    }
+                }
+                items(roaster.locations) { location ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = LatteVariant),
+                        border = BorderStroke(1.dp, DarkRoast.copy(alpha = .2f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text(location.name, style = MaterialTheme.typography.titleSmall, color = DarkRoast)
+                            Text(location.type, style = MaterialTheme.typography.labelSmall, color = DarkRoast.copy(alpha = .7f))
+                            Text(location.address, color = DarkRoast)
+                            Text(location.city, color = DarkRoast)
+                            if (location.hours.isNotBlank()) Text(location.hours, style = MaterialTheme.typography.bodySmall, color = DarkRoast)
+                            TextButton(onClick = {
+                                val query = Uri.encode("${location.address}, ${location.city}")
+                                uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$query")
+                            }) {
+                                Icon(Icons.Default.Map, contentDescription = null)
+                                Spacer(Modifier.width(5.dp))
+                                Text("Open in Maps")
+                            }
+                        }
+                    }
+                }
+                item {
+                    Text("Your coffees from this roaster", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                    if (connectedBeans.isEmpty()) {
+                        Text("No coffees linked yet.", color = DarkRoast.copy(alpha = .7f))
+                    } else {
+                        connectedBeans.forEach { row ->
+                            TextButton(onClick = { }) {
+                                Text(row.bean.name.ifBlank { row.bean.roastery }, color = DarkRoast)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 // ---------- List ----------
 private enum class BeanSortOption(val label: String) {
     ROAST_DATE("Roast date"),
@@ -292,7 +691,7 @@ private enum class BeanSortOption(val label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
+fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters: () -> Unit) {
     val beans by dao.beansWithLatestBag().collectAsState(emptyList())
     var sortOption by remember { mutableStateOf(BeanSortOption.ROAST_DATE) }
     // Recently added defaults to newest first; Name defaults to A–Z.
@@ -336,6 +735,9 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit) {
                     Text("My Beans", style = MaterialTheme.typography.headlineMedium)
                 },
                 actions = {
+                    IconButton(onClick = onRoasters) {
+                        Icon(Icons.Default.Storefront, "Roasters", tint = DarkRoast)
+                    }
                     IconButton(onClick = { settingsOpen = true }) {
                         Icon(Icons.Default.Settings, "Settings", tint = DarkRoast)
                     }
