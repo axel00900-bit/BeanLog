@@ -1028,11 +1028,20 @@ private fun beanNextKeyboardActions(focusManager: androidx.compose.ui.focus.Focu
 @Composable
 private fun FieldLabel(label: String, explanation: String) {
     var showHelp by remember(label) { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(label)
-        Surface(Modifier.size(18.dp).clickable { showHelp = true }, shape = CircleShape,
-            color = DarkRoast.copy(alpha = 0.12f), contentColor = DarkRoast) {
-            Box(contentAlignment = Alignment.Center) { Text("?", style = MaterialTheme.typography.labelSmall) }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, modifier = Modifier.weight(1f))
+        Surface(
+            Modifier.size(20.dp).clickable { showHelp = true },
+            shape = CircleShape,
+            color = DarkRoast.copy(alpha = 0.12f),
+            contentColor = DarkRoast
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("?", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
     if (showHelp) AlertDialog(
@@ -1122,7 +1131,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) { Icon(Icons.Default.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
 
-            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = beanNextKeyboardOptions, keyboardActions = beanNextKeyboardActions(focusManager))
+            OutlinedTextField(roastery, { roastery = it }, label = { Text("Roastery *") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = beanNextKeyboardOptions, keyboardActions = beanNextKeyboardActions(focusManager))
             OutlinedTextField(country, { country = it }, label = { Text("Country of roaster") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(name, { name = it }, label = { Text("Coffee name") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(notes, { notes = it }, label = { FieldLabel("Flavour notes", "These are the flavours the roaster describes for the coffee. They give you an indication of what to look for when tasting your brewed coffee and help you understand whether your brewing recipe brings out the intended characteristics.") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
@@ -1153,7 +1162,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             }
             OutlinedTextField(score, { score = it }, label = { FieldLabel("Cupping score", "A cupping score is a standardised 100-point quality rating given to specialty coffee by trained tasters, known as Q Graders, during a sensory evaluation process called cupping.") }, modifier = Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             HorizontalDivider(Modifier.padding(vertical=8.dp))
-            Text("Coffee details (optional)",style=MaterialTheme.typography.titleMedium)
+            Text("Coffee details",style=MaterialTheme.typography.titleMedium)
             OutlinedTextField(origin,{origin=it},label={FieldLabel("Origin", "Where was the coffee grown? Origin is important for transparency and traceability. Different countries, regions and growing elevations can influence flavour.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(farm,{farm=it},label={FieldLabel("Farm", "Knowing the farm helps with transparency and traceability. Different farms can produce different flavour profiles, and farm information can help you understand how and where the coffee was produced.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
             OutlinedTextField(region,{region=it},label={FieldLabel("Region", "The wider geographical area where the coffee was grown. Regional climate, soil, elevation and local practices can influence flavour.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
@@ -1195,6 +1204,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
     val scope = rememberCoroutineScope()
     var showBagDialog by remember { mutableStateOf(false) }
     var askToAddBag by remember { mutableStateOf(false) }
+    var confirmDeleteBean by remember { mutableStateOf(false) }
     LaunchedEffect(autoOpenAddBag) {
         if (autoOpenAddBag) askToAddBag = true
     }
@@ -1202,7 +1212,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
     var showFinishedBags by remember { mutableStateOf(false) }
     var displayCur by remember { mutableStateOf<String?>(null) }   // null = show as paid
     var ratesOk by remember { mutableStateOf(Rates.loaded) }
-    LaunchedEffect(Unit) { ratesOk = Rates.load() }
+    LaunchedEffect(context) { ratesOk = Rates.load(context) }
     val b = bean ?: return
 
     Scaffold(
@@ -1214,13 +1224,9 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onEdit) { BeanActionIcon(BeanIconAction.EDIT, "Edit") }
-                    IconButton({
-                        scope.launch {
-                            dao.delete(b)
-                            deleteManagedPhoto(context, b.photoPath)
-                            onBack()
-                        }
-                    }) { BeanActionIcon(BeanIconAction.DELETE, "Delete") }
+                    IconButton({ confirmDeleteBean = true }) {
+                        BeanActionIcon(BeanIconAction.DELETE, "Delete")
+                    }
                 })
         },
         floatingActionButton = {
@@ -1264,9 +1270,18 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                     Text("Show in: ")
                     CurrencyMenu(displayCur, allowNone = true) { displayCur = it }
                 }
-                if (displayCur != null && !ratesOk)
-                    Text("Exchange rates unavailable (check your internet connection).",
-                        style = MaterialTheme.typography.bodySmall)
+                if (displayCur != null) {
+                    Text(
+                        buildString {
+                            append("Converted amounts use approximate ECB reference rates")
+                            Rates.rateDate?.let { append(" dated $it") }
+                            append(". Rates refresh about weekly when internet is available.")
+                            if (!ratesOk) append(" Showing the last saved rates.")
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DarkRoast.copy(alpha = 0.78f)
+                    )
+                }
             }
             items(bags.filter { !it.isFinished }, key={it.id}) { bag ->
                 BagCard(dao,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}})
@@ -1283,6 +1298,24 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
         }
     }
 
+    if (confirmDeleteBean) AlertDialog(
+        onDismissRequest = { confirmDeleteBean = false },
+        title = { Text("Delete coffee bean?", color = DarkRoast) },
+        text = { Text("This will permanently delete this bean and all its bags and shot history. This cannot be undone.", color = DarkRoast) },
+        confirmButton = {
+            TextButton(onClick = {
+                confirmDeleteBean = false
+                scope.launch {
+                    dao.delete(b)
+                    deleteManagedPhoto(context, b.photoPath)
+                    onBack()
+                }
+            }) { Text("Delete", color = Color(0xFF9B2C20)) }
+        },
+        dismissButton = { TextButton(onClick = { confirmDeleteBean = false }) { Text("Cancel") } },
+        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+    )
+
     if (askToAddBag) AlertDialog(
         onDismissRequest = { askToAddBag = false },
         title = { Text("Add a coffee bag?", color = DarkRoast) },
@@ -1298,7 +1331,10 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
 @Composable
 private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false) {
  val shots by dao.shots(bag.id).collectAsState(emptyList())
- val scope=rememberCoroutineScope(); val context=LocalContext.current; var add by remember{mutableStateOf(false)}; var showHistory by remember{mutableStateOf(false)}
+ val scope=rememberCoroutineScope(); val context=LocalContext.current
+ var add by remember{mutableStateOf(false)}
+ var showHistory by remember{mutableStateOf(false)}
+ var confirmDeleteBag by remember{mutableStateOf(false)}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
   colors=CardDefaults.cardColors(containerColor=LatteVariant),
   elevation=CardDefaults.cardElevation(defaultElevation=0.dp)) {
@@ -1309,14 +1345,20 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
      Text("${bag.weightG} g")
      if (bag.price > 0.0) {
       Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price / bag.weightG.coerceAtLeast(1), bag.currency, 3)}/g)")
-      cur?.let{c->if(c!=bag.currency)Rates.convert(bag.price,bag.currency,c)?.let{Text("≈ ${money(it)} $c")}}
+      cur?.let { c ->
+       if (c != bag.currency) {
+        Rates.convert(bag.price, bag.currency, c)?.let { converted ->
+         Text("≈ ${moneyWithCurrency(converted, c)} (approx.)",style=MaterialTheme.typography.bodySmall)
+        }
+       }
+      }
      }
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
      shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
-    IconButton(onClick=delete){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
+    IconButton(onClick={confirmDeleteBag=true}){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
    }
    HorizontalDivider()
    Row(verticalAlignment=Alignment.CenterVertically) {
@@ -1335,6 +1377,14 @@ private fun BagCard(dao:BeanDao,bag:Bag,cur:String?,edit:()->Unit,delete:()->Uni
  }
  if(add)ShotDialog({add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); add=false}}
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
+ if(confirmDeleteBag) AlertDialog(
+  onDismissRequest={confirmDeleteBag=false},
+  title={Text("Delete coffee bag?",color=DarkRoast)},
+  text={Text("This will permanently delete this bag and all its shot history. This cannot be undone.",color=DarkRoast)},
+  confirmButton={TextButton(onClick={confirmDeleteBag=false;delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
+  dismissButton={TextButton(onClick={confirmDeleteBag=false}){Text("Cancel")}},
+  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+ )
 }
 private data class ShotSentiment(val emoji:String,val percent:Int,val liked:Int,val rated:Int)
 
@@ -1501,7 +1551,32 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
     }
    }
   }
-  OutlinedTextField(recommendedGrind,{recommendedGrind=it},label={Text("Recommended grind setting")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+  var showRecommendedGrind by remember(initial?.id) {
+   mutableStateOf(!initial?.recommendedGrindSetting.isNullOrBlank())
+  }
+  if (showRecommendedGrind) {
+   OutlinedTextField(
+    recommendedGrind,
+    {recommendedGrind=it},
+    label={Text("Recommended grind setting")},
+    modifier=Modifier.fillMaxWidth(),
+    colors=beanTextFieldColors(),
+    trailingIcon={
+     IconButton(onClick={showRecommendedGrind=false;recommendedGrind=""}) {
+      Icon(Icons.Default.Close,contentDescription="Remove grind setting")
+     }
+    }
+   )
+  } else {
+   TextButton(
+    onClick={showRecommendedGrind=true},
+    contentPadding=PaddingValues(horizontal=4.dp,vertical=2.dp)
+   ) {
+    Icon(Icons.Default.Add,contentDescription=null)
+    Spacer(Modifier.width(6.dp))
+    Text("Do you want to add a grind setting?")
+   }
+  }
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
  }},
  confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0,onClick={
