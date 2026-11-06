@@ -1776,7 +1776,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
      ){
       Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){
        Row(verticalAlignment=Alignment.CenterVertically){
-        Text("SHOT ${(index+1).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
+        Text("SHOT ${(shots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
         Spacer(Modifier.weight(1f))
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
