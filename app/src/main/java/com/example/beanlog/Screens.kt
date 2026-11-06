@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,9 +15,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -59,6 +64,7 @@ import com.example.beanlog.ui.theme.DarkRoast
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -240,11 +246,123 @@ private fun countryFlag(country: String): String {
     return code.uppercase().map { String(Character.toChars(0x1F1E6 + it.code - 65)) }.joinToString("")
 }
 
-/** Copy the picked image into app storage so it stays available. */
-private fun copyToInternal(ctx: Context, uri: Uri): String {
-    val f = File(ctx.filesDir, "bean_${System.currentTimeMillis()}.jpg")
-    ctx.contentResolver.openInputStream(uri)?.use { i -> f.outputStream().use { o -> i.copyTo(o) } }
-    return f.absolutePath
+/**
+ * A softly tilted coffee-bean silhouette. The photo itself remains a normal image;
+ * only its on-screen presentation is clipped to this shape.
+ */
+private val CoffeeBeanPhotoShape = GenericShape { size, _ ->
+    moveTo(size.width * 0.52f, size.height * 0.02f)
+    cubicTo(size.width * 0.82f, size.height * -0.01f,
+        size.width * 1.02f, size.height * 0.22f,
+        size.width * 0.95f, size.height * 0.50f)
+    cubicTo(size.width * 0.89f, size.height * 0.75f,
+        size.width * 0.68f, size.height * 0.98f,
+        size.width * 0.43f, size.height * 0.97f)
+    cubicTo(size.width * 0.17f, size.height * 0.96f,
+        size.width * 0.01f, size.height * 0.76f,
+        size.width * 0.04f, size.height * 0.49f)
+    cubicTo(size.width * 0.07f, size.height * 0.22f,
+        size.width * 0.28f, size.height * 0.04f,
+        size.width * 0.52f, size.height * 0.02f)
+    close()
+}
+
+/** Display a photo in BeanLog's coffee-bean silhouette with a subtle centre crease. */
+@Composable
+private fun BeanPhoto(path: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(CoffeeBeanPhotoShape)
+            .border(1.dp, DarkRoast.copy(alpha = 0.38f), CoffeeBeanPhotoShape)
+    ) {
+        AsyncImage(
+            model = File(path),
+            contentDescription = "Coffee bean photo",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Canvas(Modifier.fillMaxSize()) {
+            val crease = Path().apply {
+                moveTo(size.width * 0.64f, size.height * 0.10f)
+                cubicTo(size.width * 0.28f, size.height * 0.31f,
+                    size.width * 0.73f, size.height * 0.66f,
+                    size.width * 0.36f, size.height * 0.91f)
+            }
+            drawPath(
+                crease,
+                Color(0xFF2B1A12).copy(alpha = 0.28f),
+                style = Stroke(width = size.width * 0.018f, cap = StrokeCap.Round)
+            )
+        }
+    }
+}
+
+/**
+ * Decode with sampling, then cap the longest edge at 1200 px and store a
+ * moderately compressed JPEG. Returns null rather than crashing if the URI
+ * cannot be read or the image cannot be decoded.
+ */
+private fun compressPickedImage(ctx: Context, uri: Uri): String? {
+    var decoded: Bitmap? = null
+    var scaled: Bitmap? = null
+    var output: File? = null
+    return try {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        ctx.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, bounds)
+        }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+        val maxDimension = maxOf(bounds.outWidth, bounds.outHeight)
+        var sampleSize = 1
+        while (maxDimension / sampleSize > 2400) sampleSize *= 2
+
+        val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        decoded = ctx.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, options)
+        } ?: return null
+
+        val decodedBitmap = decoded ?: return null
+        val decodedMax = maxOf(decodedBitmap.width, decodedBitmap.height)
+        val scale = minOf(1f, 1200f / decodedMax.toFloat())
+        val finalBitmap = if (scale < 1f) {
+            Bitmap.createScaledBitmap(
+                decodedBitmap,
+                (decodedBitmap.width * scale).toInt().coerceAtLeast(1),
+                (decodedBitmap.height * scale).toInt().coerceAtLeast(1),
+                true
+            ).also { scaled = it }
+        } else decodedBitmap
+
+        output = File.createTempFile("bean_", ".jpg", ctx.filesDir)
+        FileOutputStream(output).use { stream ->
+            if (!finalBitmap.compress(Bitmap.CompressFormat.JPEG, 84, stream)) {
+                throw IllegalStateException("Could not compress selected image")
+            }
+            stream.flush()
+        }
+        output.absolutePath
+    } catch (_: Exception) {
+        output?.delete()
+        null
+    } catch (_: OutOfMemoryError) {
+        output?.delete()
+        null
+    } finally {
+        if (scaled != null && scaled !== decoded) scaled?.recycle()
+        decoded?.recycle()
+    }
+}
+
+/** Delete only image files managed by BeanLog inside its private files directory. */
+private fun deleteManagedPhoto(ctx: Context, path: String?) {
+    if (path.isNullOrBlank()) return
+    runCatching {
+        val file = File(path)
+        if (file.canonicalFile.parentFile == ctx.filesDir.canonicalFile &&
+            file.name.startsWith("bean_") && file.extension.equals("jpg", ignoreCase = true)
+        ) file.delete()
+    }
 }
 
 @Composable
@@ -849,7 +967,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                     elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)) {
                     Row(Modifier.padding(if (count == 0) 8.dp else 12.dp).alpha(if(count==0) .48f else 1f), verticalAlignment=Alignment.CenterVertically) {
                         val imageSize = if (count == 0) 44.dp else 64.dp
-                        if(b.photoPath!=null) AsyncImage(File(b.photoPath),null,Modifier.size(imageSize),contentScale=ContentScale.Crop)
+                        if (b.photoPath != null) BeanPhoto(b.photoPath, Modifier.size(imageSize * 0.9f, imageSize))
                         else CoffeeBagIcon(Modifier.size(imageSize))
                         Spacer(Modifier.width(if (count == 0) 8.dp else 12.dp))
                         Column(Modifier.weight(1f)) {
@@ -921,6 +1039,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     var roast by remember { mutableStateOf("Medium") }
     var score by remember { mutableStateOf("") }
     var photo by remember { mutableStateOf<String?>(null) }
+    var originalPhoto by remember { mutableStateOf<String?>(null) }
     var cIn by remember { mutableStateOf("") }
     var cOut by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
@@ -931,21 +1050,31 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
         if (id != 0L) dao.bean(id).first()?.let {
             roastery = it.roastery; country = it.roasteryCountry; name = it.name
             notes = it.flavourNotes; roast = it.roastLevel
-            score = it.cuppingScore?.toString() ?: ""; photo = it.photoPath
+            score = it.cuppingScore?.toString() ?: ""; photo = it.photoPath; originalPhoto = it.photoPath
             cIn = it.coffeeInG?.toString() ?: ""; cOut = it.coffeeOutG?.toString() ?: ""
             time = it.brewTimeSec?.toString() ?: ""
             origin=it.origin; farm=it.farm; variety=it.variety; processing=it.processing
         }
     }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) photo = copyToInternal(ctx, uri)
+        if (uri != null) {
+            val compressedPath = compressPickedImage(ctx, uri)
+            if (compressedPath != null) {
+                val previousSelection = photo
+                photo = compressedPath
+                if (previousSelection != originalPhoto) deleteManagedPhoto(ctx, previousSelection)
+            }
+        }
     }
 
     Scaffold(containerColor = Color.Transparent, topBar = {
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = { Text(if (id == 0L) "New bean" else "Edit bean") }, actions = {
-            TextButton(onClick = { onDone(id, false) }) { Text("Cancel") }
+            TextButton(onClick = {
+                if (photo != originalPhoto) deleteManagedPhoto(ctx, photo)
+                onDone(id, false)
+            }) { Text("Cancel") }
             TextButton(enabled = roastery.isNotBlank(), onClick = {
                 scope.launch {
                     val bean = Bean(id, roastery.trim(), country.trim(), name.trim(), notes.trim(), roast,
@@ -955,6 +1084,8 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
                         dao.save(bean)
                         id
                     }
+                    if (originalPhoto != photo) deleteManagedPhoto(ctx, originalPhoto)
+                    originalPhoto = photo
                     onDone(savedId, id == 0L)
                 }
             }) { Text("Save") }
@@ -962,8 +1093,11 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
     }) { pad ->
         Column(Modifier.padding(pad).imePadding().padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (photo != null) AsyncImage(File(photo!!), null,
-                Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Crop)
+            if (photo != null) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    BeanPhoto(photo!!, Modifier.size(150.dp, 178.dp))
+                }
+            }
             OutlinedButton(onClick = {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) { Icon(Icons.Default.AddAPhoto, null); Spacer(Modifier.width(8.dp)); Text("Add picture") }
@@ -1034,6 +1168,7 @@ private fun CurrencyMenu(selected: String?, allowNone: Boolean, onPick: (String?
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit: () -> Unit, onBack: () -> Unit) {
+    val context = LocalContext.current
     val bean by dao.bean(id).collectAsState(null)
     val bags by dao.bags(id).collectAsState(emptyList())
     val scope = rememberCoroutineScope()
@@ -1057,7 +1192,13 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onEdit) { BeanActionIcon(BeanIconAction.EDIT, "Edit") }
-                    IconButton({ scope.launch { dao.delete(b); onBack() } }) { BeanActionIcon(BeanIconAction.DELETE, "Delete") }
+                    IconButton({
+                        scope.launch {
+                            dao.delete(b)
+                            deleteManagedPhoto(context, b.photoPath)
+                            onBack()
+                        }
+                    }) { BeanActionIcon(BeanIconAction.DELETE, "Delete") }
                 })
         },
         floatingActionButton = {
@@ -1068,8 +1209,11 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)) {
             item {
-                if (b.photoPath != null) AsyncImage(File(b.photoPath), null,
-                    Modifier.fillMaxWidth().height(200.dp), contentScale = ContentScale.Crop)
+                if (b.photoPath != null) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        BeanPhoto(b.photoPath, Modifier.size(156.dp, 184.dp))
+                    }
+                }
                 Text("${b.roastery} · ${countryFlag(b.roasteryCountry)}", style = MaterialTheme.typography.titleMedium)
                 Text("Roast: ${b.roastLevel}" + (b.cuppingScore?.let { " · Cup Score: $it" } ?: ""))
                 if (b.flavourNotes.isNotBlank()) Text("Notes: ${b.flavourNotes}")
