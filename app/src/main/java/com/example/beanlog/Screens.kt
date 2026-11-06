@@ -762,6 +762,370 @@ private val ROASTERS = listOf(
         ),
         note = "The roastery address at Parc Magellan, Rue de Ransbeek 230 1A, is not listed as a public shop."
     ),
+    // Belgium — additional independent and traditional roasters (provisional entries)
+    RoasterProfile(
+        name = "Kolonel Coffee", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://kolonelcoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Normo Coffee", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://normo.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Rush Rush Coffee Roasters", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://rushrush.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Cross Roast", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://crossroast.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Cuperus", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://cuperus.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffie Verheyen", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Mattheus B", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "St Michel", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffiebranderij Kavus", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Golden Bean", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Café7", area = "Antwerp", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Antwerp. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Parlor Coffee Roasters", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://parlor.coffee",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Belga & Co", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://belga-co.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Corica", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://corica.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Café Velvet", area = "Jodoigne", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Jodoigne. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Aksum Coffee House", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Javry", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://javry.com",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Black Potion Coffee", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://blackpotioncoffee.com",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Boo Coffee Roasters", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://boocoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Café Capitale", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://cafecapitale.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Café Colombia", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://cafecolombia.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Gust Coffee Roasters", area = "Beersel", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Beersel. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://gust.coffee",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Natural Caffè", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Winok", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://winok.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Santos Palace", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "MOK Coffee", area = "Brussels", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Brussels. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://mokcoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "WAY Coffee Roasters", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://waycoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Full Circle Coffee", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://fullcircle.coffee",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Mokabon", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Café Labath", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Vandekerckhove's Koffiebranderij", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://vandekerckhove-koffie.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffiebranderij De Draak", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffiebranderij Sao Paulo", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Drip Coffee", area = "Zottegem", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Zottegem. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Hoorens Koffie", area = "Zottegem", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Zottegem. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Viva Sara", area = "Vichte", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Vichte. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://vivasara.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Maeskes Roem", area = "Moorsel", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Moorsel. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://maeskesroem.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Maximiliaan", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "King's Koffie", area = "Ghent", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Ghent. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Madmum Coffee Roasters", area = "Leuven", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Leuven. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://madmumcoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "NAFT Coffee Roasters", area = "Leuven", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Leuven. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://naft.coffee",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Onan", area = "Leuven", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Leuven. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "NAGA Coffee", area = "Rixensart", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Rixensart. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://nagacoffee.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Ross Specialty Coffee Roastery", area = "Leuven", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Leuven. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Dees Koffiebranders", area = "Bruges", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Bruges. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://dees.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Jolicoeur Coffee Roasters", area = "Mons", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Mons. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://jolicoeur.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Matubu Coffee Roastery", area = "Bruges", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Bruges. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://matubu.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffiebranderij Grymonprez", area = "Bruges", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Bruges. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Carantos", area = "Blankenberge", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Blankenberge. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://carantos.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Brazila", area = "Bruges", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Bruges. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Two Oh Five", area = "Maasmechelen", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Maasmechelen. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://twoohfive.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Delahaut", area = "Namur", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Namur. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Charles Liégeois", area = "Thimister", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Thimister. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://charlesliegeois.com",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "2:AM Coffee", area = "Namur", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Namur. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "STYLE COFFEE", area = "Merchtem", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Merchtem. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Fabo Coffee Roasters", area = "Mol", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Mol. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Ray & Jules", area = "Hamme-Mille", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Hamme-Mille. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://ray-jules.com",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Torrefactory", area = "Mont-Saint-Guibert", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Mont-Saint-Guibert. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://torrefactory.coffee",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "De Witte Zwaan", area = "Lievegem", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Lievegem. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "My Father Coffee", area = "Aalst", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Aalst. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Sas Coffee", area = "Beerse", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Beerse. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Taeymans Coffee Roasters", area = "Minderhout", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Minderhout. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Monx Roasters", area = "Belgium", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Belgium. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "De Lou", area = "Pelt", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Pelt. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Stroobants Koffie", area = "Diest", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Diest. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        website = "https://stroobantskoffie.be",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
+    RoasterProfile(
+        name = "Koffiebranderij Deprez", area = "Vichte", country = "Belgium", micro = "Unknown",
+        description = "Belgian coffee roaster or coffee-roasting business based in Vichte. The directory entry is included from the Belgian roaster review list; specific sourcing, roasting details and public-facing locations are being verified.",
+        note = "Public retail address, Instagram and detailed profile information still need verification. This is a provisional directory entry."
+    ),
     // Benelux — Luxembourg
     RoasterProfile(
         name = "Feierboun Coffeeroasters", area = "Luxembourg City · Bascharage", country = "Luxembourg", micro = "Unknown",
