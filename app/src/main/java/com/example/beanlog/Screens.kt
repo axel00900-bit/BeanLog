@@ -786,7 +786,8 @@ private data class RoasterProfile(
     val aliases: List<String> = emptyList(),
     val awards: String = "",
     val extraLinks: List<RoasterLink> = emptyList(),
-    val note: String = ""
+    val note: String = "",
+    val ectUrl: String? = null
 )
 
 private val ROASTERS = listOf(
@@ -1103,7 +1104,8 @@ private val ROASTERS = listOf(
         locations = listOf(
             RoasterLocation("PAKT", "Lamorinièrestraat 161, 2018", "Antwerp, Belgium", "Coffee bar / roastery / offices"),
             RoasterLocation("City Centre", "Mechelsesteenweg 16, 2000", "Antwerp, Belgium", "Coffee bar")
-        )
+        ),
+        ectUrl = "https://europeancoffeetrip.com/roaster/caffenationroasteryandbarpakt-belgium/"
     ),
     RoasterProfile(
         name = "Wide Awake Coffee Roasters", area = "Brussels · Ixelles", country = "Belgium", micro = "Unknown",
@@ -1113,7 +1115,8 @@ private val ROASTERS = listOf(
             RoasterLocation("Saint-Catherine", "Rue Sainte-Catherine 2, 1000", "Brussels, Belgium", "Flagship café / shop"),
             RoasterLocation("Flagey", "Rue Lesbroussart 34, 1050", "Ixelles, Belgium", "Espresso bar")
         ),
-        note = "The roastery address at Parc Magellan, Rue de Ransbeek 230 1A, is not listed as a public shop."
+        note = "The roastery address at Parc Magellan, Rue de Ransbeek 230 1A, is not listed as a public shop.",
+        ectUrl = "https://europeancoffeetrip.com/roaster/wideawakecoffee-bussels/"
     ),
     // Belgium — additional independent and traditional roasters (provisional entries)
     RoasterProfile(
@@ -1551,7 +1554,8 @@ private val ROASTERS = listOf(
         description = "Independent Stockholm specialty roastery and café, roasting in small batches since 2013. Known for transparent sourcing and clear, bright roast profiles.",
         website = "https://www.dropcoffee.com",
         locations = listOf(RoasterLocation("Mariatorget Café", "Wollmar Yxkullsgatan 10, 118 50", "Stockholm, Sweden", "Coffee shop / roastery café")),
-        awards = "Silver medal at the World Coffee Roasting Championship."
+        awards = "Silver medal at the World Coffee Roasting Championship.",
+        ectUrl = "https://europeancoffeetrip.com/roaster/dropcoffeeroasters/"
     ),
     RoasterProfile(
         name = "Koppi Roasters", area = "Helsingborg", country = "Sweden", micro = "Unknown",
@@ -1810,8 +1814,10 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                             Text("Website ↗")
                         }
                     }
-                    TextButton(onClick = { uriHandler.openUri("https://europeancoffeetrip.com/") }) {
-                        Text("European Coffee Trip ↗")
+                    roaster.ectUrl?.let { ectUrl ->
+                        TextButton(onClick = { uriHandler.openUri(ectUrl) }) {
+                            Text("European Coffee Trip ↗")
+                        }
                     }
                     roaster.extraLinks.forEach { link ->
                         TextButton(onClick = { uriHandler.openUri(link.url) }) { Text("${link.label} ↗") }
