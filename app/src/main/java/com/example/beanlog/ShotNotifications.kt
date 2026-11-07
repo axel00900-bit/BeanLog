@@ -57,8 +57,6 @@ class ShotReminderWorker(context: Context, params: WorkerParameters) : Coroutine
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val contentIntent = PendingIntent.getActivity(applicationContext, (shotId * 3).toInt(), openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val likeIntent = feedbackIntent(applicationContext, shotId, true)
-        val dislikeIntent = feedbackIntent(applicationContext, shotId, false)
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("How was that brew?")
