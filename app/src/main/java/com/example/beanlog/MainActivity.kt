@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     android.graphics.Color.rgb(86, 56, 39) // Light coffee-card brown
                 }
-                WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
+                WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                     window.isNavigationBarContrastEnforced = false
                 }
