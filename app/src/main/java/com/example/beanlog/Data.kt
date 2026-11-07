@@ -178,7 +178,7 @@ abstract class AppDb : RoomDatabase() {
 
         private val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE Shot ADD COLUMN photoPath TEXT")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN photoPath TEXT DEFAULT ''")
                 db.execSQL("ALTER TABLE Bag ADD COLUMN lastBrewAtMillis INTEGER NOT NULL DEFAULT 0")
             }
         }
