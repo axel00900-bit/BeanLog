@@ -423,6 +423,162 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
 
 
 
+private data class TasteStat(val name: String, val likedWeight: Int, val totalWeight: Int) {
+    val percent: Int get() = if (totalWeight == 0) 0 else (likedWeight * 100.0 / totalWeight).toInt()
+}
+
+private data class HistoryStat(val name: String, val count: Int, val percent: Int)
+
+@Composable
+private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
+    var beans by remember { mutableStateOf<List<Bean>>(emptyList()) }
+    var bags by remember { mutableStateOf<List<Bag>>(emptyList()) }
+    var brews by remember { mutableStateOf<List<Shot>>(emptyList()) }
+    var selectedTab by remember { mutableIntStateOf(0) }
+    LaunchedEffect(dao) {
+        withContext(Dispatchers.IO) {
+            beans = dao.allBeans()
+            bags = dao.allBags()
+            brews = dao.allShots()
+        }
+    }
+    val bagsByBean = bags.groupBy { it.beanId }
+    val bagsById = bags.associateBy { it.id }
+    val brewsByBean = brews.groupBy { brew -> bagsById[brew.bagId]?.beanId }
+    val tasteGroups = listOf(
+        "Variety" to { bean: Bean -> bean.variety },
+        "Farm" to { bean: Bean -> bean.farm },
+        "Roast level" to { bean: Bean -> bean.roastLevel },
+        "Roaster" to { bean: Bean -> bean.roastery },
+        "Processing" to { bean: Bean -> bean.processing }
+    ).mapNotNull { (category, valueOf) ->
+        val totals = linkedMapOf<String, Pair<Int, Int>>()
+        beans.forEach { bean ->
+            val label = valueOf(bean).trim()
+            if (label.isNotBlank()) {
+                var liked = 0
+                var total = 0
+                (brewsByBean[bean.id] ?: emptyList()).forEach { brew ->
+                    if (brew.liked != null) {
+                        total += 1
+                        if (brew.liked == true) liked += 1
+                    }
+                }
+                (bagsByBean[bean.id] ?: emptyList()).forEach { bag ->
+                    if (bag.liked != null) {
+                        total += 3
+                        if (bag.liked == true) liked += 3
+                    }
+                }
+                if (total > 0) {
+                    val previous = totals[label] ?: (0 to 0)
+                    totals[label] = (previous.first + liked) to (previous.second + total)
+                }
+            }
+        }
+        val stats = totals.map { (name, weights) -> TasteStat(name, weights.first, weights.second) }
+            .sortedWith(compareByDescending<TasteStat> { it.percent }.thenByDescending { it.totalWeight })
+        if (stats.isEmpty()) null else category to stats
+    }
+    val historyGroups = listOf(
+        "Variety" to { bean: Bean -> bean.variety },
+        "Roaster" to { bean: Bean -> bean.roastery },
+        "Processing" to { bean: Bean -> bean.processing },
+        "Farm" to { bean: Bean -> bean.farm },
+        "Roast level" to { bean: Bean -> bean.roastLevel },
+        "Origin" to { bean: Bean -> bean.origin }
+    ).mapNotNull { (category, valueOf) ->
+        val values = beans.map { valueOf(it).trim() }.filter { it.isNotBlank() }
+        val total = values.size
+        val stats = values.groupingBy { it }.eachCount().map { (name, count) ->
+            HistoryStat(name, count, if (total == 0) 0 else (count * 100.0 / total).toInt())
+        }.sortedWith(compareByDescending<HistoryStat> { it.count }.thenBy { it.name })
+        if (stats.isEmpty()) null else category to stats
+    }
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                title = { Text("Coffee insights", style = MaterialTheme.typography.headlineSmall) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = DarkRoast) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+        }
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = selectedTab) {
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("What you like") })
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Coffee history") })
+            }
+            if (selectedTab == 0) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    item {
+                        Text("Your taste profile", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
+                        Text("Shot ratings count as 1 vote. Liking a bag to buy again counts as 3 votes. Unrated brews and bags are excluded.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                    }
+                    if (tasteGroups.isEmpty()) item {
+                        Text("Rate brews or mark a bag as one you'd buy again to start building your taste profile.", color = DarkRoast)
+                    }
+                    tasteGroups.forEach { (category, stats) ->
+                        item {
+                            Card(colors = CardDefaults.cardColors(containerColor = LatteVariant), modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                    Text(category, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                                    stats.forEach { stat ->
+                                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                                Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium)
+                                                Text("${stat.percent}% liked · ${stat.totalWeight} votes", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
+                                            }
+                                            LinearProgressIndicator(
+                                                progress = { stat.percent / 100f },
+                                                modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
+                                                color = Color(0xFF987052),
+                                                trackColor = DarkRoast.copy(alpha = .12f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    item {
+                        Text("Your coffee history", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
+                        Text("${beans.size} coffees recorded. Percentages are based on the number of bean entries with that detail, not bag weight or brew count.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                    }
+                    if (historyGroups.isEmpty()) item { Text("Add coffees with variety, roaster or processing details to build your history.", color = DarkRoast) }
+                    historyGroups.forEach { (category, stats) ->
+                        item {
+                            Card(colors = CardDefaults.cardColors(containerColor = LatteVariant), modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                    Text(category, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                                    stats.forEach { stat ->
+                                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                                Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium)
+                                                Text("${stat.percent}% · ${stat.count} coffees", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
+                                            }
+                                            LinearProgressIndicator(
+                                                progress = { stat.percent / 100f },
+                                                modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
+                                                color = Color(0xFF987052),
+                                                trackColor = DarkRoast.copy(alpha = .12f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ---------- Danish roastery directory ----------
 private data class RoasterLocation(
     val name: String,
