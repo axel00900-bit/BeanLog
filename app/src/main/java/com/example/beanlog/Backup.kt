@@ -142,7 +142,9 @@ object BeanLogBackup {
                 grindSetting = o.optString("grindSetting"), liked = o.booleanOrNull("liked"),
                 pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"))
         }
-        val contents = BackupContents(beans, bags, shots, entries.filterKeys { it.startsWith("photos/") })
+        val beanPhotoEntries = beans.mapNotNull { it.photoPath }.toSet()
+        // Ignore legacy Brew-photo entries from older backups; only Bean photos remain supported.
+        val contents = BackupContents(beans, bags, shots, entries.filterKeys { it in beanPhotoEntries })
         return BackupPreview(beans.size, bags.size, shots.size) to contents
     }
 
