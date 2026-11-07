@@ -2645,7 +2645,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
        shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",pulledAtMillis=System.currentTimeMillis())
        add=true
       }
-     }){BeanActionIcon(BeanIconAction.ADD,"Add brew");Text("Add brew")}
+     }){Icon(Icons.Default.Add, contentDescription = "Add brew");Text("Add brew")}
    }
    shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} brews)",style=MaterialTheme.typography.bodySmall) }
    shots.sortedByDescending { it.id }.take(2).forEach{shot->
