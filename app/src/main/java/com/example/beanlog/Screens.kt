@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -397,6 +398,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
             modifier = Modifier.size(3120.dp).alpha(0.12f),
             contentScale = ContentScale.Fit
         )
+        CompositionLocalProvider(LocalContentColor provides DarkRoast) {
         NavHost(nav, startDestination = "list") {
             composable("list") {
                 BeanList(dao, onOpen = { nav.navigate("detail/$it/false/0/0") },
@@ -425,6 +427,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
                     if (isNew) nav.navigate("detail/$savedId/true/0/0")
                 })
             }
+        }
         }
     }
 }
@@ -1574,8 +1577,7 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                                 Text(
                                     roaster.name,
                                     modifier = Modifier.weight(1f).clickable {
-                                        val url = roaster.instagram
-                                        if (url != null) uriHandler.openUri(url) else selectedRoaster = roaster
+                                        selectedRoaster = roaster
                                     },
                                     style = MaterialTheme.typography.titleMedium,
                                     color = DarkRoast
@@ -1704,19 +1706,20 @@ private fun SectionSwitchBar(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding()
                 .padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Surface(
                 onClick = onClick,
+                modifier = Modifier.weight(1f).height(48.dp),
                 color = BeanLogNavButtonSurface,
                 contentColor = BeanLogNavButtonText,
                 shape = MaterialTheme.shapes.large,
                 shadowElevation = 2.dp
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     if (isRoasters) {
                         BeanActionIcon(
@@ -1726,27 +1729,26 @@ private fun SectionSwitchBar(
                             color = BeanLogNavButtonText
                         )
                     } else {
-                        Icon(Icons.Default.Storefront, contentDescription = "Roasters")
+                        Icon(Icons.Default.Storefront, contentDescription = "Roasters", modifier = Modifier.size(24.dp))
                     }
+                    Spacer(Modifier.width(8.dp))
                     Text(label, style = MaterialTheme.typography.labelLarge)
                 }
             }
             if (onAdd != null) {
-                ExtendedFloatingActionButton(
+                Surface(
                     onClick = onAdd,
-                    icon = {
-                        BeanActionIcon(
-                            BeanIconAction.BEAN,
-                            "Add bean",
-                            modifier = Modifier.size(23.dp),
-                            color = BeanLogNavButtonText
-                        )
-                    },
-                    text = { Text("Add bean", style = MaterialTheme.typography.labelLarge) },
-                    containerColor = BeanLogNavButtonSurface,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    color = BeanLogNavButtonSurface,
                     contentColor = BeanLogNavButtonText,
-                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
-                )
+                    shape = MaterialTheme.shapes.large,
+                    shadowElevation = 2.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        BeanActionIcon(BeanIconAction.BEAN, null, Modifier.size(34.dp).alpha(0.34f), BeanLogNavButtonText)
+                        Text("Add bean", style = MaterialTheme.typography.labelLarge, color = BeanLogNavButtonText)
+                    }
+                }
             }
         }
     }
@@ -2419,7 +2421,6 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
      shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
-    TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=if(bag.liked==true)null else true))}}){Text(if(bag.liked==true) "♥ Buy again" else "♡ Buy again",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast)}
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
     IconButton(onClick={confirmDeleteBag=true}){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
    }
@@ -2532,7 +2533,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
-       shot.photoPath?.let { AsyncImage(model=File(it),contentDescription="Brew result photo",modifier=Modifier.fillMaxWidth().heightIn(max=220.dp).clip(MaterialTheme.shapes.medium),contentScale=ContentScale.Crop) }
+       
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
        var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
@@ -2561,7 +2562,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
          text={OutlinedTextField(feedbackText,{feedbackText=it},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,label={Text("Feedback")},colors=beanTextFieldColors())},
          confirmButton={TextButton(onClick={scope.launch{dao.saveShot(target.copy(note=feedbackText.trim()));editingFeedback=null}}){Text("Save")}},
          dismissButton={TextButton(onClick={editingFeedback=null}){Text("Cancel")}},
-         containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+         containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
         )
        }
        if(showTips) Surface(color=BeanLogTipSurface.copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
@@ -2582,7 +2583,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   confirmButton={TextButton(onClick=dismiss){Text("Close")}},
   dismissButton={TextButton(onClick={dismiss();edit()}){Text("Edit bag")}},
   shape=MaterialTheme.shapes.extraLarge,
-  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
 private fun shotDateTime(timestamp:Long):String =
@@ -2680,7 +2681,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
  shape=MaterialTheme.shapes.extraLarge,
- containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast)
+ containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast)
  if(picker && !unknownDate){val state=rememberDatePickerState(initialSelectedDateMillis=isoToMillis(date))
   DatePickerDialog(onDismissRequest={picker=false},confirmButton={TextButton(onClick={state.selectedDateMillis?.let{date=millisToIso(it)};picker=false}){Text("OK")}},
   dismissButton={TextButton(onClick={picker=false}){Text("Cancel")}}){DatePicker(state)}
@@ -2725,7 +2726,7 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
     }
     
     photoPath?.let {
-     AsyncImage(model=File(it),contentDescription="Brew result preview",modifier=Modifier.size(54.dp).clip(MaterialTheme.shapes.small),contentScale=ContentScale.Crop)
+     Text("Photo added", style=MaterialTheme.typography.labelSmall, color=DarkRoast)
      IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
       Icon(Icons.Default.Close,contentDescription="Remove brew photo",tint=DarkRoast)
      }
@@ -2746,6 +2747,6 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
   confirmButton={},
   dismissButton={},
   shape=MaterialTheme.shapes.extraLarge,
-  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
