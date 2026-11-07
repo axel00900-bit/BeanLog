@@ -453,6 +453,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
     var selectedTasteCategory by remember { mutableStateOf("Roaster") }
     val expandedHistory = remember { mutableStateListOf<String>() }
     var selectedHistoryDetail by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var selectedTasteDetail by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     LaunchedEffect(dao) {
         withContext(Dispatchers.IO) {
@@ -554,7 +555,12 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     Text(selectedTasteCategory, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
                                     selectedStats.forEach { stat ->
-                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Column(
+                                            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                                                .clickable { selectedTasteDetail = selectedTasteCategory to stat.name }
+                                                .padding(vertical = 4.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
                                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                                 Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                                                 Text("${stat.percent}% liked · ${100 - stat.percent}% disliked", color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.labelMedium)
@@ -565,7 +571,10 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                                                 color = Color(0xFF987052),
                                                 trackColor = DarkRoast.copy(alpha = .12f)
                                             )
-                                            Text("${stat.totalWeight} votes", color = DarkRoast.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall)
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                Text("${stat.totalWeight} votes", color = DarkRoast.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall)
+                                                Text("View coffees  ›", color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.labelSmall)
+                                            }
                                         }
                                     }
                                 }
@@ -622,6 +631,69 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                 }
             }
         }
+    }
+
+    selectedTasteDetail?.let { (category, value) ->
+        val valueOf: (Bean) -> String = when (category) {
+            "Roaster" -> { bean -> bean.roastery }
+            "Variety" -> { bean -> bean.variety }
+            "Processing" -> { bean -> bean.processing }
+            "Farm" -> { bean -> bean.farm }
+            "Roast level" -> { bean -> bean.roastLevel }
+            else -> { _ -> "" }
+        }
+        val matchingBeans = beans.filter { bean ->
+            val matchesValue = valueOf(bean).trim().equals(value, ignoreCase = true)
+            val beanLikedVotes = if (bean.liked) 3 else 0
+            val beanTotalVotes = if (bean.liked) 3 else 0
+            val brewVotes = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
+            matchesValue && (beanTotalVotes > 0 || brewVotes.isNotEmpty())
+        }
+        AlertDialog(
+            onDismissRequest = { selectedTasteDetail = null },
+            title = { Text("$value · ${matchingBeans.size} coffees", color = DarkRoast) },
+            text = {
+                Column(
+                    Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    if (matchingBeans.isEmpty()) {
+                        Text("No rated coffees in this group yet.", color = DarkRoast)
+                    }
+                    matchingBeans.forEachIndexed { index, bean ->
+                        val ratedBrews = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
+                        val likedVotes = (if (bean.liked) 3 else 0) + ratedBrews.count { it.liked == true }
+                        val totalVotes = (if (bean.liked) 3 else 0) + ratedBrews.size
+                        Column(
+                            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                                .clickable {
+                                    val preferredBag = bags.filter { it.beanId == bean.id }
+                                        .sortedWith(compareBy<Bag> { it.isFinished }.thenByDescending { it.lastBrewAtMillis }.thenByDescending { it.id })
+                                        .firstOrNull()
+                                    onOpenCoffee(bean.id, preferredBag?.id)
+                                }
+                                .padding(vertical = 5.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(bean.name.ifBlank { bean.roastery }, color = DarkRoast, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "${bean.roastery} · $likedVotes liked / ${totalVotes - likedVotes} disliked votes",
+                                color = DarkRoast.copy(alpha = .78f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            val details = listOf(
+                                "Origin" to bean.origin, "Farm" to bean.farm, "Variety" to bean.variety,
+                                "Processing" to bean.processing, "Roast" to bean.roastLevel
+                            ).filter { it.second.isNotBlank() }
+                            if (details.isNotEmpty()) Text(details.joinToString(" · ") { "${it.first}: ${it.second}" }, color = DarkRoast.copy(alpha = .82f), style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (index < matchingBeans.lastIndex) HorizontalDivider(color = DarkRoast.copy(alpha = .16f))
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { selectedTasteDetail = null }) { Text("Close") } },
+            containerColor = CoffeeCream, titleContentColor = DarkRoast, textContentColor = DarkRoast
+        )
     }
 
     selectedHistoryDetail?.let { (category, value) ->
