@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,9 +16,6 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 private const val CHANNEL_ID = "shot_feedback"
@@ -74,31 +70,6 @@ private fun createShotChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= 26) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Brew feedback", NotificationManager.IMPORTANCE_DEFAULT))
-    }
-}
-
-private fun feedbackIntent(context: Context, shotId: Long, liked: Boolean): PendingIntent {
-    val intent = Intent(context, ShotFeedbackReceiver::class.java)
-        .setAction("com.example.beanlog.SHOT_FEEDBACK")
-        .putExtra("shot_id", shotId)
-        .putExtra("liked", liked)
-    val requestCode = (shotId * 2 + if (liked) 1 else 0).toInt()
-    return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-}
-
-class ShotFeedbackReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != "com.example.beanlog.SHOT_FEEDBACK") return
-        val shotId = intent.getLongExtra("shot_id", -1L)
-        val liked = intent.getBooleanExtra("liked", false)
-        val pending = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val dao = AppDb.create(context.applicationContext).dao()
-                dao.shotById(shotId)?.let { dao.saveShot(it.copy(liked = liked)) }
-                NotificationManagerCompat.from(context).cancel(shotId.toInt())
-            } finally { pending.finish() }
-        }
     }
 }
 
