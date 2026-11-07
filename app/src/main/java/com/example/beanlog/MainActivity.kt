@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.beanlog.ui.theme.BeanLogTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +24,13 @@ class MainActivity : ComponentActivity() {
         darkMode = preferences.getBoolean("dark_theme", false)
         updateNotificationDestination(intent)
         setContent {
+            SideEffect {
+                window.navigationBarColor = android.graphics.Color.rgb(38, 25, 18)
+                WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
+            }
             BeanLogTheme(darkMode) {
                 App(dao, pendingBeanId, pendingBagId, pendingBrewId, darkMode, navigationRequestId) { enabled ->
                     darkMode = enabled
