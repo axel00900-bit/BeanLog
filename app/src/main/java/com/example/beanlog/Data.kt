@@ -122,7 +122,7 @@ interface BeanDao {
     @Query("SELECT * FROM Bag WHERE id = :id LIMIT 1") suspend fun bagById(id: Long): Bag?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 8, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 9, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -183,10 +183,38 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Remove the obsolete Brew photo column without touching Bean photos.
+                db.execSQL("""
+                    CREATE TABLE Shot_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        bagId INTEGER NOT NULL,
+                        groundCoffeeG REAL NOT NULL,
+                        yieldG REAL NOT NULL,
+                        timeSec INTEGER NOT NULL,
+                        grindSetting TEXT NOT NULL DEFAULT '',
+                        liked INTEGER,
+                        pulledAtMillis INTEGER NOT NULL DEFAULT 0,
+                        note TEXT NOT NULL DEFAULT '',
+                        FOREIGN KEY(bagId) REFERENCES Bag(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    INSERT INTO Shot_new (id, bagId, groundCoffeeG, yieldG, timeSec, grindSetting, liked, pulledAtMillis, note)
+                    SELECT id, bagId, groundCoffeeG, yieldG, timeSec, grindSetting, liked, pulledAtMillis, note
+                    FROM Shot
+                """.trimIndent())
+                db.execSQL("DROP TABLE Shot")
+                db.execSQL("ALTER TABLE Shot_new RENAME TO Shot")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_Shot_bagId ON Shot(bagId)")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
-                .fallbackToDestructiveMigration(true)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                // Never silently erase a user's coffee records when a migration is missing.
                 .build()
     }
 }
