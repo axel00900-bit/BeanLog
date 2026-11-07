@@ -2631,12 +2631,25 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
        var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
+       val brewPhotoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if(uri != null) {
+         val newPath = compressPickedImage(context, uri)
+         if(newPath != null) scope.launch {
+          if(shot.photoPath != null) deleteManagedPhoto(context, shot.photoPath)
+          dao.saveShot(shot.copy(photoPath=newPath))
+         }
+        }
+       }
        Row(
         modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.spacedBy(6.dp)
        ) {
-        Text(shot.note,modifier=Modifier.weight(1f).clickable { if(shot.note.isNotBlank()){editingFeedback=shot; feedbackText=shot.note} },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
+        Text(
+         shot.note.ifBlank { "+ Add feedback" },
+         modifier=Modifier.weight(1f).clickable { editingFeedback=shot; feedbackText=shot.note },
+         style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText
+        )
         Surface(
          modifier=Modifier.clickable { showTips=!showTips },
          color=BeanLogTipSurface.copy(alpha=0.58f),
@@ -2647,8 +2660,12 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
           modifier=Modifier.padding(horizontal=10.dp,vertical=7.dp),
           style=MaterialTheme.typography.labelMedium)
         }
+        IconButton(onClick={brewPhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
+         Icon(Icons.Default.AddAPhoto, contentDescription="Add or change brew photo",
+          tint=if(shot.photoPath != null) Color(0xFF8FC99A) else CoffeeCardText,
+          modifier=Modifier.size(20.dp))
+        }
        }
-       if(shot.note.isBlank()) TextButton(onClick={editingFeedback=shot;feedbackText=""}) { Text("+ Add feedback",color=CoffeeCardText) }
        editingFeedback?.let { target ->
         AlertDialog(
          onDismissRequest={editingFeedback=null},
