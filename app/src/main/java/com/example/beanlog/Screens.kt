@@ -2490,6 +2490,7 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
  var grind by remember(initial){mutableStateOf(initial?.grindSetting ?: "")}
  var note by remember{mutableStateOf("")}
  var showFeedback by remember{mutableStateOf(false)}
+ val canSave=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text("Add shot",color=DarkRoast)},
@@ -2504,9 +2505,14 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
    } else {
     TextButton(onClick={showFeedback=true}) { Text("+ Add feedback") }
    }
+   // Keep actions inside the scrollable, IME-aware content so Save remains reachable with the keyboard open.
+   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
+    TextButton(onClick=dismiss) { Text("Cancel") }
+    TextButton(enabled=canSave,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))}) { Text("Save") }
+   }
   }},
-  confirmButton={TextButton(enabled=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))}){Text("Save")}},
-  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
+  confirmButton={},
+  dismissButton={},
   shape=MaterialTheme.shapes.extraLarge,
   containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
