@@ -535,7 +535,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your taste profile", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
-                        Text("Bean likes count as 3 votes. Each Brew rating counts as 1 vote.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                        Text("Bean and bag ratings count as 3 votes each. Each Brew rating counts as 1 vote.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
                     }
                     item {
                         Row(
