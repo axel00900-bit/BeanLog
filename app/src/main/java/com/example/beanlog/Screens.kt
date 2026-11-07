@@ -1806,11 +1806,8 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                             Text("Website ↗")
                         }
                     }
-                    roaster.ectUrl?.let { ectUrl ->
-                        TextButton(onClick = { uriHandler.openUri(ectUrl) }) {
-                            Text("European Coffee Trip ↗")
-                        }
-                    }
+                    // European Coffee Trip links are retained in RoasterProfile. Add
+                    // the UI back once profile URLs can be verified systematically.
                     roaster.extraLinks.forEach { link ->
                         TextButton(onClick = { uriHandler.openUri(link.url) }) { Text("${link.label} ↗") }
                     }
@@ -1934,6 +1931,7 @@ private fun SectionSwitchBar(
 private enum class BeanSortOption(val label: String) {
     ROAST_DATE("Roast date"),
     RECENTLY_ADDED("Recently added"),
+    RECENTLY_BREWED("Recently brewed"),
     NAME("Name")
 }
 
@@ -1995,25 +1993,47 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
     }
 
     val sortedBeans = remember(beans, sortOption, ascending) {
-        when (sortOption) {
+        val bySelectedOption = when (sortOption) {
             BeanSortOption.ROAST_DATE -> beans.sortedWith(Comparator { a, b ->
-                val da=a.latestRoastDate; val db=b.latestRoastDate
-                when { da==null && db!=null -> 1; da!=null && db==null -> -1
-                    else -> { val c=(da ?: "").compareTo(db ?: ""); if(ascending)c else -c } }
+                val da = a.latestRoastDate
+                val db = b.latestRoastDate
+                when {
+                    da.isNullOrBlank() && !db.isNullOrBlank() -> 1
+                    !da.isNullOrBlank() && db.isNullOrBlank() -> -1
+                    else -> {
+                        val comparison = (da ?: "").compareTo(db ?: "")
+                        if (ascending) comparison else -comparison
+                    }
+                }
             })
+            // A coffee's own ID records when that bean was created. Adding a bag
+            // later must not make an old coffee look newly added.
             BeanSortOption.RECENTLY_ADDED -> beans.sortedWith(
-                compareBy<BeanWithLatestBag> { it.latestBagId == 0L }
-                    .thenBy { if (ascending) it.latestBagId else -it.latestBagId }
+                compareBy<BeanWithLatestBag> { if (ascending) it.bean.id else -it.bean.id }
                     .thenBy { it.bean.name.lowercase() }
             )
+            BeanSortOption.RECENTLY_BREWED -> beans.sortedWith(Comparator { a, b ->
+                val aHasBrew = a.latestBrewAtMillis > 0L
+                val bHasBrew = b.latestBrewAtMillis > 0L
+                when {
+                    !aHasBrew && bHasBrew -> 1
+                    aHasBrew && !bHasBrew -> -1
+                    !aHasBrew && !bHasBrew -> a.bean.name.compareTo(b.bean.name, ignoreCase = true)
+                    else -> {
+                        val comparison = a.latestBrewAtMillis.compareTo(b.latestBrewAtMillis)
+                        if (ascending) comparison else -comparison
+                    }
+                }
+            })
             BeanSortOption.NAME -> {
                 val byName = compareBy<BeanWithLatestBag> { it.bean.name.lowercase() }
                     .thenBy { it.bean.roastery.lowercase() }
                 beans.sortedWith(if (ascending) byName else byName.reversed())
             }
         }
-            // Beans with at least one unfinished bag always stay above beans with no available bags.
-            .sortedByDescending { it.latestBrewAtMillis }
+        // Keep availability grouping as the one consistent priority. The selected
+        // sort controls order within each group; Brew activity no longer overrides it.
+        bySelectedOption
             .sortedBy { if (it.openBagCount > 0) 0 else 1 }
             .map { Triple(it.bean, it.openBagCount, it.bean.liked) }
     }
