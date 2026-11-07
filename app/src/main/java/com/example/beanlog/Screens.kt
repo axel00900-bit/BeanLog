@@ -368,7 +368,7 @@ private fun deleteManagedPhoto(ctx: Context, path: String?) {
 }
 
 @Composable
-fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, initialBrewId: Long? = null) {
+fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, initialBrewId: Long? = null, darkMode: Boolean = false, onThemeChange: (Boolean) -> Unit = {}) {
     val nav = rememberNavController()
     LaunchedEffect(initialBeanId, initialBagId, initialBrewId) {
         if (initialBeanId != null) {
@@ -379,7 +379,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
     }
     Box(
         modifier = Modifier.fillMaxSize().background(
-            Brush.verticalGradient(colors = listOf(Color(0xFFF1E5D7), Color(0xFFFFFCF6)))
+            Brush.verticalGradient(colors = listOf(LatteVariant, CoffeeCream))
         ),
         contentAlignment = Alignment.Center
     ) {
@@ -394,7 +394,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
                 BeanList(dao, onOpen = { nav.navigate("detail/$it/false/0/0") },
                     onAdd = { nav.navigate("edit/0") },
                     onRoasters = { nav.navigate("roasters/${System.currentTimeMillis()}") },
-                    onInsights = { nav.navigate("insights") })
+                    onInsights = { nav.navigate("insights") }, darkMode = darkMode, onThemeChange = onThemeChange)
             }
             composable("roasters/{session}") {
                 RoasterDirectoryScreen(dao, onBack = { nav.popBackStack() })
@@ -1696,8 +1696,8 @@ private fun SectionSwitchBar(
         ) {
             Surface(
                 onClick = onClick,
-                color = Color(0xFF493323),
-                contentColor = Color(0xFFFFF8EC),
+                color = CoffeeCard,
+                contentColor = CoffeeCardText,
                 shape = MaterialTheme.shapes.large,
                 shadowElevation = 2.dp
             ) {
@@ -1711,7 +1711,7 @@ private fun SectionSwitchBar(
                             BeanIconAction.BEAN,
                             "My Beans",
                             modifier = Modifier.size(23.dp),
-                            color = Color(0xFFFFF8EC)
+                            color = CoffeeCardText
                         )
                     } else {
                         Icon(Icons.Default.Storefront, contentDescription = "Roasters")
@@ -1722,8 +1722,8 @@ private fun SectionSwitchBar(
             if (onAdd != null) {
                 Surface(
                     onClick = onAdd,
-                    color = Color(0xFF493323),
-                    contentColor = Color(0xFFFFF8EC),
+                    color = CoffeeCard,
+                    contentColor = CoffeeCardText,
                     shape = MaterialTheme.shapes.large,
                     shadowElevation = 2.dp
                 ) {
@@ -1750,7 +1750,7 @@ private enum class BeanSortOption(val label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters: () -> Unit, onInsights: () -> Unit) {
+fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters: () -> Unit, onInsights: () -> Unit, darkMode: Boolean, onThemeChange: (Boolean) -> Unit) {
     val beans by dao.beansWithLatestBag().collectAsState(emptyList())
     var sortOption by remember { mutableStateOf(BeanSortOption.ROAST_DATE) }
     // Recently added defaults to newest first; Name defaults to A–Z.
@@ -1924,7 +1924,13 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
         title={Text("Settings")},
         text={Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
             Row(verticalAlignment=Alignment.CenterVertically){
-                Text("Shot feedback reminder (30 min)",modifier=Modifier.weight(1f))
+                Row(verticalAlignment=Alignment.CenterVertically){
+                Text("Dark appearance",modifier=Modifier.weight(1f))
+                Switch(checked=darkMode,onCheckedChange=onThemeChange)
+            }
+            HorizontalDivider()
+            Row(verticalAlignment=Alignment.CenterVertically){
+            Text("Brew feedback reminder (30 min)",modifier=Modifier.weight(1f))
                 Switch(checked=remindersOn,onCheckedChange={enabled->
                     remindersOn=enabled
                     setShotRemindersEnabled(context,enabled)
@@ -1933,7 +1939,8 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                         notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 })
             }
-            Text("When enabled, BeanLog asks whether you liked each shot 30 minutes after it is saved. Notifications must also be allowed by Android.",style=MaterialTheme.typography.bodySmall)
+            }
+            Text("When enabled, BeanLog asks whether you liked each brew 30 minutes after it is saved. Notifications must also be allowed by Android.",style=MaterialTheme.typography.bodySmall)
             HorizontalDivider()
             Text("Backup & Restore",style=MaterialTheme.typography.titleMedium,color=DarkRoast)
             Text("Save your beans, bags, shot history, notes and coffee photos in one backup file.",style=MaterialTheme.typography.bodySmall)
@@ -2020,7 +2027,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                 }
             },
             dismissButton={TextButton(enabled=!restoreBusy,onClick={pendingBackup=null;pendingPreview=null}){Text("Cancel")}},
-            containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+            containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
         )
     }
     (backupMessage ?: restoreError)?.let { message ->
@@ -2043,7 +2050,7 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = DarkRoast,
     unfocusedBorderColor = DarkRoast.copy(alpha = 0.55f),
     cursorColor = DarkRoast,
-    focusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.90f),
+    focusedContainerColor = OatMilk.copy(alpha = 0.90f),
     unfocusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.82f)
 )
 
@@ -2374,7 +2381,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
        if (c != bag.currency) {
         Rates.convert(bag.price, bag.currency, c)?.let { convertedTotal ->
          Surface(
-          color=Color(0xFFEADCCB).copy(alpha=0.78f),
+          color=OatMilk.copy(alpha=0.78f),
           shape=MaterialTheme.shapes.medium,
           modifier=Modifier.fillMaxWidth()
          ) {
