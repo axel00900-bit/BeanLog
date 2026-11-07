@@ -2476,10 +2476,6 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
                     }
                 })
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = { showBagDialog = true },
-                icon = { BeanActionIcon(BeanIconAction.ADD, "Add") }, text = { Text("Add bag") })
-        }
     ) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -2511,7 +2507,17 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
                 ) {
                     Text(if (b.liked) "✓ Liked" else "♡ Like")
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { showBagDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkRoast, contentColor = CoffeeCream)
+                ) {
+                    BeanActionIcon(BeanIconAction.ADD, "Add")
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add bag")
+                }
+                Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Bags", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Text("Show in: ")
