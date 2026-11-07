@@ -87,8 +87,9 @@ private fun BeanActionIcon(
     action: BeanIconAction,
     contentDescription: String?,
     modifier: Modifier = Modifier.size(24.dp),
-    color: Color = DarkRoast
+    color: Color = Color.Unspecified
 ) {
+    val iconColor = if (color == Color.Unspecified) DarkRoast else color
     when (action) {
         BeanIconAction.BEAN, BeanIconAction.ADD -> {
             Box(modifier, contentAlignment = Alignment.Center) {
@@ -97,7 +98,7 @@ private fun BeanActionIcon(
                     contentDescription = contentDescription,
                     modifier = Modifier.fillMaxSize(),
                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        color
+                        iconColor
                     ),
                     contentScale = ContentScale.Fit
                 )
@@ -115,7 +116,7 @@ private fun BeanActionIcon(
             }
         }
         BeanIconAction.EDIT -> Canvas(modifier) {
-            val cream = color
+            val cream = iconColor
             rotate(-45f, pivot = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)) {
                 val w = size.width
                 val h = size.height
@@ -129,11 +130,11 @@ private fun BeanActionIcon(
                     close()
                 }
                 drawPath(pencil, cream)
-                drawLine(color, androidx.compose.ui.geometry.Offset(w * .50f, h * .84f),
+                drawLine(iconColor, androidx.compose.ui.geometry.Offset(w * .50f, h * .84f),
                     androidx.compose.ui.geometry.Offset(w * .50f, h * .94f), w * .035f)
                 // Round portafilter basket, rim and perforations.
                 drawCircle(cream, radius = w * .235f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f))
-                drawCircle(color, radius = w * .185f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f))
+                drawCircle(iconColor, radius = w * .185f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f))
                 drawCircle(cream, radius = w * .145f, center = androidx.compose.ui.geometry.Offset(w * .50f, h * .25f), style = Stroke(width = w * .025f))
                 for (row in 0..3) for (column in 0..3) {
                     val x = w * (.405f + column * .063f)
@@ -2306,7 +2307,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
                     onClick = { scope.launch { dao.save(b.copy(liked = !b.liked)) } },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (b.liked) Color(0xFF397A45) else DarkRoast,
-                        contentColor = Color(0xFFFFFCF6)
+                        contentColor = CoffeeCream
                     )
                 ) {
                     Text(if (b.liked) "✓ Liked" else "♡ Like")
@@ -2357,7 +2358,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
             }) { Text("Delete", color = Color(0xFF9B2C20)) }
         },
         dismissButton = { TextButton(onClick = { confirmDeleteBean = false }) { Text("Cancel") } },
-        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+        containerColor = CoffeeCream, titleContentColor = DarkRoast, textContentColor = DarkRoast
     )
 
     if (askToAddBag) AlertDialog(
@@ -2374,7 +2375,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
 
 @Composable
 private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false,initiallyShowHistory:Boolean=false,focusBrewId:Long?=null) {
- val brews by dao.shots(bag.id).collectAsState(emptyList())
+ val shots by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); val context=LocalContext.current
  var add by remember{mutableStateOf(false)}
  var shotDefaults by remember{mutableStateOf<Shot?>(null)}
@@ -2394,7 +2395,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
        if (c != bag.currency) {
         Rates.convert(bag.price, bag.currency, c)?.let { convertedTotal ->
          Surface(
-          color=OatMilk.copy(alpha=0.78f),
+          color=BeanLogTipSurface.copy(alpha=0.78f),
           shape=MaterialTheme.shapes.medium,
           modifier=Modifier.fillMaxWidth()
          ) {
@@ -2416,7 +2417,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
      }
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
-     shotSentiment(brews)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
+     shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
     TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=if(bag.liked==true)null else true))}}){Text(if(bag.liked==true) "♥ Buy again" else "♡ Buy again",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast)}
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
@@ -2461,7 +2462,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
   text={Text("This will permanently delete this bag and all its brew history. This cannot be undone.",color=DarkRoast)},
   confirmButton={TextButton(onClick={confirmDeleteBag=false;shots.forEach{deleteManagedPhoto(context,it.photoPath)};delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
   dismissButton={TextButton(onClick={confirmDeleteBag=false}){Text("Cancel")}},
-  containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
 private data class ShotSentiment(val emoji:String,val percent:Int,val liked:Int,val rated:Int)
@@ -2514,7 +2515,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   text={
    Column(Modifier.fillMaxWidth().imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
-    shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
+    shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} brews)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No brews recorded yet")
     else shots.sortedByDescending { it.id }.forEachIndexed{index,shot->
