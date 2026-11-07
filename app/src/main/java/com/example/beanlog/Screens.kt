@@ -362,7 +362,7 @@ private fun deleteManagedPhoto(ctx: Context, path: String?) {
     runCatching {
         val file = File(path)
         if (file.canonicalFile.parentFile == ctx.filesDir.canonicalFile &&
-            file.name.startsWith("bean_") && file.extension.equals("jpg", ignoreCase = true)
+            (file.name.startsWith("bean_") || file.name.startsWith("brew_")) && file.extension.equals("jpg", ignoreCase = true)
         ) file.delete()
     }
 }
@@ -1627,6 +1627,9 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                             Text("Website ↗")
                         }
                     }
+                    TextButton(onClick = { uriHandler.openUri("https://europeancoffeetrip.com/?s=${Uri.encode(roaster.name)}") }) {
+                        Text("Find on European Coffee Trip ↗")
+                    }
                     roaster.extraLinks.forEach { link ->
                         TextButton(onClick = { uriHandler.openUri(link.url) }) { Text("${link.label} ↗") }
                     }
@@ -1733,7 +1736,7 @@ private fun SectionSwitchBar(
                         horizontalArrangement = Arrangement.spacedBy(9.dp)
                     ) {
                         Text("Add bean", style = MaterialTheme.typography.labelLarge)
-                        BeanActionIcon(BeanIconAction.BEAN, "Add bean", Modifier.size(23.dp), Color(0xFFFFF8EC))
+                        BeanActionIcon(BeanIconAction.BEAN, "Add bean", Modifier.size(23.dp), CoffeeCardText)
                     }
                 }
             }
@@ -1924,13 +1927,12 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
         title={Text("Settings")},
         text={Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
             Row(verticalAlignment=Alignment.CenterVertically){
-                Row(verticalAlignment=Alignment.CenterVertically){
                 Text("Dark appearance",modifier=Modifier.weight(1f))
                 Switch(checked=darkMode,onCheckedChange=onThemeChange)
             }
             HorizontalDivider()
             Row(verticalAlignment=Alignment.CenterVertically){
-            Text("Brew feedback reminder (30 min)",modifier=Modifier.weight(1f))
+                Text("Brew feedback reminder (30 min)",modifier=Modifier.weight(1f))
                 Switch(checked=remindersOn,onCheckedChange={enabled->
                     remindersOn=enabled
                     setShotRemindersEnabled(context,enabled)
@@ -1939,11 +1941,10 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                         notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 })
             }
-            }
             Text("When enabled, BeanLog asks whether you liked each brew 30 minutes after it is saved. Notifications must also be allowed by Android.",style=MaterialTheme.typography.bodySmall)
             HorizontalDivider()
             Text("Backup & Restore",style=MaterialTheme.typography.titleMedium,color=DarkRoast)
-            Text("Save your beans, bags, shot history, notes and coffee photos in one backup file.",style=MaterialTheme.typography.bodySmall)
+            Text("Save your beans, bags, brew history, notes and coffee photos in one backup file.",style=MaterialTheme.typography.bodySmall)
             OutlinedButton(
                 onClick={
                     settingsOpen=false
@@ -1988,7 +1989,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                         style=MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "Replace permanently clears your current beans, bags and shot history, then restores all ${preview.beans} beans, ${preview.bags} bags and ${preview.shots} shots from this backup.",
+                        "Replace permanently clears your current beans, bags and shot history, then restores all ${preview.beans} beans, ${preview.bags} bags and ${preview.shots} brews from this backup.",
                         style=MaterialTheme.typography.bodySmall
                     )
                     if(restoreBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -2337,6 +2338,8 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
             TextButton(onClick = {
                 confirmDeleteBean = false
                 scope.launch {
+                    val bagIds = dao.allBags().filter { it.beanId == b.id }.map { it.id }.toSet()
+                    dao.allShots().filter { it.bagId in bagIds }.forEach { deleteManagedPhoto(context, it.photoPath) }
                     dao.delete(b)
                     deleteManagedPhoto(context, b.photoPath)
                     onBack()
@@ -2446,7 +2449,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
   onDismissRequest={confirmDeleteBag=false},
   title={Text("Delete coffee bag?",color=DarkRoast)},
   text={Text("This will permanently delete this bag and all its shot history. This cannot be undone.",color=DarkRoast)},
-  confirmButton={TextButton(onClick={confirmDeleteBag=false;delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
+  confirmButton={TextButton(onClick={confirmDeleteBag=false;shots.forEach{deleteManagedPhoto(context,it.photoPath)};delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
   dismissButton={TextButton(onClick={confirmDeleteBag=false}){Text("Cancel")}},
   containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
@@ -2558,7 +2561,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true));cancelShotNotification(context,shot.id)}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false));cancelShotNotification(context,shot.id)}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(20.dp),Color.White)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot);deleteManagedPhoto(context,shot.photoPath)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(20.dp),Color.White)}
        }
       }
      }
@@ -2616,12 +2619,12 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
     keyboardOptions=beanNextKeyboardOptions,
     keyboardActions=beanNextKeyboardActions(focusManager)
    )
-   if (price.isNotBlank()) Box {
+   Box {
     OutlinedButton(
      onClick={currencyMenuOpen=true},
      modifier=Modifier.height(56.dp),
      contentPadding=PaddingValues(horizontal=14.dp,vertical=0.dp)
-    ) { Text(currencySymbol(currency),style=MaterialTheme.typography.bodyLarge) }
+    ) { Text("${currencySymbol(currency)} $currency",style=MaterialTheme.typography.bodyMedium) }
     DropdownMenu(expanded=currencyMenuOpen,onDismissRequest={currencyMenuOpen=false}) {
      CURRENCIES.forEach { c ->
       DropdownMenuItem(text={Text("${currencySymbol(c)} $c")},onClick={currency=c;currencyMenuOpen=false})
