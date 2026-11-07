@@ -215,7 +215,7 @@ object BeanLogBackup {
             dao.clearBags()
             dao.clearBeans()
             context.filesDir.listFiles()?.filter {
-                it.name.startsWith("bean_") && it.extension.equals("jpg", true)
+                (it.name.startsWith("bean_") || it.name.startsWith("brew_")) && it.extension.equals("jpg", true)
             }?.forEach { it.delete() }
         }
 
