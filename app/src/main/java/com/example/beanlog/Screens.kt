@@ -1734,8 +1734,8 @@ private fun SectionSwitchBar(
             if (onAdd != null) {
                 Surface(
                     onClick = onAdd,
-                    color = CoffeeCard,
-                    contentColor = CoffeeCardText,
+                    color = BeanLogNavButtonSurface,
+                    contentColor = BeanLogNavButtonText,
                     shape = MaterialTheme.shapes.large,
                     shadowElevation = 2.dp
                 ) {
@@ -1745,7 +1745,7 @@ private fun SectionSwitchBar(
                         horizontalArrangement = Arrangement.spacedBy(9.dp)
                     ) {
                         Text("Add bean", style = MaterialTheme.typography.labelLarge)
-                        BeanActionIcon(BeanIconAction.BEAN, "Add bean", Modifier.size(23.dp), CoffeeCardText)
+                        BeanActionIcon(BeanIconAction.BEAN, "Add bean", Modifier.size(23.dp), BeanLogNavButtonText)
                     }
                 }
             }
@@ -2368,7 +2368,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
         text = { Text("Would you like to add a coffee bag for this bean?", color = DarkRoast) },
         confirmButton = { TextButton(onClick = { askToAddBag = false; showBagDialog = true }) { Text("Yes") } },
         dismissButton = { TextButton(onClick = { askToAddBag = false }) { Text("No") } },
-        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+        containerColor = CoffeeCream, titleContentColor = DarkRoast, textContentColor = DarkRoast
     )
     if(showBagDialog) BagDialog(null,{showBagDialog=false}) { scope.launch{dao.saveBag(it.copy(beanId=id));showBagDialog=false} }
     editingBag?.let { bag -> BagDialog(bag,{editingBag=null}) { scope.launch{dao.saveBag(it.copy(beanId=id));editingBag=null} } }
