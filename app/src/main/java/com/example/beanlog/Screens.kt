@@ -148,7 +148,7 @@ private fun BeanActionIcon(
             }
         }
         BeanIconAction.DELETE -> Canvas(modifier) {
-            val cream = color
+            val cream = iconColor
             val w = size.width
             val h = size.height
             drawLine(cream, androidx.compose.ui.geometry.Offset(w * .20f, h * .27f),
