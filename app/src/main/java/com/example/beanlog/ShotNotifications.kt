@@ -63,8 +63,6 @@ class ShotReminderWorker(context: Context, params: WorkerParameters) : Coroutine
             .setContentText("Tap to open this brew and leave your feedback.")
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
-            .addAction(android.R.drawable.btn_star_big_on, "Like", likeIntent)
-            .addAction(android.R.drawable.ic_delete, "Dislike", dislikeIntent)
             .build()
         try { NotificationManagerCompat.from(applicationContext).notify(shotId.toInt(), notification) }
         catch (_: SecurityException) { }
