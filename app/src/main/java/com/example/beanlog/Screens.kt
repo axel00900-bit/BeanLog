@@ -183,7 +183,7 @@ private fun CoffeeBagIcon(modifier: Modifier = Modifier.size(64.dp)) {
         val outline = Color(0xFF4B3022)
         val bag = Color(0xFFE4C39D)
         val fold = Color(0xFFB98961)
-        val label = Color(0xFFFFF8EC)
+        val label = CoffeeCardText
 
         // Main gusseted bag body.
         val body = Path().apply {
@@ -1985,11 +1985,11 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                     Text("• ${preview.shots} brews")
                     Text("Choose how to restore this data.")
                     Text(
-                        "Merge will add ${preview.beansToAdd} beans, ${preview.bagsToAdd} bags and ${preview.shotsToAdd} shots. Existing matches will be skipped.",
+                        "Merge will add ${preview.beansToAdd} beans, ${preview.bagsToAdd} bags and ${preview.shotsToAdd} brews. Existing matches will be skipped.",
                         style=MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "Replace permanently clears your current beans, bags and shot history, then restores all ${preview.beans} beans, ${preview.bags} bags and ${preview.shots} brews from this backup.",
+                        "Replace permanently clears your current beans, bags and brew history, then restores all ${preview.beans} beans, ${preview.bags} bags and ${preview.shots} brews from this backup.",
                         style=MaterialTheme.typography.bodySmall
                     )
                     if(restoreBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -2006,7 +2006,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                             restoreBusy=false
                             pendingBackup=null;pendingPreview=null
                             backupMessage=result.fold(
-                                { "Merge complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} shots." },
+                                { "Merge complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} brews." },
                                 { "Restore failed: ${it.localizedMessage ?: "unknown error"}" }
                             )
                         }
@@ -2037,7 +2037,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
             title={Text(if(message.contains("failed",true)||message.contains("could not",true)) "Backup / restore" else "BeanLog backup",color=DarkRoast)},
             text={Text(message,color=DarkRoast)},
             confirmButton={TextButton(onClick={backupMessage=null;restoreError=null}){Text("OK")}},
-            containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
+            containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
         )
     }
 }
@@ -2052,7 +2052,7 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedBorderColor = DarkRoast.copy(alpha = 0.55f),
     cursorColor = DarkRoast,
     focusedContainerColor = OatMilk.copy(alpha = 0.90f),
-    unfocusedContainerColor = Color(0xFFF1E3D0).copy(alpha = 0.82f)
+    unfocusedContainerColor = OatMilk.copy(alpha = 0.82f)
 )
 
 private val beanNextKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -2207,7 +2207,7 @@ fun EditScreen(dao: BeanDao, id: Long, onDone: (Long, Boolean) -> Unit) {
             OutlinedTextField(processing,{processing=it},label={FieldLabel("Processing", "Coffee processing prepares the coffee seed after harvest. Common methods include Washed (fruit removed before drying), Natural (whole cherry dried around the seed), Honey (some fruit mucilage remains), Anaerobic fermentation (fermentation with limited oxygen) and Wet-hulled (parchment removed while the coffee is still wet). These methods can influence sweetness, acidity, body and fruit character.")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            FieldLabel("Recommended brew settings", "The roaster sometimes provides a recommended dose, yield and approximate brewing time. These are useful starting points. You can also enter your own recipe after experimenting and compare it with the shots you record in BeanLog to see which recipes work best and which you like or dislike.")
+            FieldLabel("Recommended brew settings", "The roaster sometimes provides a recommended dose, yield and approximate brewing time. These are useful starting points. You can also enter your own recipe after experimenting and compare it with the brews you record in BeanLog to see which recipes work best and which you like or dislike.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(cIn, { cIn = it }, label = { Text("In (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
                 OutlinedTextField(cOut, { cOut = it }, label = { Text("Out (g)") }, modifier = Modifier.weight(1f), colors = beanTextFieldColors())
@@ -2333,7 +2333,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
     if (confirmDeleteBean) AlertDialog(
         onDismissRequest = { confirmDeleteBean = false },
         title = { Text("Delete coffee bean?", color = DarkRoast) },
-        text = { Text("This will permanently delete this bean and all its bags and shot history. This cannot be undone.", color = DarkRoast) },
+        text = { Text("This will permanently delete this bean and all its bags and brew history. This cannot be undone.", color = DarkRoast) },
         confirmButton = {
             TextButton(onClick = {
                 confirmDeleteBean = false
@@ -2428,12 +2428,12 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
          dao.allShots().filter { it.bagId in allBags }.maxByOrNull { it.id }
         } ?: Shot(bagId=bag.id,groundCoffeeG=18.0,yieldG=36.0,timeSec=28,grindSetting=bag.recommendedGrindSetting)
        }
-       shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",pulledAtMillis=System.currentTimeMillis())
+       shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",photoPath=null,pulledAtMillis=System.currentTimeMillis())
        add=true
       }
-     }){BeanActionIcon(BeanIconAction.ADD,"Add shot");Text("Add brew")}
+     }){BeanActionIcon(BeanIconAction.ADD,"Add brew");Text("Add brew")}
    }
-   shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
+   shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
    shots.sortedByDescending { it.id }.take(2).forEach{shot->
     Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
      Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)
@@ -2448,7 +2448,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
  if(confirmDeleteBag) AlertDialog(
   onDismissRequest={confirmDeleteBag=false},
   title={Text("Delete coffee bag?",color=DarkRoast)},
-  text={Text("This will permanently delete this bag and all its shot history. This cannot be undone.",color=DarkRoast)},
+  text={Text("This will permanently delete this bag and all its brew history. This cannot be undone.",color=DarkRoast)},
   confirmButton={TextButton(onClick={confirmDeleteBag=false;shots.forEach{deleteManagedPhoto(context,it.photoPath)};delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
   dismissButton={TextButton(onClick={confirmDeleteBag=false}){Text("Cancel")}},
   containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
@@ -2506,7 +2506,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
     shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
-    if(shots.isEmpty()) Text("No shots recorded yet")
+    if(shots.isEmpty()) Text("No brews recorded yet")
     else shots.sortedByDescending { it.id }.forEachIndexed{index,shot->
      Card(
       modifier=Modifier.fillMaxWidth(),
@@ -2533,7 +2533,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shot.note,modifier=Modifier.weight(1f).clickable { if(shot.note.isNotBlank()){editingFeedback=shot; feedbackText=shot.note} },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
         Surface(
          modifier=Modifier.clickable { showTips=!showTips },
-         color=Color(0xFFEADCCB).copy(alpha=0.58f),
+         color=OatMilk.copy(alpha=0.58f),
          contentColor=DarkRoast.copy(alpha=0.86f),
          shape=MaterialTheme.shapes.small
         ) {
