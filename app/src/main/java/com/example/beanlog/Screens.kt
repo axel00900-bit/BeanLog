@@ -376,9 +376,9 @@ private fun deleteManagedPhoto(ctx: Context, path: String?) {
 }
 
 @Composable
-fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, initialBrewId: Long? = null, darkMode: Boolean = false, onThemeChange: (Boolean) -> Unit = {}) {
+fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, initialBrewId: Long? = null, darkMode: Boolean = false, navigationRequestId: Int = 0, onThemeChange: (Boolean) -> Unit = {}) {
     val nav = rememberNavController()
-    LaunchedEffect(initialBeanId, initialBagId, initialBrewId) {
+    LaunchedEffect(initialBeanId, initialBagId, initialBrewId, navigationRequestId) {
         if (initialBeanId != null) {
             nav.navigate("detail/$initialBeanId/false/${initialBagId ?: 0L}/${initialBrewId ?: 0L}") {
                 popUpTo("list") { inclusive = false }
