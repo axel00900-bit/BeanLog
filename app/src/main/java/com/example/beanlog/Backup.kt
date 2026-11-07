@@ -79,23 +79,13 @@ object BeanLogBackup {
         })
         root.put("shots", JSONArray().apply {
             shots.forEach { shot ->
-                val photoName = shot.photoPath?.let { path ->
-                    runCatching {
-                        val file = File(path)
-                        if (file.isFile && file.length() > 0L) {
-                            val entry = "photos/${file.name}"
-                            photos[entry] = file.readBytes()
-                            entry
-                        } else null
-                    }.getOrNull()
-                }
                 put(JSONObject().apply {
-                put("id", shot.id); put("bagId", shot.bagId); put("groundCoffeeG", shot.groundCoffeeG)
-                put("yieldG", shot.yieldG); put("timeSec", shot.timeSec)
-                put("grindSetting", shot.grindSetting); put("liked", shot.liked ?: JSONObject.NULL)
-                put("pulledAtMillis", shot.pulledAtMillis); put("note", shot.note)
-                put("photoEntry", photoName ?: JSONObject.NULL)
-            }) }
+                    put("id", shot.id); put("bagId", shot.bagId); put("groundCoffeeG", shot.groundCoffeeG)
+                    put("yieldG", shot.yieldG); put("timeSec", shot.timeSec)
+                    put("grindSetting", shot.grindSetting); put("liked", shot.liked ?: JSONObject.NULL)
+                    put("pulledAtMillis", shot.pulledAtMillis); put("note", shot.note)
+                })
+            }
         })
         ZipOutputStream(output.buffered()).use { zip ->
             zip.putNextEntry(ZipEntry(DATA_ENTRY))
@@ -150,9 +140,7 @@ object BeanLogBackup {
                 id = o.optLong("id"), bagId = o.optLong("bagId"), groundCoffeeG = o.optDouble("groundCoffeeG"),
                 yieldG = o.optDouble("yieldG"), timeSec = o.optInt("timeSec"),
                 grindSetting = o.optString("grindSetting"), liked = o.booleanOrNull("liked"),
-                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"),
-                photoPath = o.optString("photoEntry").takeUnless { it.isBlank() || it == "null" }
-            )
+                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"))
         }
         val contents = BackupContents(beans, bags, shots, entries.filterKeys { it.startsWith("photos/") })
         return BackupPreview(beans.size, bags.size, shots.size) to contents
@@ -215,7 +203,7 @@ object BeanLogBackup {
             dao.clearBags()
             dao.clearBeans()
             context.filesDir.listFiles()?.filter {
-                (it.name.startsWith("bean_") || it.name.startsWith("brew_")) && it.extension.equals("jpg", true)
+                it.name.startsWith("bean_") && it.extension.equals("jpg", true)
             }?.forEach { it.delete() }
         }
 
@@ -267,8 +255,7 @@ object BeanLogBackup {
                 it.bagId == targetBagId && shotKey(it) == shotKey(source)
             }
             if (!exists) {
-                val restoredPhoto = source.photoPath?.let { contents.photos[it] }?.let { savePhoto(context, it, "brew_") }
-                dao.insertShot(source.copy(id = 0, bagId = targetBagId, photoPath = restoredPhoto))
+                dao.insertShot(source.copy(id = 0, bagId = targetBagId))
                 shotsAdded++
             }
         }
@@ -282,8 +269,8 @@ object BeanLogBackup {
     private fun shotKey(s: Shot) = listOf(s.pulledAtMillis, s.groundCoffeeG, s.yieldG, s.timeSec, s.grindSetting, s.note, s.liked)
         .joinToString("|")
 
-    private fun savePhoto(context: Context, bytes: ByteArray, prefix: String = "bean_"): String? = runCatching {
-        val file = File(context.filesDir, "${prefix}${UUID.randomUUID()}.jpg")
+    private fun savePhoto(context: Context, bytes: ByteArray): String? = runCatching {
+        val file = File(context.filesDir, "bean_${UUID.randomUUID()}.jpg")
         file.writeBytes(bytes)
         file.absolutePath
     }.getOrNull()
