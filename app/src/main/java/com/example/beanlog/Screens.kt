@@ -2070,7 +2070,7 @@ private fun CurrencyMenu(selected: String?, allowNone: Boolean, onPick: (String?
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit: () -> Unit, onBack: () -> Unit) {
+fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBagId: Long? = null, openBrewId: Long? = null, onEdit: () -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     val bean by dao.bean(id).collectAsState(null)
     val bags by dao.bags(id).collectAsState(emptyList())
@@ -2152,7 +2152,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                 }
             }
             items(bags.filter { !it.isFinished }, key={it.id}) { bag ->
-                BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}})
+                BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}}, initiallyShowHistory = bag.id == openBagId, focusBrewId = openBrewId)
             }
             if(bags.any{it.isFinished}) {
                 item { TextButton(onClick={showFinishedBags=!showFinishedBags},modifier=Modifier.fillMaxWidth()) {
@@ -2160,7 +2160,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
                     Icon(if(showFinishedBags) Icons.Default.ExpandLess else Icons.Default.ExpandMore,null)
                 } }
                 if(showFinishedBags) items(bags.filter{it.isFinished},key={it.id}) { bag ->
-                    BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true)
+                    BagCard(dao,b,bag,displayCur,{editingBag=bag},{scope.launch{dao.deleteBag(bag)}},true, bag.id == openBagId, openBrewId)
                 }
             }
         }
@@ -2197,12 +2197,12 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, onEdit
 }
 
 @Composable
-private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false) {
+private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false,initiallyShowHistory:Boolean=false,focusBrewId:Long?=null) {
  val shots by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); val context=LocalContext.current
  var add by remember{mutableStateOf(false)}
  var shotDefaults by remember{mutableStateOf<Shot?>(null)}
- var showHistory by remember{mutableStateOf(false)}
+ var showHistory by remember(bag.id, initiallyShowHistory){mutableStateOf(initiallyShowHistory)}
  var confirmDeleteBag by remember{mutableStateOf(false)}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
   colors=CardDefaults.cardColors(containerColor=LatteVariant),
@@ -2242,6 +2242,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
      shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
+    TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=if(bag.liked==true)null else true))}}){Text(if(bag.liked==true) "♥ Buy again" else "♡ Buy again",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast)}
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
     IconButton(onClick={confirmDeleteBag=true}){BeanActionIcon(BeanIconAction.DELETE,"Delete bag")}
    }
@@ -2277,7 +2278,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
   }
  }
  if(add)ShotDialog(shotDefaults,{add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); dao.saveBag(bag.copy(lastBrewAtMillis=shot.pulledAtMillis)); add=false}}
- if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao)
+ if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao,focusBrewId)
  if(confirmDeleteBag) AlertDialog(
   onDismissRequest={confirmDeleteBag=false},
   title={Text("Delete coffee bag?",color=DarkRoast)},
@@ -2329,7 +2330,7 @@ private fun shotTasteTips(note: String): List<String> {
 }
 
 @Composable
-private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao) {
+private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao,focusBrewId:Long?=null) {
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text(if (bag.roastDate.isBlank()) "Brew history" else "Brew history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
@@ -2343,7 +2344,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
      Card(
       modifier=Modifier.fillMaxWidth(),
       colors=CardDefaults.cardColors(containerColor=CoffeeCard,contentColor=CoffeeCardText),
-      border=BorderStroke(1.dp,DarkRoast.copy(alpha=0.35f)),
+      border=BorderStroke(if (shot.id == focusBrewId) 3.dp else 1.dp, if (shot.id == focusBrewId) Color(0xFFB98961) else DarkRoast.copy(alpha=0.35f)),
       elevation=CardDefaults.cardElevation(defaultElevation=4.dp)
      ){
       Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){
@@ -2353,6 +2354,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
+       shot.photoPath?.let { AsyncImage(model=File(it),contentDescription="Brew result photo",modifier=Modifier.fillMaxWidth().heightIn(max=220.dp).clip(MaterialTheme.shapes.medium),contentScale=ContentScale.Crop) }
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
        var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
@@ -2392,8 +2394,8 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         }
        }
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
-        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true))}}){Text("👍 Like",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false))}}){Text("👎 Dislike",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true));cancelShotNotification(context,shot.id)}}){Text("👍 Like",color=CoffeeCardText)}
+        TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false));cancelShotNotification(context,shot.id)}}){Text("👎 Dislike",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(20.dp),Color.White)}
        }
       }
