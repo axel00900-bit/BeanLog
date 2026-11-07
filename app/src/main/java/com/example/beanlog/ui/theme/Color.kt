@@ -17,7 +17,12 @@ data class BeanPalette(
     val coffeeOutline: Color,
     val darkRoast: Color,
     val coffeeCard: Color,
-    val coffeeCardText: Color
+    val coffeeCardText: Color,
+    val pageTop: Color,
+    val navButtonSurface: Color,
+    val navButtonText: Color,
+    val fieldSurface: Color,
+    val tipSurface: Color
 )
 
 val LightBeanPalette = BeanPalette(
@@ -33,7 +38,12 @@ val LightBeanPalette = BeanPalette(
     coffeeOutline = Color(0xFF9A785D),
     darkRoast = Color(0xFF29180F),
     coffeeCard = Color(0xFF563827),
-    coffeeCardText = Color(0xFFFFF5E8)
+    coffeeCardText = Color(0xFFFFF5E8),
+    pageTop = Color(0xFFF1E5D7),
+    navButtonSurface = Color(0xFF493323),
+    navButtonText = Color(0xFFFFF8EC),
+    fieldSurface = Color(0xFFF1E3D0),
+    tipSurface = Color(0xFFEADCCB)
 )
 
 val DarkBeanPalette = BeanPalette(
@@ -49,7 +59,12 @@ val DarkBeanPalette = BeanPalette(
     coffeeOutline = Color(0xFF8E7664),
     darkRoast = Color(0xFFF2E8DA),
     coffeeCard = Color(0xFF594335),
-    coffeeCardText = Color(0xFFF7EEE3)
+    coffeeCardText = Color(0xFFF7EEE3),
+    pageTop = Color(0xFF211B18),
+    navButtonSurface = Color(0xFF49382D),
+    navButtonText = Color(0xFFF7EEE3),
+    fieldSurface = Color(0xFF49382D),
+    tipSurface = Color(0xFF49382D)
 )
 
 val LocalBeanPalette = staticCompositionLocalOf { LightBeanPalette }
@@ -67,3 +82,9 @@ val CoffeeOutline: Color @Composable get() = LocalBeanPalette.current.coffeeOutl
 val DarkRoast: Color @Composable get() = LocalBeanPalette.current.darkRoast
 val CoffeeCard: Color @Composable get() = LocalBeanPalette.current.coffeeCard
 val CoffeeCardText: Color @Composable get() = LocalBeanPalette.current.coffeeCardText
+
+val BeanLogPageTop: Color @Composable get() = LocalBeanPalette.current.pageTop
+val BeanLogNavButtonSurface: Color @Composable get() = LocalBeanPalette.current.navButtonSurface
+val BeanLogNavButtonText: Color @Composable get() = LocalBeanPalette.current.navButtonText
+val BeanLogFieldSurface: Color @Composable get() = LocalBeanPalette.current.fieldSurface
+val BeanLogTipSurface: Color @Composable get() = LocalBeanPalette.current.tipSurface
