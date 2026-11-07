@@ -2487,6 +2487,7 @@ private fun shotTasteTips(note: String): List<String> {
 
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao,focusBrewId:Long?=null) {
+ val context = LocalContext.current
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text(if (bag.roastDate.isBlank()) "Brew history" else "Brew history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
@@ -2519,9 +2520,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.spacedBy(6.dp)
        ) {
-        if (shot.note.isNotBlank()) {
-         Text(shot.note,modifier=Modifier.weight(1f).clickable { editingFeedback=shot; feedbackText=shot.note },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
-        }
+        Text(shot.note,modifier=Modifier.weight(1f).clickable { if(shot.note.isNotBlank()){editingFeedback=shot; feedbackText=shot.note} },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
         Surface(
          modifier=Modifier.clickable { showTips=!showTips },
          color=Color(0xFFEADCCB).copy(alpha=0.58f),
@@ -2668,15 +2667,30 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
 }
 @Composable
 private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
+ val context = LocalContext.current
  var input by remember(initial){mutableStateOf(initial?.groundCoffeeG?.let{money(it)} ?: "18")}
  var output by remember(initial){mutableStateOf(initial?.yieldG?.let{money(it)} ?: "36")}
  var seconds by remember(initial){mutableStateOf((initial?.timeSec ?: 28).toString())}
  var grind by remember(initial){mutableStateOf(initial?.grindSetting ?: "")}
  var note by remember{mutableStateOf("")}
  var showFeedback by remember{mutableStateOf(false)}
+ var photoPath by remember(initial){mutableStateOf(initial?.photoPath)}
+ val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+  if (uri != null) {
+   val newPath = compressPickedImage(context, uri)
+   if (newPath != null) {
+    if (photoPath != initial?.photoPath) deleteManagedPhoto(context, photoPath)
+    photoPath = newPath
+   }
+  }
+ }
  val canSave=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0
+ fun closeDialog() {
+  if (photoPath != initial?.photoPath) deleteManagedPhoto(context, photoPath)
+  dismiss()
+ }
  AlertDialog(
-  onDismissRequest=dismiss,
+  onDismissRequest={closeDialog()},
   title={Text("Add brew",color=DarkRoast)},
   text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
    Text("BREW DETAILS",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
@@ -2684,15 +2698,28 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+    IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
+     Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=DarkRoast)
+    }
+    Text("Add photo",style=MaterialTheme.typography.bodyMedium,color=DarkRoast)
+    photoPath?.let {
+     AsyncImage(model=File(it),contentDescription="Brew result preview",modifier=Modifier.size(54.dp).clip(MaterialTheme.shapes.small),contentScale=ContentScale.Crop)
+     IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
+      Icon(Icons.Default.Close,contentDescription="Remove brew photo",tint=DarkRoast)
+     }
+    }
+   }
    if(showFeedback) {
     OutlinedTextField(note,{note=it},label={Text("Feedback (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
    } else {
     TextButton(onClick={showFeedback=true}) { Text("+ Add feedback") }
    }
-   // Keep actions inside the scrollable, IME-aware content so Save remains reachable with the keyboard open.
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
-    TextButton(onClick=dismiss) { Text("Cancel") }
-    TextButton(enabled=canSave,onClick={save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))}) { Text("Save") }
+    TextButton(onClick={closeDialog}) { Text("Cancel") }
+    TextButton(enabled=canSave,onClick={
+     save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim(),photoPath=photoPath))
+    }) { Text("Save") }
    }
   }},
   confirmButton={},
