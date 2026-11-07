@@ -536,7 +536,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                                 Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium)
-                                                Text("${stat.percent}% liked · ${stat.totalWeight} votes", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
+                                                Text("${stat.percent}% liked · ${100 - stat.percent}% disliked · ${stat.totalWeight} weighted votes", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
                                             }
                                             LinearProgressIndicator(
                                                 progress = { stat.percent / 100f },
@@ -1635,8 +1635,8 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                             Text("Website ↗")
                         }
                     }
-                    TextButton(onClick = { uriHandler.openUri("https://europeancoffeetrip.com/?s=${Uri.encode(roaster.name)}") }) {
-                        Text("Find on European Coffee Trip ↗")
+                    TextButton(onClick = { uriHandler.openUri("https://europeancoffeetrip.com/") }) {
+                        Text("European Coffee Trip ↗")
                     }
                     roaster.extraLinks.forEach { link ->
                         TextButton(onClick = { uriHandler.openUri(link.url) }) { Text("${link.label} ↗") }
