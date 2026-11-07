@@ -653,7 +653,6 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                                         val preferredBag = bags.filter { it.beanId == bean.id }
                                             .sortedWith(compareBy<Bag> { it.isFinished }.thenByDescending { it.lastBrewAtMillis }.thenByDescending { it.id })
                                             .firstOrNull()
-                                        selectedHistoryDetail = null
                                         onOpenCoffee(bean.id, preferredBag?.id)
                                     }
                                     .padding(vertical = 5.dp),
@@ -2622,7 +2621,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
       Column(Modifier.padding(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
        Row(verticalAlignment=Alignment.CenterVertically){
         Text("BREW ${(shots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
-        if (shot.photoPath != null) Icon(Icons.Default.AddAPhoto, contentDescription = "Brew photo attached", tint = CoffeeCardText, modifier = Modifier.size(16.dp))
         Spacer(Modifier.weight(1f))
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
@@ -2631,15 +2629,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
        var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
-       val brewPhotoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if(uri != null) {
-         val newPath = compressPickedImage(context, uri)
-         if(newPath != null) scope.launch {
-          if(shot.photoPath != null) deleteManagedPhoto(context, shot.photoPath)
-          dao.saveShot(shot.copy(photoPath=newPath))
-         }
-        }
-       }
        Row(
         modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
@@ -2659,11 +2648,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
          Text(if(showTips) "Hide tips" else "☼ Tips",
           modifier=Modifier.padding(horizontal=10.dp,vertical=7.dp),
           style=MaterialTheme.typography.labelMedium)
-        }
-        IconButton(onClick={brewPhotoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
-         Icon(Icons.Default.AddAPhoto, contentDescription="Add or change brew photo",
-          tint=if(shot.photoPath != null) Color(0xFF8FC99A) else CoffeeCardText,
-          modifier=Modifier.size(20.dp))
         }
        }
        editingFeedback?.let { target ->
@@ -2807,21 +2791,8 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
  var grind by remember(initial){mutableStateOf(initial?.grindSetting ?: "")}
  var note by remember{mutableStateOf("")}
  var showFeedback by remember{mutableStateOf(false)}
- var photoPath by remember(initial){mutableStateOf(initial?.photoPath)}
- val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-  if (uri != null) {
-   val newPath = compressPickedImage(context, uri)
-   if (newPath != null) {
-    if (photoPath != initial?.photoPath) deleteManagedPhoto(context, photoPath)
-    photoPath = newPath
-   }
-  }
- }
  val canSave=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0
- fun closeDialog() {
-  if (photoPath != initial?.photoPath) deleteManagedPhoto(context, photoPath)
-  dismiss()
- }
+ fun closeDialog() { dismiss() }
  AlertDialog(
   onDismissRequest={closeDialog()},
   title={Text("Add brew",color=DarkRoast)},
@@ -2835,14 +2806,6 @@ Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizon
     TextButton(onClick={showFeedback=!showFeedback},contentPadding=PaddingValues(horizontal=4.dp)) {
      Text(if(showFeedback) "Feedback" else "+ Add feedback")
     }
-    Row(verticalAlignment=Alignment.CenterVertically) {
-     IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
-      Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=if(photoPath != null) Color(0xFF397A45) else DarkRoast)
-     }
-     if(photoPath != null) IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
-      Icon(Icons.Default.Close,contentDescription="Remove brew photo",tint=DarkRoast)
-     }
-    }
    }
    if(showFeedback) {
     OutlinedTextField(note,{note=it},label={Text("Feedback (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
@@ -2850,7 +2813,7 @@ Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizon
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
     TextButton(onClick={closeDialog()}) { Text("Cancel") }
     TextButton(enabled=canSave,onClick={
-     save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim(),photoPath=photoPath))
+     save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))
     }) { Text("Save") }
    }
   }},
