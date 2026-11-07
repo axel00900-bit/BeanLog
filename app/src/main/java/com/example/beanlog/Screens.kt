@@ -522,7 +522,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your taste profile", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
-                        Text("Shot ratings count as 1 vote. Liking a bag to buy again counts as 3 votes. Unrated brews and bags are excluded.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                        Text("Brew ratings count as 1 vote. Liking a bag to buy again counts as 3 votes. Unrated brews and bags are excluded.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
                     }
                     if (tasteGroups.isEmpty()) item {
                         Text("Rate brews or mark a bag as one you'd buy again to start building your taste profile.", color = DarkRoast)
