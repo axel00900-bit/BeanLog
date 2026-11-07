@@ -2595,15 +2595,16 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
       modifier=Modifier.fillMaxWidth(),
       colors=CardDefaults.cardColors(containerColor=CoffeeCard,contentColor=CoffeeCardText),
       border=BorderStroke(if (shot.id == focusBrewId) 3.dp else 1.dp, if (shot.id == focusBrewId) Color(0xFFB98961) else DarkRoast.copy(alpha=0.35f)),
-      elevation=CardDefaults.cardElevation(defaultElevation=4.dp)
+      elevation=CardDefaults.cardElevation(defaultElevation=1.dp)
      ){
-      Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){
+      Column(Modifier.padding(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
        Row(verticalAlignment=Alignment.CenterVertically){
         Text("BREW ${(shots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
+        if (shot.photoPath != null) Icon(Icons.Default.AddAPhoto, contentDescription = "Brew photo attached", tint = CoffeeCardText, modifier = Modifier.size(16.dp))
         Spacer(Modifier.weight(1f))
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
-       Text(shotSummary(shot),style=MaterialTheme.typography.bodyLarge,color=CoffeeCardText)
+       Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall,color=CoffeeCardText)
        
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
@@ -2793,11 +2794,10 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
     IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
-     Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=DarkRoast)
+     Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=if(photoPath != null) Color(0xFF397A45) else DarkRoast)
     }
     
     photoPath?.let {
-     Text("Photo added", style=MaterialTheme.typography.labelSmall, color=DarkRoast)
      IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
       Icon(Icons.Default.Close,contentDescription="Remove brew photo",tint=DarkRoast)
      }
