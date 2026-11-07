@@ -25,7 +25,11 @@ class MainActivity : ComponentActivity() {
         updateNotificationDestination(intent)
         setContent {
             SideEffect {
-                window.navigationBarColor = android.graphics.Color.rgb(38, 25, 18)
+                window.navigationBarColor = if (darkMode) {
+                    android.graphics.Color.rgb(89, 67, 53) // Dark coffee-card brown
+                } else {
+                    android.graphics.Color.rgb(86, 56, 39) // Light coffee-card brown
+                }
                 WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = false
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                     window.isNavigationBarContrastEnforced = false
