@@ -434,6 +434,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
 
 
 
+
 private data class TasteStat(val name: String, val likedWeight: Int, val totalWeight: Int) {
     val percent: Int get() = if (totalWeight == 0) 0 else (likedWeight * 100.0 / totalWeight).toInt()
 }
@@ -447,6 +448,10 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
     var bags by remember { mutableStateOf<List<Bag>>(emptyList()) }
     var brews by remember { mutableStateOf<List<Shot>>(emptyList()) }
     var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTasteCategory by remember { mutableStateOf("Roaster") }
+    val expandedHistory = remember { mutableStateListOf<String>() }
+    var selectedHistoryDetail by remember { mutableStateOf<Pair<String, String>?>(null) }
+
     LaunchedEffect(dao) {
         withContext(Dispatchers.IO) {
             beans = dao.allBeans()
@@ -454,32 +459,26 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
             brews = dao.allShots()
         }
     }
-    val bagsByBean = bags.groupBy { it.beanId }
     val bagsById = bags.associateBy { it.id }
     val brewsByBean = brews.groupBy { brew -> bagsById[brew.bagId]?.beanId }
-    val tasteGroups = listOf(
-        "Variety" to { bean: Bean -> bean.variety },
-        "Farm" to { bean: Bean -> bean.farm },
-        "Roast level" to { bean: Bean -> bean.roastLevel },
+    val tasteCategories = listOf(
         "Roaster" to { bean: Bean -> bean.roastery },
-        "Processing" to { bean: Bean -> bean.processing }
-    ).mapNotNull { (category, valueOf) ->
+        "Variety" to { bean: Bean -> bean.variety },
+        "Processing" to { bean: Bean -> bean.processing },
+        "Farm" to { bean: Bean -> bean.farm },
+        "Roast level" to { bean: Bean -> bean.roastLevel }
+    )
+    val tasteGroups = tasteCategories.mapNotNull { (category, valueOf) ->
         val totals = linkedMapOf<String, Pair<Int, Int>>()
         beans.forEach { bean ->
             val label = valueOf(bean).trim()
             if (label.isNotBlank()) {
-                var liked = 0
-                var total = 0
+                var liked = if (bean.liked) 3 else 0
+                var total = if (bean.liked) 3 else 0
                 (brewsByBean[bean.id] ?: emptyList()).forEach { brew ->
                     if (brew.liked != null) {
                         total += 1
                         if (brew.liked == true) liked += 1
-                    }
-                }
-                (bagsByBean[bean.id] ?: emptyList()).forEach { bag ->
-                    if (bag.liked != null) {
-                        total += 3
-                        if (bag.liked == true) liked += 3
                     }
                 }
                 if (total > 0) {
@@ -507,11 +506,12 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
         }.sortedWith(compareByDescending<HistoryStat> { it.count }.thenBy { it.name })
         if (stats.isEmpty()) null else category to stats
     }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Coffee insights", style = MaterialTheme.typography.headlineSmall) },
+                title = { Text("Coffee insights", style = MaterialTheme.typography.headlineSmall, color = DarkRoast) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = DarkRoast) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
@@ -526,21 +526,35 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your taste profile", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
-                        Text("Brew ratings count as 1 vote. Liking a bag to buy again counts as 3 votes. Unrated brews and bags are excluded.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                        Text("Bean likes count as 3 votes. Each Brew rating counts as 1 vote.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
                     }
-                    if (tasteGroups.isEmpty()) item {
-                        Text("Rate brews or mark a bag as one you'd buy again to start building your taste profile.", color = DarkRoast)
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        ) {
+                            tasteCategories.forEach { (category, _) ->
+                                FilterChip(
+                                    selected = selectedTasteCategory == category,
+                                    onClick = { selectedTasteCategory = category },
+                                    label = { Text(category) }
+                                )
+                            }
+                        }
                     }
-                    tasteGroups.forEach { (category, stats) ->
+                    val selectedStats = tasteGroups.firstOrNull { it.first == selectedTasteCategory }?.second.orEmpty()
+                    if (selectedStats.isEmpty()) {
+                        item { Text("No rated coffees in this category yet.", color = DarkRoast) }
+                    } else {
                         item {
                             Card(colors = CardDefaults.cardColors(containerColor = LatteVariant), modifier = Modifier.fillMaxWidth()) {
-                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                                    Text(category, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
-                                    stats.forEach { stat ->
-                                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium)
-                                                Text("${stat.percent}% liked · ${100 - stat.percent}% disliked · ${stat.totalWeight} weighted votes", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text(selectedTasteCategory, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                                    selectedStats.forEach { stat ->
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                                                Text("${stat.percent}% liked · ${100 - stat.percent}% disliked", color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.labelMedium)
                                             }
                                             LinearProgressIndicator(
                                                 progress = { stat.percent / 100f },
@@ -548,6 +562,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                                                 color = Color(0xFF987052),
                                                 trackColor = DarkRoast.copy(alpha = .12f)
                                             )
+                                            Text("${stat.totalWeight} votes", color = DarkRoast.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall)
                                         }
                                     }
                                 }
@@ -559,23 +574,39 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your coffee history", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
-                        Text("${beans.size} coffees recorded. Percentages are based on the number of bean entries with that detail, not bag weight or brew count.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                        Text("${beans.size} coffees recorded. Tap a value to see the coffees in that group.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
                     }
                     if (historyGroups.isEmpty()) item { Text("Add coffees with variety, roaster or processing details to build your history.", color = DarkRoast) }
                     historyGroups.forEach { (category, stats) ->
                         item {
                             Card(colors = CardDefaults.cardColors(containerColor = LatteVariant), modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                                    Text(category, style = MaterialTheme.typography.titleMedium, color = DarkRoast)
-                                    stats.forEach { stat ->
-                                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(category, style = MaterialTheme.typography.titleMedium, color = DarkRoast, modifier = Modifier.weight(1f))
+                                        if (stats.size > 4) {
+                                            TextButton(
+                                                onClick = {
+                                                    if (expandedHistory.contains(category)) expandedHistory.remove(category)
+                                                    else expandedHistory.add(category)
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                                            ) { Text(if (expandedHistory.contains(category)) "Show less" else "See all") }
+                                        }
+                                    }
+                                    (if (expandedHistory.contains(category)) stats else stats.take(4)).forEach { stat ->
+                                        Column(
+                                            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                                                .clickable { selectedHistoryDetail = category to stat.name }
+                                                .padding(vertical = 4.dp),
+                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
                                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                                 Text(stat.name, color = DarkRoast, style = MaterialTheme.typography.bodyMedium)
                                                 Text("${stat.percent}% · ${stat.count} coffees", color = DarkRoast.copy(alpha = .76f), style = MaterialTheme.typography.labelSmall)
                                             }
                                             LinearProgressIndicator(
                                                 progress = { stat.percent / 100f },
-                                                modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
+                                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
                                                 color = Color(0xFF987052),
                                                 trackColor = DarkRoast.copy(alpha = .12f)
                                             )
@@ -588,6 +619,46 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                 }
             }
         }
+    }
+
+    selectedHistoryDetail?.let { (category, value) ->
+        val matchingBeans = beans.filter { bean ->
+            val field = when (category) {
+                "Variety" -> bean.variety
+                "Roaster" -> bean.roastery
+                "Processing" -> bean.processing
+                "Farm" -> bean.farm
+                "Roast level" -> bean.roastLevel
+                "Origin" -> bean.origin
+                else -> ""
+            }
+            field.trim().equals(value, ignoreCase = true)
+        }
+        AlertDialog(
+            onDismissRequest = { selectedHistoryDetail = null },
+            title = { Text("$value · ${matchingBeans.size} coffees", color = DarkRoast) },
+            text = {
+                Column(
+                    Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    matchingBeans.forEachIndexed { index, bean ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(bean.name.ifBlank { bean.roastery }, color = DarkRoast, style = MaterialTheme.typography.titleSmall)
+                            Text(bean.roastery, color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.bodySmall)
+                            val details = listOf(
+                                "Origin" to bean.origin, "Farm" to bean.farm, "Variety" to bean.variety,
+                                "Processing" to bean.processing, "Roast" to bean.roastLevel
+                            ).filter { it.second.isNotBlank() }
+                            if (details.isNotEmpty()) Text(details.joinToString(" · ") { "${it.first}: ${it.second}" }, color = DarkRoast.copy(alpha = .82f), style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (index < matchingBeans.lastIndex) HorizontalDivider(color = DarkRoast.copy(alpha = .16f))
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { selectedHistoryDetail = null }) { Text("Close") } },
+            containerColor = CoffeeCream, titleContentColor = DarkRoast, textContentColor = DarkRoast
+        )
     }
 }
 
