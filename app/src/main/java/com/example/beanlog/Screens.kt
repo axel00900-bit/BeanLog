@@ -1732,22 +1732,21 @@ private fun SectionSwitchBar(
                 }
             }
             if (onAdd != null) {
-                Surface(
+                ExtendedFloatingActionButton(
                     onClick = onAdd,
-                    color = BeanLogNavButtonSurface,
+                    icon = {
+                        BeanActionIcon(
+                            BeanIconAction.BEAN,
+                            "Add bean",
+                            modifier = Modifier.size(23.dp),
+                            color = BeanLogNavButtonText
+                        )
+                    },
+                    text = { Text("Add bean", style = MaterialTheme.typography.labelLarge) },
+                    containerColor = BeanLogNavButtonSurface,
                     contentColor = BeanLogNavButtonText,
-                    shape = MaterialTheme.shapes.large,
-                    shadowElevation = 2.dp
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(9.dp)
-                    ) {
-                        Text("Add bean", style = MaterialTheme.typography.labelLarge)
-                        BeanActionIcon(BeanIconAction.BEAN, "Add bean", Modifier.size(23.dp), BeanLogNavButtonText)
-                    }
-                }
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
+                )
             }
         }
     }
