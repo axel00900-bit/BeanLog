@@ -259,6 +259,16 @@ object BeanLogBackup {
                 shotsAdded++
             }
         }
+
+        // Rebuild this denormalized timestamp from the actual Brew history. This
+        // also repairs older backups that predate lastBrewAtMillis.
+        val shotsByBag = dao.allShots().groupBy { it.bagId }
+        dao.allBags().forEach { bag ->
+            val latestBrew = shotsByBag[bag.id]?.maxOfOrNull { it.pulledAtMillis } ?: 0L
+            if (bag.lastBrewAtMillis != latestBrew) {
+                dao.saveBag(bag.copy(lastBrewAtMillis = latestBrew))
+            }
+        }
         return RestoreResult(beansAdded, bagsAdded, shotsAdded)
     }
 
