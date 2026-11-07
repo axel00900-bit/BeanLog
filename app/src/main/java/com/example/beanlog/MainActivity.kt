@@ -10,22 +10,35 @@ import com.example.beanlog.ui.theme.BeanLogTheme
 
 class MainActivity : ComponentActivity() {
     private var darkMode by mutableStateOf(false)
+    private var pendingBeanId by mutableStateOf<Long?>(null)
+    private var pendingBagId by mutableStateOf<Long?>(null)
+    private var pendingBrewId by mutableStateOf<Long?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dao = AppDb.create(applicationContext).dao()
         val preferences = getSharedPreferences("beanlog_settings", MODE_PRIVATE)
         darkMode = preferences.getBoolean("dark_theme", false)
-        val beanId = intent.getLongExtra("bean_id", -1L).takeIf { it > 0L }
-        val bagId = intent.getLongExtra("bag_id", -1L).takeIf { it > 0L }
-        val shotId = intent.getLongExtra("shot_id", -1L).takeIf { it > 0L }
+        updateNotificationDestination(intent)
         setContent {
             BeanLogTheme(darkMode) {
-                App(dao, beanId, bagId, shotId, darkMode) { enabled ->
+                App(dao, pendingBeanId, pendingBagId, pendingBrewId, darkMode) { enabled ->
                     darkMode = enabled
                     preferences.edit().putBoolean("dark_theme", enabled).apply()
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        updateNotificationDestination(intent)
+    }
+
+    private fun updateNotificationDestination(intent: android.content.Intent) {
+        pendingBeanId = intent.getLongExtra("bean_id", -1L).takeIf { it > 0L }
+        pendingBagId = intent.getLongExtra("bag_id", -1L).takeIf { it > 0L }
+        pendingBrewId = intent.getLongExtra("shot_id", -1L).takeIf { it > 0L }
     }
 }
