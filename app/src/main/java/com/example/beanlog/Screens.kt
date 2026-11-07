@@ -1866,7 +1866,7 @@ private fun SectionSwitchBar(
     onAdd: (() -> Unit)? = null
 ) {
     Surface(
-        color = BeanLogPageTop,
+        color = Color.Transparent,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
