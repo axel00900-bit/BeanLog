@@ -54,7 +54,7 @@ class ShotReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         val bean = AppDb.create(applicationContext).dao().allBeans().firstOrNull { it.id == bag.beanId } ?: return Result.success()
         val openIntent = Intent(applicationContext, MainActivity::class.java)
             .putExtra("bean_id", bean.id).putExtra("bag_id", bag.id).putExtra("shot_id", shotId)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val contentIntent = PendingIntent.getActivity(applicationContext, (shotId * 3).toInt(), openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val likeIntent = feedbackIntent(applicationContext, shotId, true)
