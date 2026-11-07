@@ -41,17 +41,29 @@ class ShotReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         val shotId = inputData.getLong("shot_id", -1L)
         if (shotId <= 0L) return Result.failure()
         val shot = AppDb.create(applicationContext).dao().shotById(shotId) ?: return Result.success()
+        if (shot.liked != null) {
+            NotificationManagerCompat.from(applicationContext).cancel(shotId.toInt())
+            return Result.success()
+        }
         if (!applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PREF_REMIND, false)) return Result.success()
         createShotChannel(applicationContext)
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return Result.success()
 
+        val bag = AppDb.create(applicationContext).dao().bagById(shot.bagId) ?: return Result.success()
+        val bean = AppDb.create(applicationContext).dao().allBeans().firstOrNull { it.id == bag.beanId } ?: return Result.success()
+        val openIntent = Intent(applicationContext, MainActivity::class.java)
+            .putExtra("bean_id", bean.id).putExtra("bag_id", bag.id).putExtra("shot_id", shotId)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val contentIntent = PendingIntent.getActivity(applicationContext, (shotId * 3).toInt(), openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val likeIntent = feedbackIntent(applicationContext, shotId, true)
         val dislikeIntent = feedbackIntent(applicationContext, shotId, false)
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("How was that espresso?")
-            .setContentText("Did you like this shot? Tap Like or Dislike to save your feedback.")
+            .setContentTitle("How was that brew?")
+            .setContentText("Tap to open this brew and leave your feedback.")
+            .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .addAction(android.R.drawable.btn_star_big_on, "Like", likeIntent)
             .addAction(android.R.drawable.ic_delete, "Dislike", dislikeIntent)
@@ -92,6 +104,10 @@ class ShotFeedbackReceiver : BroadcastReceiver() {
             } finally { pending.finish() }
         }
     }
+}
+
+fun cancelShotNotification(context: Context, shotId: Long) {
+    NotificationManagerCompat.from(context).cancel(shotId.toInt())
 }
 
 fun shotRemindersEnabled(context: Context): Boolean =
