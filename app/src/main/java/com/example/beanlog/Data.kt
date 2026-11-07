@@ -68,7 +68,6 @@ data class Shot(
     val liked: Boolean? = null,
     @ColumnInfo(defaultValue = "0") val pulledAtMillis: Long = System.currentTimeMillis(),
     @ColumnInfo(defaultValue = "''") val note: String = "",
-    @ColumnInfo(defaultValue = "''") val photoPath: String? = null,
 )
 
 /** Bean plus sorting information for the front page. */
