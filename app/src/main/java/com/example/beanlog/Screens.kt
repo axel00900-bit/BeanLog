@@ -410,7 +410,9 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
                 RoasterDirectoryScreen(dao, onBack = { nav.popBackStack() })
             }
             composable("insights") {
-                InsightsScreen(dao, onBack = { nav.popBackStack() })
+                InsightsScreen(dao, onBack = { nav.popBackStack() }, onOpenCoffee = { beanId, bagId ->
+                    nav.navigate("detail/$beanId/false/${bagId ?: 0L}/0")
+                })
             }
             composable("detail/{id}/{addBag}/{openBagId}/{openBrewId}") {
                 val id = it.arguments!!.getString("id")!!.toLong()
@@ -443,7 +445,7 @@ private data class HistoryStat(val name: String, val count: Int, val percent: In
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
+private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long, Long?) -> Unit) {
     var beans by remember { mutableStateOf<List<Bean>>(emptyList()) }
     var bags by remember { mutableStateOf<List<Bag>>(emptyList()) }
     var brews by remember { mutableStateOf<List<Shot>>(emptyList()) }
@@ -488,6 +490,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
             }
         }
         val stats = totals.map { (name, weights) -> TasteStat(name, weights.first, weights.second) }
+            .filter { it.totalWeight >= 5 }
             .sortedWith(compareByDescending<TasteStat> { it.percent }.thenByDescending { it.totalWeight })
         if (stats.isEmpty()) null else category to stats
     }
@@ -644,8 +647,21 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
                 ) {
                     matchingBeans.forEachIndexed { index, bean ->
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(bean.name.ifBlank { bean.roastery }, color = DarkRoast, style = MaterialTheme.typography.titleSmall)
-                            Text(bean.roastery, color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.bodySmall)
+                            Column(
+                                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                                    .clickable {
+                                        val preferredBag = bags.filter { it.beanId == bean.id }
+                                            .sortedWith(compareBy<Bag> { it.isFinished }.thenByDescending { it.lastBrewAtMillis }.thenByDescending { it.id })
+                                            .firstOrNull()
+                                        selectedHistoryDetail = null
+                                        onOpenCoffee(bean.id, preferredBag?.id)
+                                    }
+                                    .padding(vertical = 5.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(bean.name.ifBlank { bean.roastery }, color = DarkRoast, style = MaterialTheme.typography.titleSmall)
+                                Text(bean.roastery, color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.bodySmall)
+                            }
                             val details = listOf(
                                 "Origin" to bean.origin, "Farm" to bean.farm, "Variety" to bean.variety,
                                 "Processing" to bean.processing, "Roast" to bean.roastLevel
@@ -1769,19 +1785,20 @@ private fun SectionSwitchBar(
     onAdd: (() -> Unit)? = null
 ) {
     Surface(
-        color = Color.Transparent,
+        color = BeanLogPageTop,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding()
+                .background(BeanLogPageTop)
                 .padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Surface(
                 onClick = onClick,
-                modifier = Modifier.weight(1f).height(48.dp),
+                modifier = Modifier.width(116.dp).height(54.dp),
                 color = BeanLogNavButtonSurface,
                 contentColor = BeanLogNavButtonText,
                 shape = MaterialTheme.shapes.large,
@@ -1809,15 +1826,20 @@ private fun SectionSwitchBar(
             if (onAdd != null) {
                 Surface(
                     onClick = onAdd,
-                    modifier = Modifier.weight(1f).height(48.dp),
+                    modifier = Modifier.width(116.dp).height(54.dp),
                     color = BeanLogNavButtonSurface,
                     contentColor = BeanLogNavButtonText,
                     shape = MaterialTheme.shapes.large,
                     shadowElevation = 2.dp
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        BeanActionIcon(BeanIconAction.BEAN, null, Modifier.size(34.dp).alpha(0.34f), BeanLogNavButtonText)
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Text("Add bean", style = MaterialTheme.typography.labelLarge, color = BeanLogNavButtonText)
+                        Spacer(Modifier.width(7.dp))
+                        Icon(Icons.Default.Add, contentDescription = "Add bean", tint = BeanLogNavButtonText, modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -2792,21 +2814,21 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
    OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-   Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-    IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
-     Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=if(photoPath != null) Color(0xFF397A45) else DarkRoast)
+remove old add brew photo row   Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
+    TextButton(onClick={showFeedback=!showFeedback},contentPadding=PaddingValues(horizontal=4.dp)) {
+     Text(if(showFeedback) "Feedback" else "+ Add feedback")
     }
-    
-    photoPath?.let {
-     IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
+    Row(verticalAlignment=Alignment.CenterVertically) {
+     IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
+      Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=if(photoPath != null) Color(0xFF397A45) else DarkRoast)
+     }
+     if(photoPath != null) IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
       Icon(Icons.Default.Close,contentDescription="Remove brew photo",tint=DarkRoast)
      }
     }
    }
    if(showFeedback) {
     OutlinedTextField(note,{note=it},label={Text("Feedback (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
-   } else {
-    TextButton(onClick={showFeedback=true}) { Text("+ Add feedback") }
    }
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
     TextButton(onClick={closeDialog()}) { Text("Cancel") }
