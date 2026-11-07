@@ -77,7 +77,7 @@ class ShotReminderWorker(context: Context, params: WorkerParameters) : Coroutine
 private fun createShotChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= 26) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Shot feedback", NotificationManager.IMPORTANCE_DEFAULT))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Brew feedback", NotificationManager.IMPORTANCE_DEFAULT))
     }
 }
 
