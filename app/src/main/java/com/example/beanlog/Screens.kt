@@ -2751,7 +2751,16 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true));cancelShotNotification(context,shot.id)}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false));cancelShotNotification(context,shot.id)}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
+        TextButton(onClick={
+          scope.launch {
+           dao.deleteShot(shot)
+           cancelShotNotification(context, shot.id)
+           val latestBrew = dao.allShots().filter { it.bagId == bag.id }.maxOfOrNull { it.pulledAtMillis } ?: 0L
+           dao.bagById(bag.id)?.let { currentBag ->
+            dao.saveBag(currentBag.copy(lastBrewAtMillis = latestBrew))
+           }
+          }
+         }){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
        }
       }
      }
