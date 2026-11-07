@@ -47,9 +47,10 @@ data class Bag(
     @ColumnInfo(defaultValue = "0") val isFinished: Boolean = false,
     @ColumnInfo(defaultValue = "''") val recommendedGrindSetting: String = "",
     val liked: Boolean? = null,
+    @ColumnInfo(defaultValue = "0") val lastBrewAtMillis: Long = 0L,
 )
 
-/** Individual espresso shot pulled from a specific bag. */
+/** Individual brew record saved for a specific bag. */
 @Entity(
     foreignKeys = [ForeignKey(
         entity = Bag::class, parentColumns = ["id"],
@@ -67,6 +68,7 @@ data class Shot(
     val liked: Boolean? = null,
     @ColumnInfo(defaultValue = "0") val pulledAtMillis: Long = System.currentTimeMillis(),
     @ColumnInfo(defaultValue = "''") val note: String = "",
+    @ColumnInfo(defaultValue = "''") val photoPath: String? = null,
 )
 
 /** Bean plus sorting information for the front page. */
@@ -76,6 +78,7 @@ data class BeanWithLatestBag(
     val latestRoastDate: String?,
     val openBagCount: Int,
     val latestBagLiked: Boolean?,
+    val latestBrewAtMillis: Long,
 )
 
 @Dao
@@ -86,7 +89,8 @@ interface BeanDao {
             MAX(Bag.roastDate) AS latestRoastDate,
             COALESCE(SUM(CASE WHEN Bag.isFinished = 0 THEN 1 ELSE 0 END), 0) AS openBagCount,
             (SELECT liked FROM Bag AS LatestBag WHERE LatestBag.beanId = Bean.id
-                ORDER BY isFinished ASC, roastDate DESC, id DESC LIMIT 1) AS latestBagLiked
+                ORDER BY isFinished ASC, lastBrewAtMillis DESC, roastDate DESC, id DESC LIMIT 1) AS latestBagLiked,
+            COALESCE(MAX(Bag.lastBrewAtMillis), 0) AS latestBrewAtMillis
         FROM Bean LEFT JOIN Bag ON Bag.beanId = Bean.id
         GROUP BY Bean.id
     """)
@@ -104,7 +108,7 @@ interface BeanDao {
     @Query("DELETE FROM Bean") suspend fun clearBeans()
     @Delete suspend fun delete(bean: Bean)
 
-    @Query("SELECT * FROM Bag WHERE beanId = :beanId ORDER BY isFinished ASC, roastDate DESC")
+    @Query("SELECT * FROM Bag WHERE beanId = :beanId ORDER BY isFinished ASC, lastBrewAtMillis DESC, roastDate DESC, id DESC")
     fun bags(beanId: Long): Flow<List<Bag>>
     @Upsert suspend fun saveBag(bag: Bag)
     @Delete suspend fun deleteBag(bag: Bag)
@@ -115,9 +119,10 @@ interface BeanDao {
     @Upsert suspend fun saveShot(shot: Shot)
     @Delete suspend fun deleteShot(shot: Shot)
     @Query("SELECT * FROM Shot WHERE id = :id LIMIT 1") suspend fun shotById(id: Long): Shot?
+    @Query("SELECT * FROM Bag WHERE id = :id LIMIT 1") suspend fun bagById(id: Long): Bag?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 7, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 8, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -171,9 +176,16 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Shot ADD COLUMN photoPath TEXT")
+                db.execSQL("ALTER TABLE Bag ADD COLUMN lastBrewAtMillis INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration(true)
                 .build()
     }
