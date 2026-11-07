@@ -74,14 +74,27 @@ object BeanLogBackup {
                 put("lotNumber", bag.lotNumber); put("isFinished", bag.isFinished)
                 put("recommendedGrindSetting", bag.recommendedGrindSetting)
                 put("liked", bag.liked ?: JSONObject.NULL)
+                put("lastBrewAtMillis", bag.lastBrewAtMillis)
             }) }
         })
         root.put("shots", JSONArray().apply {
-            shots.forEach { shot -> put(JSONObject().apply {
+            shots.forEach { shot ->
+                val photoName = shot.photoPath?.let { path ->
+                    runCatching {
+                        val file = File(path)
+                        if (file.isFile && file.length() > 0L) {
+                            val entry = "photos/${file.name}"
+                            photos[entry] = file.readBytes()
+                            entry
+                        } else null
+                    }.getOrNull()
+                }
+                put(JSONObject().apply {
                 put("id", shot.id); put("bagId", shot.bagId); put("groundCoffeeG", shot.groundCoffeeG)
                 put("yieldG", shot.yieldG); put("timeSec", shot.timeSec)
                 put("grindSetting", shot.grindSetting); put("liked", shot.liked ?: JSONObject.NULL)
                 put("pulledAtMillis", shot.pulledAtMillis); put("note", shot.note)
+                put("photoEntry", photoName ?: JSONObject.NULL)
             }) }
         })
         ZipOutputStream(output.buffered()).use { zip ->
@@ -128,7 +141,8 @@ object BeanLogBackup {
                 id = o.optLong("id"), beanId = o.optLong("beanId"), roastDate = o.optString("roastDate"),
                 weightG = o.optInt("weightG"), price = o.optDouble("price"), currency = o.optString("currency", "EUR"),
                 lotNumber = o.optString("lotNumber"), isFinished = o.optBoolean("isFinished"),
-                recommendedGrindSetting = o.optString("recommendedGrindSetting"), liked = o.booleanOrNull("liked")
+                recommendedGrindSetting = o.optString("recommendedGrindSetting"), liked = o.booleanOrNull("liked"),
+                lastBrewAtMillis = o.optLong("lastBrewAtMillis", 0L)
             )
         }
         val shots = root.optJSONArray("shots").toObjects { o ->
@@ -136,7 +150,8 @@ object BeanLogBackup {
                 id = o.optLong("id"), bagId = o.optLong("bagId"), groundCoffeeG = o.optDouble("groundCoffeeG"),
                 yieldG = o.optDouble("yieldG"), timeSec = o.optInt("timeSec"),
                 grindSetting = o.optString("grindSetting"), liked = o.booleanOrNull("liked"),
-                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note")
+                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"),
+                photoPath = o.optString("photoEntry").takeUnless { it.isBlank() || it == "null" }
             )
         }
         val contents = BackupContents(beans, bags, shots, entries.filterKeys { it.startsWith("photos/") })
@@ -252,7 +267,8 @@ object BeanLogBackup {
                 it.bagId == targetBagId && shotKey(it) == shotKey(source)
             }
             if (!exists) {
-                dao.insertShot(source.copy(id = 0, bagId = targetBagId))
+                val restoredPhoto = source.photoPath?.let { contents.photos[it] }?.let { savePhoto(context, it, "brew_") }
+                dao.insertShot(source.copy(id = 0, bagId = targetBagId, photoPath = restoredPhoto))
                 shotsAdded++
             }
         }
@@ -266,8 +282,8 @@ object BeanLogBackup {
     private fun shotKey(s: Shot) = listOf(s.pulledAtMillis, s.groundCoffeeG, s.yieldG, s.timeSec, s.grindSetting, s.note, s.liked)
         .joinToString("|")
 
-    private fun savePhoto(context: Context, bytes: ByteArray): String? = runCatching {
-        val file = File(context.filesDir, "bean_${UUID.randomUUID()}.jpg")
+    private fun savePhoto(context: Context, bytes: ByteArray, prefix: String = "bean_"): String? = runCatching {
+        val file = File(context.filesDir, "${prefix}${UUID.randomUUID()}.jpg")
         file.writeBytes(bytes)
         file.absolutePath
     }.getOrNull()
