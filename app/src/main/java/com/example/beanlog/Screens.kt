@@ -452,22 +452,14 @@ private data class HistoryStat(val name: String, val count: Int, val percent: In
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long, Long?) -> Unit) {
-    var beans by remember { mutableStateOf<List<Bean>>(emptyList()) }
-    var bags by remember { mutableStateOf<List<Bag>>(emptyList()) }
-    var brews by remember { mutableStateOf<List<Shot>>(emptyList()) }
+    val beans by dao.observeAllBeans().collectAsState(emptyList())
+    val bags by dao.observeAllBags().collectAsState(emptyList())
+    val brews by dao.observeAllShots().collectAsState(emptyList())
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedTasteCategory by remember { mutableStateOf("Roaster") }
     val expandedHistory = remember { mutableStateListOf<String>() }
     var selectedHistoryDetail by remember { mutableStateOf<Pair<String, String>?>(null) }
     var selectedTasteDetail by remember { mutableStateOf<Pair<String, String>?>(null) }
-
-    LaunchedEffect(dao) {
-        withContext(Dispatchers.IO) {
-            beans = dao.allBeans()
-            bags = dao.allBags()
-            brews = dao.allShots()
-        }
-    }
     val bagsById = bags.associateBy { it.id }
     val bagsByBean = bags.groupBy { it.beanId }
     val brewsByBean = brews.groupBy { brew -> bagsById[brew.bagId]?.beanId }
