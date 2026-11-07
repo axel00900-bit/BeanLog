@@ -57,6 +57,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.beanlog.ui.theme.LatteVariant
+import com.example.beanlog.ui.theme.OatMilk
 import com.example.beanlog.ui.theme.CoffeeCard
 import com.example.beanlog.ui.theme.CoffeeCardText
 import com.example.beanlog.ui.theme.CoffeeCream
@@ -429,6 +430,7 @@ private data class TasteStat(val name: String, val likedWeight: Int, val totalWe
 
 private data class HistoryStat(val name: String, val count: Int, val percent: Int)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit) {
     var beans by remember { mutableStateOf<List<Bean>>(emptyList()) }
@@ -2729,7 +2731,7 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
     TextButton(onClick={showFeedback=true}) { Text("+ Add feedback") }
    }
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
-    TextButton(onClick={closeDialog}) { Text("Cancel") }
+    TextButton(onClick={closeDialog()}) { Text("Cancel") }
     TextButton(enabled=canSave,onClick={
      save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim(),photoPath=photoPath))
     }) { Text("Save") }
