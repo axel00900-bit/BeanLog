@@ -371,7 +371,7 @@ private fun deleteManagedPhoto(ctx: Context, path: String?) {
     runCatching {
         val file = File(path)
         if (file.canonicalFile.parentFile == ctx.filesDir.canonicalFile &&
-            (file.name.startsWith("bean_") || file.name.startsWith("brew_")) && file.extension.equals("jpg", ignoreCase = true)
+            file.name.startsWith("bean_") && file.extension.equals("jpg", ignoreCase = true)
         ) file.delete()
     }
 }
@@ -379,6 +379,12 @@ private fun deleteManagedPhoto(ctx: Context, path: String?) {
 @Composable
 fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, initialBrewId: Long? = null, darkMode: Boolean = false, navigationRequestId: Int = 0, onThemeChange: (Boolean) -> Unit = {}) {
     val nav = rememberNavController()
+    val appContext = LocalContext.current
+    LaunchedEffect(Unit) {
+        appContext.filesDir.listFiles()?.filter {
+            it.name.startsWith("brew_") && it.extension.equals("jpg", ignoreCase = true)
+        }?.forEach { it.delete() }
+    }
     LaunchedEffect(initialBeanId, initialBagId, initialBrewId, navigationRequestId) {
         if (initialBeanId != null) {
             nav.navigate("detail/$initialBeanId/false/${initialBagId ?: 0L}/${initialBrewId ?: 0L}") {
@@ -463,6 +469,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
         }
     }
     val bagsById = bags.associateBy { it.id }
+    val bagsByBean = bags.groupBy { it.beanId }
     val brewsByBean = brews.groupBy { brew -> bagsById[brew.bagId]?.beanId }
     val tasteCategories = listOf(
         "Roaster" to { bean: Bean -> bean.roastery },
@@ -478,6 +485,12 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
             if (label.isNotBlank()) {
                 var liked = if (bean.liked) 3 else 0
                 var total = if (bean.liked) 3 else 0
+                (bagsByBean[bean.id] ?: emptyList()).forEach { bag ->
+                    if (bag.liked != null) {
+                        total += 3
+                        if (bag.liked == true) liked += 3
+                    }
+                }
                 (brewsByBean[bean.id] ?: emptyList()).forEach { brew ->
                     if (brew.liked != null) {
                         total += 1
@@ -644,10 +657,9 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
         }
         val matchingBeans = beans.filter { bean ->
             val matchesValue = valueOf(bean).trim().equals(value, ignoreCase = true)
-            val beanLikedVotes = if (bean.liked) 3 else 0
-            val beanTotalVotes = if (bean.liked) 3 else 0
+            val ratedBags = (bagsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
             val brewVotes = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
-            matchesValue && (beanTotalVotes > 0 || brewVotes.isNotEmpty())
+            matchesValue && (bean.liked || ratedBags.isNotEmpty() || brewVotes.isNotEmpty())
         }
         AlertDialog(
             onDismissRequest = { selectedTasteDetail = null },
@@ -662,8 +674,10 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                     }
                     matchingBeans.forEachIndexed { index, bean ->
                         val ratedBrews = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
-                        val likedVotes = (if (bean.liked) 3 else 0) + ratedBrews.count { it.liked == true }
-                        val totalVotes = (if (bean.liked) 3 else 0) + ratedBrews.size
+                        val ratedBags = (bagsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
+                        val likedVotes = (if (bean.liked) 3 else 0) +
+                            ratedBags.count { it.liked == true } * 3 + ratedBrews.count { it.liked == true }
+                        val totalVotes = (if (bean.liked) 3 else 0) + ratedBags.size * 3 + ratedBrews.size
                         Column(
                             Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
                                 .clickable {
@@ -2516,7 +2530,6 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
                 confirmDeleteBean = false
                 scope.launch {
                     val bagIds = dao.allBags().filter { it.beanId == b.id }.map { it.id }.toSet()
-                    dao.allShots().filter { it.bagId in bagIds }.forEach { deleteManagedPhoto(context, it.photoPath) }
                     dao.delete(b)
                     deleteManagedPhoto(context, b.photoPath)
                     onBack()
@@ -2604,7 +2617,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
          dao.allShots().filter { it.bagId in allBags }.maxByOrNull { it.id }
         } ?: Shot(bagId=bag.id,groundCoffeeG=18.0,yieldG=36.0,timeSec=28,grindSetting=bag.recommendedGrindSetting)
        }
-       shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",photoPath=null,pulledAtMillis=System.currentTimeMillis())
+       shotDefaults = defaults.copy(bagId=bag.id,liked=null,note="",pulledAtMillis=System.currentTimeMillis())
        add=true
       }
      }){BeanActionIcon(BeanIconAction.ADD,"Add brew");Text("Add brew")}
@@ -2625,7 +2638,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
   onDismissRequest={confirmDeleteBag=false},
   title={Text("Delete coffee bag?",color=DarkRoast)},
   text={Text("This will permanently delete this bag and all its brew history. This cannot be undone.",color=DarkRoast)},
-  confirmButton={TextButton(onClick={confirmDeleteBag=false;shots.forEach{deleteManagedPhoto(context,it.photoPath)};delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
+  confirmButton={TextButton(onClick={confirmDeleteBag=false;delete()}){Text("Delete",color=Color(0xFF9B2C20))}},
   dismissButton={TextButton(onClick={confirmDeleteBag=false}){Text("Cancel")}},
   containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
@@ -2740,7 +2753,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true));cancelShotNotification(context,shot.id)}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false));cancelShotNotification(context,shot.id)}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot);deleteManagedPhoto(context,shot.photoPath)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
        }
       }
      }
