@@ -2791,6 +2791,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var currency by remember(initial?.id){mutableStateOf(initial?.currency?:"EUR")}
  var currencyMenuOpen by remember(initial?.id){mutableStateOf(false)}
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
+ var bagRating by remember(initial?.id){mutableStateOf(initial?.liked)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
@@ -2858,12 +2859,19 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
    }
   }
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
+  Text("Bag rating")
+  Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
+   FilterChip(selected=bagRating==true,onClick={bagRating=true},label={Text("👍 Like")})
+   FilterChip(selected=bagRating==false,onClick={bagRating=false},label={Text("👎 Dislike")})
+   if(bagRating!=null) TextButton(onClick={bagRating=null}) { Text("Clear") }
+  }
  }},
+
  confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0,onClick={
   val savedDate = if (unknownDate) "" else date
   val savedPrice = price.num() ?: 0.0
-  val bag=initial?.copy(roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind)
-   ?:Bag(beanId=0,roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind)
+  val bag=initial?.copy(roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
+   ?:Bag(beanId=0,roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
