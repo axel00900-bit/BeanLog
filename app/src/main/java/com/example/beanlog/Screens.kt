@@ -2020,7 +2020,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                             restoreBusy=false
                             pendingBackup=null;pendingPreview=null
                             backupMessage=result.fold(
-                                { "Restore complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} shots." },
+                                { "Restore complete: added ${it.beansAdded} beans, ${it.bagsAdded} bags and ${it.shotsAdded} brews." },
                                 { "Restore failed: ${it.localizedMessage ?: "unknown error"}" }
                             )
                         }
@@ -2085,7 +2085,7 @@ private fun FieldLabel(label: String, explanation: String) {
         title = { Text(label, color = DarkRoast) },
         text = { Text(explanation, color = DarkRoast) },
         confirmButton = { TextButton(onClick = { showHelp = false }) { Text("Got it") } },
-        containerColor = Color(0xFFFFFCF6), titleContentColor = DarkRoast, textContentColor = DarkRoast
+        containerColor = CoffeeCream, titleContentColor = DarkRoast, textContentColor = DarkRoast
     )
 }
 
@@ -2250,6 +2250,9 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
     var displayCur by remember { mutableStateOf<String?>(null) }   // null = show as paid
     var ratesOk by remember { mutableStateOf(Rates.loaded) }
     LaunchedEffect(context) { ratesOk = Rates.load(context) }
+    LaunchedEffect(openBagId, bags) {
+        if (openBagId != null && bags.firstOrNull { it.id == openBagId }?.isFinished == true) showFinishedBags = true
+    }
     val b = bean ?: return
 
     Scaffold(
@@ -2364,7 +2367,7 @@ fun DetailScreen(dao: BeanDao, id: Long, autoOpenAddBag: Boolean = false, openBa
 
 @Composable
 private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,delete:()->Unit,muted:Boolean=false,initiallyShowHistory:Boolean=false,focusBrewId:Long?=null) {
- val shots by dao.shots(bag.id).collectAsState(emptyList())
+ val brews by dao.shots(bag.id).collectAsState(emptyList())
  val scope=rememberCoroutineScope(); val context=LocalContext.current
  var add by remember{mutableStateOf(false)}
  var shotDefaults by remember{mutableStateOf<Shot?>(null)}
@@ -2406,7 +2409,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
      }
      if(bag.isFinished)Text("Finished",style=MaterialTheme.typography.labelMedium)
      if(bag.recommendedGrindSetting.isNotBlank())Text("Recommended grind: ${bag.recommendedGrindSetting}")
-     shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
+     shotSentiment(brews)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked",style=MaterialTheme.typography.bodySmall) }
     }
     TextButton(onClick={scope.launch{dao.saveBag(bag.copy(liked=if(bag.liked==true)null else true))}}){Text(if(bag.liked==true) "♥ Buy again" else "♡ Buy again",color=if(bag.liked==true) Color(0xFF397A45) else DarkRoast)}
     IconButton(onClick=edit){BeanActionIcon(BeanIconAction.EDIT,"Edit bag")}
@@ -2504,7 +2507,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   text={
    Column(Modifier.fillMaxWidth().imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
-    shotSentiment(shots)?.let { Text("Shot average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
+    shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodyLarge) }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No brews recorded yet")
     else shots.sortedByDescending { it.id }.forEachIndexed{index,shot->
@@ -2553,7 +2556,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
          containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
         )
        }
-       if(showTips) Surface(color=Color(0xFFEADCCB).copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
+       if(showTips) Surface(color=OatMilk.copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
          shotTasteTips(shot.note).forEach { Text("• $it",style=MaterialTheme.typography.bodySmall,color=DarkRoast) }
         }
@@ -2712,7 +2715,7 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
     IconButton(onClick={photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}) {
      Icon(Icons.Default.AddAPhoto,contentDescription="Add brew photo",tint=DarkRoast)
     }
-    Text("Add photo",style=MaterialTheme.typography.bodyMedium,color=DarkRoast)
+    
     photoPath?.let {
      AsyncImage(model=File(it),contentDescription="Brew result preview",modifier=Modifier.size(54.dp).clip(MaterialTheme.shapes.small),contentScale=ContentScale.Crop)
      IconButton(onClick={deleteManagedPhoto(context,photoPath);photoPath=null}) {
