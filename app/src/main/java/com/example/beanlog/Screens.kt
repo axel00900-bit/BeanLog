@@ -2438,7 +2438,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
       }
      }){BeanActionIcon(BeanIconAction.ADD,"Add brew");Text("Add brew")}
    }
-   shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} shots)",style=MaterialTheme.typography.bodySmall) }
+   shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} brews)",style=MaterialTheme.typography.bodySmall) }
    shots.sortedByDescending { it.id }.take(2).forEach{shot->
     Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
      Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall)
@@ -2566,7 +2566,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
        Row(horizontalArrangement=Arrangement.spacedBy(4.dp)){
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=true));cancelShotNotification(context,shot.id)}}){Text("👍 Like",color=CoffeeCardText)}
         TextButton(onClick={scope.launch{dao.saveShot(shot.copy(liked=false));cancelShotNotification(context,shot.id)}}){Text("👎 Dislike",color=CoffeeCardText)}
-        TextButton(onClick={scope.launch{dao.deleteShot(shot);deleteManagedPhoto(context,shot.photoPath)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete shot",Modifier.size(20.dp),Color.White)}
+        TextButton(onClick={scope.launch{dao.deleteShot(shot);deleteManagedPhoto(context,shot.photoPath)}}){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
        }
       }
      }
