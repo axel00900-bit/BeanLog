@@ -13,6 +13,7 @@ class MainActivity : ComponentActivity() {
     private var pendingBeanId by mutableStateOf<Long?>(null)
     private var pendingBagId by mutableStateOf<Long?>(null)
     private var pendingBrewId by mutableStateOf<Long?>(null)
+    private var navigationRequestId by mutableStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         updateNotificationDestination(intent)
         setContent {
             BeanLogTheme(darkMode) {
-                App(dao, pendingBeanId, pendingBagId, pendingBrewId, darkMode) { enabled ->
+                App(dao, pendingBeanId, pendingBagId, pendingBrewId, darkMode, navigationRequestId) { enabled ->
                     darkMode = enabled
                     preferences.edit().putBoolean("dark_theme", enabled).apply()
                 }
@@ -40,5 +41,6 @@ class MainActivity : ComponentActivity() {
         pendingBeanId = intent.getLongExtra("bean_id", -1L).takeIf { it > 0L }
         pendingBagId = intent.getLongExtra("bag_id", -1L).takeIf { it > 0L }
         pendingBrewId = intent.getLongExtra("shot_id", -1L).takeIf { it > 0L }
+        if (pendingBeanId != null) navigationRequestId++
     }
 }
