@@ -58,6 +58,11 @@ import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.beanlog.ui.theme.LatteVariant
 import com.example.beanlog.ui.theme.OatMilk
+import com.example.beanlog.ui.theme.BeanLogTipSurface
+import com.example.beanlog.ui.theme.BeanLogFieldSurface
+import com.example.beanlog.ui.theme.BeanLogNavButtonText
+import com.example.beanlog.ui.theme.BeanLogNavButtonSurface
+import com.example.beanlog.ui.theme.BeanLogPageTop
 import com.example.beanlog.ui.theme.CoffeeCard
 import com.example.beanlog.ui.theme.CoffeeCardText
 import com.example.beanlog.ui.theme.CoffeeCream
@@ -380,7 +385,7 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
     }
     Box(
         modifier = Modifier.fillMaxSize().background(
-            Brush.verticalGradient(colors = listOf(LatteVariant, CoffeeCream))
+            Brush.verticalGradient(colors = listOf(BeanLogPageTop, CoffeeCream))
         ),
         contentAlignment = Alignment.Center
     ) {
@@ -1701,8 +1706,8 @@ private fun SectionSwitchBar(
         ) {
             Surface(
                 onClick = onClick,
-                color = CoffeeCard,
-                contentColor = CoffeeCardText,
+                color = BeanLogNavButtonSurface,
+                contentColor = BeanLogNavButtonText,
                 shape = MaterialTheme.shapes.large,
                 shadowElevation = 2.dp
             ) {
@@ -1716,7 +1721,7 @@ private fun SectionSwitchBar(
                             BeanIconAction.BEAN,
                             "My Beans",
                             modifier = Modifier.size(23.dp),
-                            color = CoffeeCardText
+                            color = BeanLogNavButtonText
                         )
                     } else {
                         Icon(Icons.Default.Storefront, contentDescription = "Roasters")
@@ -2053,8 +2058,8 @@ private fun beanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = DarkRoast,
     unfocusedBorderColor = DarkRoast.copy(alpha = 0.55f),
     cursorColor = DarkRoast,
-    focusedContainerColor = OatMilk.copy(alpha = 0.90f),
-    unfocusedContainerColor = OatMilk.copy(alpha = 0.82f)
+    focusedContainerColor = BeanLogFieldSurface.copy(alpha = 0.90f),
+    unfocusedContainerColor = BeanLogFieldSurface.copy(alpha = 0.82f)
 )
 
 private val beanNextKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -2538,7 +2543,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shot.note,modifier=Modifier.weight(1f).clickable { if(shot.note.isNotBlank()){editingFeedback=shot; feedbackText=shot.note} },style=MaterialTheme.typography.bodyMedium,color=CoffeeCardText)
         Surface(
          modifier=Modifier.clickable { showTips=!showTips },
-         color=OatMilk.copy(alpha=0.58f),
+         color=BeanLogTipSurface.copy(alpha=0.58f),
          contentColor=DarkRoast.copy(alpha=0.86f),
          shape=MaterialTheme.shapes.small
         ) {
@@ -2558,7 +2563,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
          containerColor=Color(0xFFFFFCF6),titleContentColor=DarkRoast,textContentColor=DarkRoast
         )
        }
-       if(showTips) Surface(color=OatMilk.copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
+       if(showTips) Surface(color=BeanLogTipSurface.copy(alpha=0.72f),shape=MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
          shotTasteTips(shot.note).forEach { Text("• $it",style=MaterialTheme.typography.bodySmall,color=DarkRoast) }
         }
