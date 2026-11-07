@@ -416,8 +416,9 @@ fun App(dao: BeanDao, initialBeanId: Long? = null, initialBagId: Long? = null, i
                 RoasterDirectoryScreen(dao, onBack = { nav.popBackStack() })
             }
             composable("insights") {
-                InsightsScreen(dao, onBack = { nav.popBackStack() }, onOpenCoffee = { beanId, bagId ->
-                    nav.navigate("detail/$beanId/false/${bagId ?: 0L}/0")
+                InsightsScreen(dao, onBack = { nav.popBackStack() }, onOpenCoffee = { beanId, _ ->
+                    // Open the coffee detail with its bag list collapsed, not a specific bag's Brew history.
+                    nav.navigate("detail/$beanId/false/0/0")
                 })
             }
             composable("detail/{id}/{addBag}/{openBagId}/{openBrewId}") {
