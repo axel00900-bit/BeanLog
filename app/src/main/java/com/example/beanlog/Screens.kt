@@ -1872,7 +1872,6 @@ private fun SectionSwitchBar(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().navigationBarsPadding()
-                .background(BeanLogPageTop)
                 .padding(horizontal = 14.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
