@@ -184,13 +184,14 @@ private fun BeanActionIcon(
 /** Illustrated coffee bag placeholder for beans without a user photo. */
 @Composable
 private fun CoffeeBagIcon(modifier: Modifier = Modifier.size(64.dp)) {
+    val labelColor = CoffeeCardText
     Canvas(modifier) {
         val w = size.width
         val h = size.height
         val outline = Color(0xFF4B3022)
         val bag = Color(0xFFE4C39D)
         val fold = Color(0xFFB98961)
-        val label = CoffeeCardText
+        val label = labelColor
 
         // Main gusseted bag body.
         val body = Path().apply {
