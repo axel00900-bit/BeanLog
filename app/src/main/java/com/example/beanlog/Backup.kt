@@ -84,10 +84,6 @@ object BeanLogBackup {
                     put("yieldG", shot.yieldG); put("timeSec", shot.timeSec)
                     put("grindSetting", shot.grindSetting); put("liked", shot.liked ?: JSONObject.NULL)
                     put("pulledAtMillis", shot.pulledAtMillis); put("note", shot.note)
-                    put("tastingAroma", shot.tastingAroma); put("tastingFlavour", shot.tastingFlavour)
-                    put("tastingAcidity", shot.tastingAcidity); put("tastingSweetness", shot.tastingSweetness)
-                    put("tastingBody", shot.tastingBody); put("tastingAftertaste", shot.tastingAftertaste)
-                    put("overallImpression", shot.overallImpression ?: JSONObject.NULL)
                 })
             }
         })
@@ -144,11 +140,7 @@ object BeanLogBackup {
                 id = o.optLong("id"), bagId = o.optLong("bagId"), groundCoffeeG = o.optDouble("groundCoffeeG"),
                 yieldG = o.optDouble("yieldG"), timeSec = o.optInt("timeSec"),
                 grindSetting = o.optString("grindSetting"), liked = o.booleanOrNull("liked"),
-                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"),
-                tastingAroma = o.optString("tastingAroma"), tastingFlavour = o.optString("tastingFlavour"),
-                tastingAcidity = o.optString("tastingAcidity"), tastingSweetness = o.optString("tastingSweetness"),
-                tastingBody = o.optString("tastingBody"), tastingAftertaste = o.optString("tastingAftertaste"),
-                overallImpression = o.intOrNull("overallImpression"))
+                pulledAtMillis = o.optLong("pulledAtMillis"), note = o.optString("note"))
         }
         val beanPhotoEntries = beans.mapNotNull { it.photoPath }.toSet()
         // Ignore legacy Brew-photo entries from older backups; only Bean photos remain supported.
