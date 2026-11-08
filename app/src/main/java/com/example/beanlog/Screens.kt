@@ -2862,7 +2862,7 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Text(bean?.name?.ifBlank { bean.roastery } ?: "Coffee", color = DarkRoast, style = MaterialTheme.typography.titleSmall)
+                                Text(bean?.let { it.name.ifBlank { it.roastery } } ?: "Coffee", color = DarkRoast, style = MaterialTheme.typography.titleSmall)
                                 Text(
                                     listOfNotNull(bean?.roastery, bag?.roastDate?.takeIf { it.isNotBlank() }?.let { "Roasted ${isoToDisplay(it)}" }).joinToString(" · "),
                                     color = DarkRoast.copy(alpha = .72f),
