@@ -68,13 +68,6 @@ data class Shot(
     val liked: Boolean? = null,
     @ColumnInfo(defaultValue = "0") val pulledAtMillis: Long = System.currentTimeMillis(),
     @ColumnInfo(defaultValue = "''") val note: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingAroma: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingFlavour: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingAcidity: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingSweetness: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingBody: String = "",
-    @ColumnInfo(defaultValue = "''") val tastingAftertaste: String = "",
-    val overallImpression: Int? = null,
 )
 
 /** Bean plus sorting information for the front page. */
@@ -131,7 +124,7 @@ interface BeanDao {
     @Query("SELECT * FROM Bag WHERE id = :id LIMIT 1") suspend fun bagById(id: Long): Bag?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 10, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 9, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -220,21 +213,9 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAroma TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingFlavour TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAcidity TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingSweetness TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingBody TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAftertaste TEXT NOT NULL DEFAULT ''")
-                db.execSQL("ALTER TABLE Shot ADD COLUMN overallImpression INTEGER")
-            }
-        }
-
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                 // Never silently erase a user's coffee records when a migration is missing.
                 .build()
     }
