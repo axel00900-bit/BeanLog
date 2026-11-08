@@ -2711,6 +2711,11 @@ private fun shotTasteTips(note: String): List<String> {
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao,focusBrewId:Long?=null) {
  val context = LocalContext.current
+ var compareMode by remember(bag.id) { mutableStateOf(false) }
+ var selectedCompareIds by remember(bag.id) { mutableStateOf(emptySet<Long>()) }
+ var showComparison by remember(bag.id) { mutableStateOf(false) }
+ val orderedShots = shots.sortedByDescending { it.id }
+ val selectedBrews = orderedShots.filter { it.id in selectedCompareIds }
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text(if (bag.roastDate.isBlank()) "Brew history" else "Brew history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
@@ -2718,9 +2723,23 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
    Column(Modifier.fillMaxWidth().imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
     shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} brews)",style=MaterialTheme.typography.bodyLarge) }
+    if (shots.size >= 2) {
+     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+      if (compareMode) {
+       Text("${selectedCompareIds.size}/2 selected",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
+       Spacer(Modifier.weight(1f))
+       TextButton(onClick={compareMode=false;selectedCompareIds=emptySet()}) { Text("Cancel") }
+       Button(onClick={showComparison=true},enabled=selectedCompareIds.size==2,colors=ButtonDefaults.buttonColors(containerColor=DarkRoast,contentColor=CoffeeCream)) { Text("Compare") }
+      } else {
+       Spacer(Modifier.weight(1f))
+       TextButton(onClick={compareMode=true;selectedCompareIds=emptySet()}) { Text("Compare brews") }
+      }
+     }
+     if (compareMode) Text("Choose two brews from this bag to compare.",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.75f))
+    }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No brews recorded yet")
-    else shots.sortedByDescending { it.id }.forEachIndexed{index,shot->
+    else orderedShots.forEachIndexed{index,shot->
      Card(
       modifier=Modifier.fillMaxWidth(),
       colors=CardDefaults.cardColors(containerColor=CoffeeCard,contentColor=CoffeeCardText),
@@ -2729,12 +2748,25 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
      ){
       Column(Modifier.padding(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
        Row(verticalAlignment=Alignment.CenterVertically){
-        Text("BREW ${(shots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
-        Spacer(Modifier.weight(1f))
-        Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
+        Text("BREW ${(orderedShots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
+        if (compareMode) {
+         Spacer(Modifier.weight(1f))
+         Checkbox(
+          checked=shot.id in selectedCompareIds,
+          onCheckedChange={checked ->
+           selectedCompareIds = if (checked) {
+            if (selectedCompareIds.size < 2) selectedCompareIds + shot.id else selectedCompareIds
+           } else selectedCompareIds - shot.id
+          },
+          colors=CheckboxDefaults.colors(checkedColor=Color(0xFFB98961),uncheckedColor=CoffeeCardText)
+         )
+        } else {
+         Spacer(Modifier.weight(1f))
+         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
+        }
        }
+       if (compareMode) Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall,color=CoffeeCardText)
-       
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
        var feedbackText by remember(shot.id) { mutableStateOf(shot.note) }
@@ -2796,6 +2828,51 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   confirmButton={TextButton(onClick=dismiss){Text("Close")}},
   dismissButton={TextButton(onClick={dismiss();edit()}){Text("Edit bag")}},
   shape=MaterialTheme.shapes.extraLarge,
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
+ )
+ if (showComparison && selectedBrews.size == 2) {
+  BrewComparisonDialog(selectedBrews[1], selectedBrews[0]) { showComparison=false }
+ }
+}
+
+@Composable
+private fun BrewComparisonDialog(first:Shot,second:Shot,onDismiss:()->Unit) {
+ val rows = listOf(
+  Triple("Date",shotDateTime(first.pulledAtMillis),shotDateTime(second.pulledAtMillis)),
+  Triple("Dose", "${money(first.groundCoffeeG)} g", "${money(second.groundCoffeeG)} g"),
+  Triple("Yield", "${money(first.yieldG)} g", "${money(second.yieldG)} g"),
+  Triple("Ratio", "1:${ratioText(first.groundCoffeeG,first.yieldG)}", "1:${ratioText(second.groundCoffeeG,second.yieldG)}"),
+  Triple("Time", "${first.timeSec} sec", "${second.timeSec} sec"),
+  Triple("Grind", first.grindSetting.ifBlank{"—"}, second.grindSetting.ifBlank{"—"}),
+  Triple("Rating", when(first.liked){true->"👍 Like";false->"👎 Dislike";null->"Not rated"}, when(second.liked){true->"👍 Like";false->"👎 Dislike";null->"Not rated"}),
+  Triple("Feedback", first.note.ifBlank{"—"}, second.note.ifBlank{"—"})
+ )
+ AlertDialog(
+  onDismissRequest=onDismiss,
+  title={Text("Brew comparison",color=DarkRoast)},
+  text={
+   Column(Modifier.fillMaxWidth().heightIn(max=480.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+     Text("Parameter",Modifier.weight(0.85f),style=MaterialTheme.typography.labelSmall,color=DarkRoast)
+     Text("Brew 1",Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,color=DarkRoast,textAlign=TextAlign.Center)
+     Text("Brew 2",Modifier.weight(1f),style=MaterialTheme.typography.labelMedium,color=DarkRoast,textAlign=TextAlign.Center)
+    }
+    rows.forEach { (label,left,right) ->
+     val differs = left != right
+     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+      Text(label,Modifier.weight(0.85f),style=MaterialTheme.typography.labelSmall,color=DarkRoast)
+      Surface(Modifier.weight(1f),color=if(differs) Color(0xFFE8D2BC) else BeanLogTipSurface.copy(alpha=.45f),shape=MaterialTheme.shapes.small) {
+       Text(left,Modifier.padding(horizontal=6.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall,color=DarkRoast,textAlign=TextAlign.Center)
+      }
+      Surface(Modifier.weight(1f),color=if(differs) Color(0xFFE8D2BC) else BeanLogTipSurface.copy(alpha=.45f),shape=MaterialTheme.shapes.small) {
+       Text(right,Modifier.padding(horizontal=6.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall,color=DarkRoast,textAlign=TextAlign.Center)
+      }
+     }
+    }
+    Text("Highlighted rows show values that differ.",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.72f))
+   }
+  },
+  confirmButton={TextButton(onClick=onDismiss){Text("Close")}},
   containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
 }
