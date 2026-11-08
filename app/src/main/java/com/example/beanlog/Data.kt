@@ -124,7 +124,7 @@ interface BeanDao {
     @Query("SELECT * FROM Bag WHERE id = :id LIMIT 1") suspend fun bagById(id: Long): Bag?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 9, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 11, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -213,9 +213,51 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        // Stage 1 briefly shipped schema version 10. Keep an upgrade path for
+        // devices that already opened it, while removing those optional fields
+        // from the final schema without losing any Brew records.
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAroma TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingFlavour TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAcidity TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingSweetness TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingBody TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN tastingAftertaste TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Shot ADD COLUMN overallImpression INTEGER")
+            }
+        }
+
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE Shot_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        bagId INTEGER NOT NULL,
+                        groundCoffeeG REAL NOT NULL,
+                        yieldG REAL NOT NULL,
+                        timeSec INTEGER NOT NULL,
+                        grindSetting TEXT NOT NULL DEFAULT '',
+                        liked INTEGER,
+                        pulledAtMillis INTEGER NOT NULL DEFAULT 0,
+                        note TEXT NOT NULL DEFAULT '',
+                        FOREIGN KEY(bagId) REFERENCES Bag(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    INSERT INTO Shot_new (id, bagId, groundCoffeeG, yieldG, timeSec, grindSetting, liked, pulledAtMillis, note)
+                    SELECT id, bagId, groundCoffeeG, yieldG, timeSec, grindSetting, liked, pulledAtMillis, note
+                    FROM Shot
+                """.trimIndent())
+                db.execSQL("DROP TABLE Shot")
+                db.execSQL("ALTER TABLE Shot_new RENAME TO Shot")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_Shot_bagId ON Shot(bagId)")
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                 // Never silently erase a user's coffee records when a migration is missing.
                 .build()
     }
