@@ -531,6 +531,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("What you like") })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Coffee history") })
+                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Compare brews") })
             }
             if (selectedTab == 0) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -588,7 +589,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                         }
                     }
                 }
-            } else {
+            } else if (selectedTab == 1) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your coffee history", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
@@ -635,6 +636,8 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                         }
                     }
                 }
+            } else {
+                BrewComparisonTab(brews = brews, bags = bags, beans = beans)
             }
         }
     }
@@ -2711,11 +2714,7 @@ private fun shotTasteTips(note: String): List<String> {
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao,focusBrewId:Long?=null) {
  val context = LocalContext.current
- var compareMode by remember(bag.id) { mutableStateOf(false) }
- var selectedCompareIds by remember(bag.id) { mutableStateOf(emptySet<Long>()) }
- var showComparison by remember(bag.id) { mutableStateOf(false) }
  val orderedShots = shots.sortedByDescending { it.id }
- val selectedBrews = orderedShots.filter { it.id in selectedCompareIds }
  AlertDialog(
   onDismissRequest=dismiss,
   title={Text(if (bag.roastDate.isBlank()) "Brew history" else "Brew history · ${isoToDisplay(bag.roastDate)}", color=DarkRoast)},
@@ -2723,20 +2722,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
    Column(Modifier.fillMaxWidth().imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
     if (bag.recommendedGrindSetting.isNotBlank()) Text("Recommended grind: ${bag.recommendedGrindSetting}",style=MaterialTheme.typography.bodyLarge)
     shotSentiment(shots)?.let { Text("Brew average: ${it.emoji} · ${it.percent}% liked (${it.liked}/${it.rated} brews)",style=MaterialTheme.typography.bodyLarge) }
-    if (shots.size >= 2) {
-     Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-      if (compareMode) {
-       Text("${selectedCompareIds.size}/2 selected",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
-       Spacer(Modifier.weight(1f))
-       TextButton(onClick={compareMode=false;selectedCompareIds=emptySet()}) { Text("Cancel") }
-       Button(onClick={showComparison=true},enabled=selectedCompareIds.size==2,colors=ButtonDefaults.buttonColors(containerColor=DarkRoast,contentColor=CoffeeCream)) { Text("Compare") }
-      } else {
-       Spacer(Modifier.weight(1f))
-       TextButton(onClick={compareMode=true;selectedCompareIds=emptySet()}) { Text("Compare brews") }
-      }
-     }
-     if (compareMode) Text("Choose two brews from this bag to compare.",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.75f))
-    }
     HorizontalDivider(color=DarkRoast.copy(alpha=0.25f))
     if(shots.isEmpty()) Text("No brews recorded yet")
     else orderedShots.forEachIndexed{index,shot->
@@ -2749,23 +2734,9 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
       Column(Modifier.padding(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
        Row(verticalAlignment=Alignment.CenterVertically){
         Text("BREW ${(orderedShots.size-index).toString().padStart(2,'0')}",style=MaterialTheme.typography.labelMedium,color=Color(0xFFE7C9A6))
-        if (compareMode) {
-         Spacer(Modifier.weight(1f))
-         Checkbox(
-          checked=shot.id in selectedCompareIds,
-          onCheckedChange={checked ->
-           selectedCompareIds = if (checked) {
-            if (selectedCompareIds.size < 2) selectedCompareIds + shot.id else selectedCompareIds
-           } else selectedCompareIds - shot.id
-          },
-          colors=CheckboxDefaults.colors(checkedColor=Color(0xFFB98961),uncheckedColor=CoffeeCardText)
-         )
-        } else {
-         Spacer(Modifier.weight(1f))
-         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
-        }
+        Spacer(Modifier.weight(1f))
+        Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
-       if (compareMode) Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall,color=CoffeeCardText)
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
@@ -2830,9 +2801,93 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
   shape=MaterialTheme.shapes.extraLarge,
   containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
  )
- if (showComparison && selectedBrews.size == 2) {
-  BrewComparisonDialog(selectedBrews[1], selectedBrews[0]) { showComparison=false }
- }
+}
+
+@Composable
+private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Bean>) {
+    var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
+    var showComparison by remember { mutableStateOf(false) }
+    val bagById = bags.associateBy { it.id }
+    val beanById = beans.associateBy { it.id }
+    val orderedBrews = brews.sortedByDescending { it.pulledAtMillis }
+    val selected = orderedBrews.filter { it.id in selectedIds }
+
+    Column(Modifier.fillMaxSize()) {
+        Text(
+            "Choose any two brews, including brews from different bags or coffees.",
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkRoast.copy(alpha = .78f)
+        )
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("${selectedIds.size}/2 selected", color = DarkRoast, style = MaterialTheme.typography.labelMedium)
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = { selectedIds = emptySet() }, enabled = selectedIds.isNotEmpty()) { Text("Clear") }
+            Button(
+                onClick = { showComparison = true },
+                enabled = selectedIds.size == 2,
+                colors = ButtonDefaults.buttonColors(containerColor = DarkRoast, contentColor = CoffeeCream)
+            ) { Text("Compare") }
+        }
+        if (orderedBrews.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No brews recorded yet.", color = DarkRoast)
+            }
+        } else {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(orderedBrews, key = { it.id }) { brew ->
+                    val bag = bagById[brew.bagId]
+                    val bean = bag?.let { beanById[it.beanId] }
+                    val checked = brew.id in selectedIds
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            selectedIds = if (checked) selectedIds - brew.id
+                            else if (selectedIds.size < 2) selectedIds + brew.id else selectedIds
+                        },
+                        colors = CardDefaults.cardColors(containerColor = if (checked) LatteVariant else CoffeeCard),
+                        border = BorderStroke(
+                            if (checked) 2.dp else 1.dp,
+                            if (checked) Color(0xFFB98961) else DarkRoast.copy(alpha = .25f)
+                        )
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text(bean?.name?.ifBlank { bean.roastery } ?: "Coffee", color = DarkRoast, style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    listOfNotNull(bean?.roastery, bag?.roastDate?.takeIf { it.isNotBlank() }?.let { "Roasted ${isoToDisplay(it)}" }).joinToString(" · "),
+                                    color = DarkRoast.copy(alpha = .72f),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Text(shotSummary(brew), color = DarkRoast, style = MaterialTheme.typography.bodySmall)
+                                Text(shotDateTime(brew.pulledAtMillis), color = DarkRoast.copy(alpha = .68f), style = MaterialTheme.typography.labelSmall)
+                            }
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = { value ->
+                                    selectedIds = if (value) {
+                                        if (selectedIds.size < 2) selectedIds + brew.id else selectedIds
+                                    } else selectedIds - brew.id
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (showComparison && selected.size == 2) {
+        BrewComparisonDialog(selected[1], selected[0]) { showComparison = false }
+    }
 }
 
 @Composable
