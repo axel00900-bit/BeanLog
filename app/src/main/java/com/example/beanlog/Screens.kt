@@ -2684,28 +2684,6 @@ private fun shotSentiment(shots:List<Shot>):ShotSentiment? {
     return ShotSentiment(emoji,percent,likes,rated.size)
 }
 
-@Composable
-private fun TastingLevelPicker(label:String,value:String,onValueChange:(String)->Unit) {
- Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
-  Text(label,style=MaterialTheme.typography.labelLarge,color=DarkRoast)
-  Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-   listOf("Low","Medium","High").forEach { option ->
-    FilterChip(selected=value==option,onClick={onValueChange(if(value==option) "" else option)},label={Text(option)})
-   }
-  }
- }
-}
-
-private fun shotTastingLines(shot:Shot):List<String> = buildList {
- if(shot.tastingAroma.isNotBlank()) add("Aroma: ${shot.tastingAroma}")
- if(shot.tastingFlavour.isNotBlank()) add("Flavour: ${shot.tastingFlavour}")
- if(shot.tastingAcidity.isNotBlank()) add("Acidity: ${shot.tastingAcidity}")
- if(shot.tastingSweetness.isNotBlank()) add("Sweetness: ${shot.tastingSweetness}")
- if(shot.tastingBody.isNotBlank()) add("Body: ${shot.tastingBody}")
- if(shot.tastingAftertaste.isNotBlank()) add("Aftertaste: ${shot.tastingAftertaste}")
- shot.overallImpression?.let { add("Overall impression: $it/5") }
-}
-
 private fun shotSummary(shot:Shot):String =
     "${money(shot.groundCoffeeG)} g in → ${money(shot.yieldG)} g out · 1:${ratioText(shot.groundCoffeeG,shot.yieldG)} · ${shot.timeSec}s" +
         (shot.grindSetting.takeIf{it.isNotBlank()}?.let{" · Grind $it"} ?: "") +
@@ -2756,13 +2734,6 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
         Text(shotDateTime(shot.pulledAtMillis),style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
        }
        Text(shotSummary(shot),style=MaterialTheme.typography.bodySmall,color=CoffeeCardText)
-       val tastingLines = shotTastingLines(shot)
-       if(tastingLines.isNotEmpty()) {
-        Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
-         Text("TASTING NOTES",style=MaterialTheme.typography.labelSmall,color=CoffeeCardText.copy(alpha=0.82f))
-         tastingLines.forEach { Text(it,style=MaterialTheme.typography.bodySmall,color=CoffeeCardText) }
-        }
-       }
        
        var showTips by remember(shot.id) { mutableStateOf(false) }
        var editingFeedback by remember { mutableStateOf<Shot?>(null) }
@@ -2946,14 +2917,6 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
  var grind by remember(initial){mutableStateOf(initial?.grindSetting ?: "")}
  var note by remember{mutableStateOf("")}
  var showFeedback by remember{mutableStateOf(false)}
- var showTastingNotes by remember{mutableStateOf(false)}
- var aroma by remember{mutableStateOf("")}
- var flavour by remember{mutableStateOf("")}
- var acidity by remember{mutableStateOf("")}
- var sweetness by remember{mutableStateOf("")}
- var body by remember{mutableStateOf("")}
- var aftertaste by remember{mutableStateOf("")}
- var overallImpression by remember{mutableStateOf<Int?>(null)}
  val canSave=(input.num()?:0.0)>0&&(output.num()?:0.0)>0&&(seconds.toIntOrNull()?:0)>0
  fun closeDialog() { dismiss() }
  AlertDialog(
@@ -2973,32 +2936,10 @@ Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizon
    if(showFeedback) {
     OutlinedTextField(note,{note=it},label={Text("Feedback (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=4,colors=beanTextFieldColors())
    }
-   HorizontalDivider(color=DarkRoast.copy(alpha=0.18f))
-   TextButton(onClick={showTastingNotes=!showTastingNotes},contentPadding=PaddingValues(horizontal=4.dp)) {
-    Text(if(showTastingNotes) "− Tasting notes" else "+ Tasting notes")
-   }
-   if(showTastingNotes) {
-    Text("Record what you experience in the cup. Every field is optional.",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=0.72f))
-    OutlinedTextField(aroma,{aroma=it},label={Text("Aroma (optional)")},modifier=Modifier.fillMaxWidth(),singleLine=true,colors=beanTextFieldColors())
-    OutlinedTextField(flavour,{flavour=it},label={Text("Flavour (optional)")},modifier=Modifier.fillMaxWidth(),minLines=2,maxLines=3,colors=beanTextFieldColors())
-    TastingLevelPicker("Acidity",acidity,{acidity=it})
-    TastingLevelPicker("Sweetness",sweetness,{sweetness=it})
-    TastingLevelPicker("Body",body,{body=it})
-    OutlinedTextField(aftertaste,{aftertaste=it},label={Text("Aftertaste (optional)")},modifier=Modifier.fillMaxWidth(),singleLine=true,colors=beanTextFieldColors())
-    Column(verticalArrangement=Arrangement.spacedBy(5.dp)) {
-     Text("Overall impression (optional)",style=MaterialTheme.typography.labelLarge,color=DarkRoast)
-     Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
-      (1..5).forEach { score ->
-       FilterChip(selected=overallImpression==score,onClick={overallImpression=if(overallImpression==score)null else score},label={Text(score.toString())})
-      }
-      if(overallImpression!=null) TextButton(onClick={overallImpression=null}) { Text("Clear") }
-     }
-    }
-   }
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
     TextButton(onClick={closeDialog()}) { Text("Cancel") }
     TextButton(enabled=canSave,onClick={
-     save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim(),tastingAroma=aroma.trim(),tastingFlavour=flavour.trim(),tastingAcidity=acidity,tastingSweetness=sweetness,tastingBody=body,tastingAftertaste=aftertaste.trim(),overallImpression=overallImpression))
+     save(Shot(bagId=0,groundCoffeeG=input.num()!!,yieldG=output.num()!!,timeSec=seconds.toInt(),grindSetting=grind.trim(),note=note.trim()))
     }) { Text("Save") }
    }
   }},
