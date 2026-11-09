@@ -1938,16 +1938,63 @@ private enum class BeanSortOption(val label: String) {
     RECENTLY_BREWED("Recently brewed"),
     NAME("Name")
 }
+private fun sortBeanRows(
+    beans: List<BeanWithLatestBag>,
+    sortOption: BeanSortOption,
+    ascending: Boolean
+): List<BeanWithLatestBag> {
+    val bySelectedOption = when (sortOption) {
+        BeanSortOption.ROAST_DATE -> beans.sortedWith(Comparator { a, b ->
+            val da = a.latestRoastDate
+            val db = b.latestRoastDate
+            when {
+                da.isNullOrBlank() && !db.isNullOrBlank() -> 1
+                !da.isNullOrBlank() && db.isNullOrBlank() -> -1
+                else -> {
+                    val comparison = (da ?: "").compareTo(db ?: "")
+                    if (ascending) comparison else -comparison
+                }
+            }
+        })
+        BeanSortOption.RECENTLY_ADDED -> beans.sortedWith(
+            compareBy<BeanWithLatestBag> { if (ascending) it.bean.id else -it.bean.id }
+                .thenBy { it.bean.name.lowercase() }
+        )
+        BeanSortOption.RECENTLY_BREWED -> beans.sortedWith(Comparator { a, b ->
+            val aHasBrew = a.latestBrewAtMillis > 0L
+            val bHasBrew = b.latestBrewAtMillis > 0L
+            when {
+                !aHasBrew && bHasBrew -> 1
+                aHasBrew && !bHasBrew -> -1
+                !aHasBrew && !bHasBrew -> a.bean.name.compareTo(b.bean.name, ignoreCase = true)
+                else -> {
+                    val comparison = a.latestBrewAtMillis.compareTo(b.latestBrewAtMillis)
+                    if (ascending) comparison else -comparison
+                }
+            }
+        })
+        BeanSortOption.NAME -> {
+            val byName = compareBy<BeanWithLatestBag> { it.bean.name.lowercase() }
+                .thenBy { it.bean.roastery.lowercase() }
+            beans.sortedWith(if (ascending) byName else byName.reversed())
+        }
+    }
+    return bySelectedOption.sortedBy { if (it.openBagCount > 0) 0 else 1 }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters: () -> Unit, onInsights: () -> Unit, darkMode: Boolean, onThemeChange: (Boolean) -> Unit) {
     val beans by dao.beansWithLatestBag().collectAsState(emptyList())
-    var sortOption by remember { mutableStateOf(BeanSortOption.ROAST_DATE) }
-    // Recently added defaults to newest first; Name defaults to A–Z.
-    var ascending by remember { mutableStateOf(false) }
-    var sortMenuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val sortPrefs = remember(context) { context.getSharedPreferences("beanlog_settings", Context.MODE_PRIVATE) }
+    var sortOption by remember(sortPrefs) {
+        mutableStateOf(runCatching { BeanSortOption.valueOf(sortPrefs.getString("bean_sort_option", BeanSortOption.ROAST_DATE.name)!!) }.getOrDefault(BeanSortOption.ROAST_DATE))
+    }
+    // Recently added defaults to newest first; Name defaults to A–Z.
+    var ascending by remember(sortPrefs) { mutableStateOf(sortPrefs.getBoolean("bean_sort_ascending", false)) }
+    var sortMenuExpanded by remember { mutableStateOf(false) }
     var settingsOpen by remember { mutableStateOf(false) }
     var remindersOn by remember { mutableStateOf(shotRemindersEnabled(context)) }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -1997,48 +2044,7 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
     }
 
     val sortedBeans = remember(beans, sortOption, ascending) {
-        val bySelectedOption = when (sortOption) {
-            BeanSortOption.ROAST_DATE -> beans.sortedWith(Comparator { a, b ->
-                val da = a.latestRoastDate
-                val db = b.latestRoastDate
-                when {
-                    da.isNullOrBlank() && !db.isNullOrBlank() -> 1
-                    !da.isNullOrBlank() && db.isNullOrBlank() -> -1
-                    else -> {
-                        val comparison = (da ?: "").compareTo(db ?: "")
-                        if (ascending) comparison else -comparison
-                    }
-                }
-            })
-            // A coffee's own ID records when that bean was created. Adding a bag
-            // later must not make an old coffee look newly added.
-            BeanSortOption.RECENTLY_ADDED -> beans.sortedWith(
-                compareBy<BeanWithLatestBag> { if (ascending) it.bean.id else -it.bean.id }
-                    .thenBy { it.bean.name.lowercase() }
-            )
-            BeanSortOption.RECENTLY_BREWED -> beans.sortedWith(Comparator { a, b ->
-                val aHasBrew = a.latestBrewAtMillis > 0L
-                val bHasBrew = b.latestBrewAtMillis > 0L
-                when {
-                    !aHasBrew && bHasBrew -> 1
-                    aHasBrew && !bHasBrew -> -1
-                    !aHasBrew && !bHasBrew -> a.bean.name.compareTo(b.bean.name, ignoreCase = true)
-                    else -> {
-                        val comparison = a.latestBrewAtMillis.compareTo(b.latestBrewAtMillis)
-                        if (ascending) comparison else -comparison
-                    }
-                }
-            })
-            BeanSortOption.NAME -> {
-                val byName = compareBy<BeanWithLatestBag> { it.bean.name.lowercase() }
-                    .thenBy { it.bean.roastery.lowercase() }
-                beans.sortedWith(if (ascending) byName else byName.reversed())
-            }
-        }
-        // Keep availability grouping as the one consistent priority. The selected
-        // sort controls order within each group; Brew activity no longer overrides it.
-        bySelectedOption
-            .sortedBy { if (it.openBagCount > 0) 0 else 1 }
+        sortBeanRows(beans, sortOption, ascending)
             .map { Triple(it.bean, it.openBagCount, it.bean.liked) }
     }
 
@@ -2091,6 +2097,10 @@ fun BeanList(dao: BeanDao, onOpen: (Long) -> Unit, onAdd: () -> Unit, onRoasters
                                         sortOption = option
                                         ascending = option == BeanSortOption.NAME
                                     }
+                                    sortPrefs.edit()
+                                        .putString("bean_sort_option", sortOption.name)
+                                        .putBoolean("bean_sort_ascending", ascending)
+                                        .apply()
                                     sortMenuExpanded = false
                                 },
                                 leadingIcon = {
@@ -2811,8 +2821,33 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
     var beanMenuOpen by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
     var showComparison by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val sortPrefs = remember(context) { context.getSharedPreferences("beanlog_settings", Context.MODE_PRIVATE) }
+    val sortOption = remember(sortPrefs) {
+        runCatching { BeanSortOption.valueOf(sortPrefs.getString("bean_sort_option", BeanSortOption.ROAST_DATE.name)!!) }
+            .getOrDefault(BeanSortOption.ROAST_DATE)
+    }
+    val ascending = remember(sortPrefs) { sortPrefs.getBoolean("bean_sort_ascending", false) }
     val bagById = bags.associateBy { it.id }
     val selectedBean = beans.firstOrNull { it.id == selectedBeanId }
+    val beanRows = remember(beans, bags, brews, sortOption, ascending) {
+        beans.map { bean ->
+            val beanBags = bags.filter { it.beanId == bean.id }
+            val latestBag = beanBags.maxByOrNull { it.id }
+            val latestBrewAt = beanBags.maxOfOrNull { bag ->
+                maxOf(bag.lastBrewAtMillis, brews.filter { it.bagId == bag.id }.maxOfOrNull { it.pulledAtMillis } ?: 0L)
+            } ?: 0L
+            BeanWithLatestBag(
+                bean = bean,
+                latestBagId = latestBag?.id ?: 0L,
+                latestRoastDate = beanBags.map { it.roastDate }.filter { it.isNotBlank() }.maxOrNull(),
+                openBagCount = beanBags.count { !it.isFinished },
+                latestBagLiked = null,
+                latestBrewAtMillis = latestBrewAt
+            )
+        }
+    }
+    val orderedBeans = remember(beanRows, sortOption, ascending) { sortBeanRows(beanRows, sortOption, ascending) }
     val beanBags = bags.filter { it.beanId == selectedBeanId }.map { it.id }.toSet()
     val orderedBrews = brews.filter { it.bagId in beanBags }.sortedByDescending { it.pulledAtMillis }
     val selected = orderedBrews.filter { it.id in selectedIds }
@@ -2838,7 +2873,8 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
                     Text(selectedBean?.let { it.name.ifBlank { it.roastery } } ?: "Choose a coffee")
                 }
                 DropdownMenu(expanded = beanMenuOpen, onDismissRequest = { beanMenuOpen = false }) {
-                    beans.sortedBy { it.name.ifBlank { it.roastery }.lowercase() }.forEach { bean ->
+                    orderedBeans.forEach { row ->
+                        val bean = row.bean
                         DropdownMenuItem(
                             text = { Text(bean.name.ifBlank { bean.roastery }) },
                             onClick = {
