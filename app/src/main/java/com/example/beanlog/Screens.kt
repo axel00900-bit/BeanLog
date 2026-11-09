@@ -2817,7 +2817,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
 @Composable
 private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Bean>) {
     val palette = LocalBeanPalette.current
-    var selectedBeanId by remember(beans) { mutableStateOf(beans.firstOrNull()?.id) }
+    var manuallySelectedBeanId by remember { mutableStateOf<Long?>(null) }
     var beanMenuOpen by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
     var showComparison by remember { mutableStateOf(false) }
@@ -2829,7 +2829,6 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
     }
     val ascending = remember(sortPrefs) { sortPrefs.getBoolean("bean_sort_ascending", false) }
     val bagById = bags.associateBy { it.id }
-    val selectedBean = beans.firstOrNull { it.id == selectedBeanId }
     val beanRows = remember(beans, bags, brews, sortOption, ascending) {
         beans.map { bean ->
             val beanBags = bags.filter { it.beanId == bean.id }
@@ -2848,6 +2847,10 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
         }
     }
     val orderedBeans = remember(beanRows, sortOption, ascending) { sortBeanRows(beanRows, sortOption, ascending) }
+    // The initial selection must match the first coffee in the shared My Beans sort order.
+    // An explicit user choice is retained while the menu is reordered.
+    val selectedBeanId = manuallySelectedBeanId ?: orderedBeans.firstOrNull()?.bean?.id
+    val selectedBean = beans.firstOrNull { it.id == selectedBeanId }
     val beanBags = bags.filter { it.beanId == selectedBeanId }.map { it.id }.toSet()
     val orderedBrews = brews.filter { it.bagId in beanBags }.sortedByDescending { it.pulledAtMillis }
     val selected = orderedBrews.filter { it.id in selectedIds }
@@ -2879,7 +2882,7 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
                             text = { Text(bean.name.ifBlank { bean.roastery }) },
                             onClick = {
                                 if (selectedBeanId != bean.id) selectedIds = emptySet()
-                                selectedBeanId = bean.id
+                                manuallySelectedBeanId = bean.id
                                 beanMenuOpen = false
                             }
                         )
