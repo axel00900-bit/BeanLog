@@ -75,6 +75,7 @@ object BeanLogBackup {
                 put("recommendedGrindSetting", bag.recommendedGrindSetting)
                 put("liked", bag.liked ?: JSONObject.NULL)
                 put("lastBrewAtMillis", bag.lastBrewAtMillis)
+                put("remainingWeightG", bag.remainingWeightG)
             }) }
         })
         root.put("shots", JSONArray().apply {
@@ -132,7 +133,8 @@ object BeanLogBackup {
                 weightG = o.optInt("weightG"), price = o.optDouble("price"), currency = o.optString("currency", "EUR"),
                 lotNumber = o.optString("lotNumber"), isFinished = o.optBoolean("isFinished"),
                 recommendedGrindSetting = o.optString("recommendedGrindSetting"), liked = o.booleanOrNull("liked"),
-                lastBrewAtMillis = o.optLong("lastBrewAtMillis", 0L)
+                lastBrewAtMillis = o.optLong("lastBrewAtMillis", 0L),
+                remainingWeightG = o.optDouble("remainingWeightG", o.optInt("weightG").toDouble())
             )
         }
         val shots = root.optJSONArray("shots").toObjects { o ->

@@ -48,6 +48,7 @@ data class Bag(
     @ColumnInfo(defaultValue = "''") val recommendedGrindSetting: String = "",
     val liked: Boolean? = null,
     @ColumnInfo(defaultValue = "0") val lastBrewAtMillis: Long = 0L,
+    @ColumnInfo(defaultValue = "0.0") val remainingWeightG: Double = 0.0,
 )
 
 /** Individual brew record saved for a specific bag. */
@@ -124,7 +125,7 @@ interface BeanDao {
     @Query("SELECT * FROM Bag WHERE id = :id LIMIT 1") suspend fun bagById(id: Long): Bag?
 }
 
-@Database(entities = [Bean::class, Bag::class, Shot::class], version = 11, exportSchema = false)
+@Database(entities = [Bean::class, Bag::class, Shot::class], version = 12, exportSchema = false)
 abstract class AppDb : RoomDatabase() {
     abstract fun dao(): BeanDao
 
@@ -255,9 +256,20 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Bag ADD COLUMN remainingWeightG REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("""
+                    UPDATE Bag SET remainingWeightG = MAX(0.0, weightG - COALESCE(
+                        (SELECT SUM(groundCoffeeG) FROM Shot WHERE Shot.bagId = Bag.id), 0.0
+                    ))
+                """.trimIndent())
+            }
+        }
+
         fun create(c: Context) =
             Room.databaseBuilder(c, AppDb::class.java, "beans.db")
-                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                 // Never silently erase a user's coffee records when a migration is missing.
                 .build()
     }

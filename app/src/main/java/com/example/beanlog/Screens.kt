@@ -2598,6 +2598,8 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
  var shotDefaults by remember{mutableStateOf<Shot?>(null)}
  var showHistory by remember(bag.id, initiallyShowHistory){mutableStateOf(initiallyShowHistory)}
  var confirmDeleteBag by remember{mutableStateOf(false)}
+ var showRemainingEditor by remember{mutableStateOf(false)}
+ var remainingDraft by remember(bag.id, bag.remainingWeightG){mutableStateOf(money(bag.remainingWeightG))}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
   colors=CardDefaults.cardColors(containerColor=LatteVariant),
   elevation=CardDefaults.cardElevation(defaultElevation=0.dp)) {
@@ -2605,7 +2607,10 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
    Row(verticalAlignment=Alignment.CenterVertically) {
     Column(Modifier.weight(1f)) {
      if (bag.roastDate.isNotBlank()) Text("Roasted ${isoToDisplay(bag.roastDate)}",style=MaterialTheme.typography.titleMedium)
-     Text("${bag.weightG} g")
+     Text("${bag.weightG} g purchased")
+     TextButton(onClick={remainingDraft=money(bag.remainingWeightG);showRemainingEditor=true},contentPadding=PaddingValues(horizontal=0.dp,vertical=0.dp)) {
+      Text("Remaining: ${money(bag.remainingWeightG)} g · Edit",style=MaterialTheme.typography.bodyMedium)
+     }
      if (bag.price > 0.0) {
       Text("Paid ${moneyWithCurrency(bag.price, bag.currency)} (${moneyWithCurrency(bag.price / bag.weightG.coerceAtLeast(1), bag.currency, 3)}/g)")
       cur?.let { c ->
@@ -2670,7 +2675,28 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
    if(shots.size>2) Text("Tap bag to see all ${shots.size} brews",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
   }
  }
- if(add)ShotDialog(shotDefaults,{add=false}){shot->scope.launch{val id=dao.insertShot(shot.copy(bagId=bag.id)); if(shotRemindersEnabled(context)) scheduleShotReminder(context,id); dao.saveBag(bag.copy(lastBrewAtMillis=shot.pulledAtMillis)); add=false}}
+ if(showRemainingEditor) AlertDialog(
+  onDismissRequest={showRemainingEditor=false},
+  title={Text("Adjust remaining coffee",color=DarkRoast)},
+  text={Column(verticalArrangement=Arrangement.spacedBy(6.dp)) {
+   OutlinedTextField(remainingDraft,{remainingDraft=it},label={Text("Remaining weight (g)")},modifier=Modifier.fillMaxWidth(),singleLine=true,colors=beanTextFieldColors())
+   Text("Enter the amount currently left in this bag. The value cannot exceed the purchased weight.",style=MaterialTheme.typography.bodySmall,color=DarkRoast.copy(alpha=.75f))
+  }},
+  confirmButton={TextButton(enabled=(remainingDraft.num()?:-1.0)>=0.0,onClick={
+   val corrected=(remainingDraft.num()?:0.0).coerceIn(0.0,bag.weightG.toDouble())
+   scope.launch { dao.bagById(bag.id)?.let { dao.saveBag(it.copy(remainingWeightG=corrected)) }; showRemainingEditor=false }
+  }){Text("Save")}},
+  dismissButton={TextButton(onClick={showRemainingEditor=false}){Text("Cancel")}},
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
+ )
+ if(add)ShotDialog(shotDefaults,{add=false}){shot->scope.launch{
+  val id=dao.insertShot(shot.copy(bagId=bag.id))
+  if(shotRemindersEnabled(context)) scheduleShotReminder(context,id)
+  dao.bagById(bag.id)?.let { current ->
+   dao.saveBag(current.copy(lastBrewAtMillis=shot.pulledAtMillis,remainingWeightG=(current.remainingWeightG-shot.groundCoffeeG).coerceAtLeast(0.0)))
+  }
+  add=false
+ }}
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao,focusBrewId)
  if(confirmDeleteBag) AlertDialog(
   onDismissRequest={confirmDeleteBag=false},
@@ -2797,7 +2823,7 @@ private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->
            cancelShotNotification(context, shot.id)
            val latestBrew = dao.allShots().filter { it.bagId == bag.id }.maxOfOrNull { it.pulledAtMillis } ?: 0L
            dao.bagById(bag.id)?.let { currentBag ->
-            dao.saveBag(currentBag.copy(lastBrewAtMillis = latestBrew))
+            dao.saveBag(currentBag.copy(lastBrewAtMillis = latestBrew, remainingWeightG=(currentBag.remainingWeightG+shot.groundCoffeeG).coerceAtMost(currentBag.weightG.toDouble())))
            }
           }
          }){BeanActionIcon(BeanIconAction.DELETE,"Delete brew",Modifier.size(20.dp),Color.White)}
@@ -3111,8 +3137,9 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0,onClick={
   val savedDate = if (unknownDate) "" else date
   val savedPrice = price.num() ?: 0.0
-  val bag=initial?.copy(roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
-   ?:Bag(beanId=0,roastDate=savedDate,weightG=weight.toInt(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
+  val newWeight=weight.toInt()
+  val bag=initial?.copy(roastDate=savedDate,weightG=newWeight,remainingWeightG=(initial.remainingWeightG+(newWeight-initial.weightG)).coerceIn(0.0,newWeight.toDouble()),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
+   ?:Bag(beanId=0,roastDate=savedDate,weightG=newWeight,remainingWeightG=newWeight.toDouble(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
