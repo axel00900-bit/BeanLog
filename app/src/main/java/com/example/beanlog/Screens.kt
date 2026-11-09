@@ -2600,6 +2600,7 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
  var confirmDeleteBag by remember{mutableStateOf(false)}
  var showRemainingEditor by remember{mutableStateOf(false)}
  var remainingDraft by remember(bag.id, bag.remainingWeightG){mutableStateOf(money(bag.remainingWeightG))}
+ var askFinishBag by remember{mutableStateOf(false)}
  Card(onClick={showHistory=true},modifier=Modifier.fillMaxWidth(),
   colors=CardDefaults.cardColors(containerColor=LatteVariant),
   elevation=CardDefaults.cardElevation(defaultElevation=0.dp)) {
@@ -2693,10 +2694,22 @@ private fun BagCard(dao:BeanDao,bean:Bean,bag:Bag,cur:String?,edit:()->Unit,dele
   val id=dao.insertShot(shot.copy(bagId=bag.id))
   if(shotRemindersEnabled(context)) scheduleShotReminder(context,id)
   dao.bagById(bag.id)?.let { current ->
-   dao.saveBag(current.copy(lastBrewAtMillis=shot.pulledAtMillis,remainingWeightG=(current.remainingWeightG-shot.groundCoffeeG).coerceAtLeast(0.0)))
+   val updatedRemaining=(current.remainingWeightG-shot.groundCoffeeG).coerceAtLeast(0.0)
+   dao.saveBag(current.copy(lastBrewAtMillis=shot.pulledAtMillis,remainingWeightG=updatedRemaining))
+   if(current.remainingWeightG>0.0 && updatedRemaining<=0.0) askFinishBag=true
   }
   add=false
  }}
+ if(askFinishBag) AlertDialog(
+  onDismissRequest={askFinishBag=false},
+  title={Text("Finish this bag?",color=DarkRoast)},
+  text={Text("This brew used the remaining coffee. Would you like to mark this bag as finished?",color=DarkRoast)},
+  confirmButton={TextButton(onClick={
+   scope.launch { dao.bagById(bag.id)?.let { dao.saveBag(it.copy(isFinished=true)) }; askFinishBag=false }
+  }){Text("Finish bag")}},
+  dismissButton={TextButton(onClick={askFinishBag=false}){Text("Keep open")}},
+  containerColor=CoffeeCream,titleContentColor=DarkRoast,textContentColor=DarkRoast
+ )
  if(showHistory) BagHistoryDialog(bag,shots,{showHistory=false},edit,scope,dao,focusBrewId)
  if(confirmDeleteBag) AlertDialog(
   onDismissRequest={confirmDeleteBag=false},
