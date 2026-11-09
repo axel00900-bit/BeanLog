@@ -2915,8 +2915,8 @@ private fun BrewComparisonTab(brews: List<Shot>, bags: List<Bag>, beans: List<Be
             }
         }
     }
-    if (showComparison && selected.size == 2) {
-        BrewComparisonDialog(selected[1], selected[0]) { showComparison = false }
+    if (showComparison && selected.size >= 2) {
+        BrewComparisonDialog(selected.reversed()) { showComparison = false }
     }
 }
 
