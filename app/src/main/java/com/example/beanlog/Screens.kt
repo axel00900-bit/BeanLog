@@ -58,6 +58,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.beanlog.ui.theme.LatteVariant
+import com.example.beanlog.ui.theme.LocalBeanPalette
 import com.example.beanlog.ui.theme.OatMilk
 import com.example.beanlog.ui.theme.BeanLogTipSurface
 import com.example.beanlog.ui.theme.BeanLogFieldSurface
