@@ -947,7 +947,8 @@ private val ROASTERS = listOf(
     RoasterProfile(
         name = "Clever Coffee", area = "Odder",
         description = "Specialty coffee with a positive impact. Based in Odder since 2014, founded by Lars Frello. Certified B Corp; one coffee was reportedly purchased at 175% of the market price.",
-        note = "B Corp is a company certification, not a competition award. Website, Instagram and customer-facing address still needed."
+        instagram = "https://www.instagram.com/clevercoffee/",
+        note = "B Corp is a company certification, not a competition award. Website and customer-facing address still needed."
     ),
     RoasterProfile(
         name = "Behag din smag", area = "Aalborg",
