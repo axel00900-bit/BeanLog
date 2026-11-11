@@ -951,6 +951,20 @@ private val ROASTERS = listOf(
         note = "B Corp is a company certification, not a competition award. Website and customer-facing address still needed."
     ),
     RoasterProfile(
+        name = "Sydhavnskaffe", area = "Aarhus",
+        description = "Aarhus-based specialty coffee roaster founded by Rasmus, a long-time coffee professional and former owner of RS28 Kaffebar. Roasts coffee in small batches, focusing on traceable sourcing, close relationships with coffee farms and responsible coffee trading. Offers whole beans through its webshop, subscriptions and local pickup, and supplies offices, cafés and restaurants.",
+        instagram = "https://www.instagram.com/sydhavnskaffe/",
+        website = "https://sydhavnskaffe.dk/",
+        locations = listOf(
+            RoasterLocation("Sydhavnskaffe", "Sydhavnsgade 7, Baggården", "Aarhus C, Denmark", "Roastery / shop",
+                "Mon 11:00–16:00 · Tue Closed · Wed 11:00–16:00 · Thu Closed · Fri 11:00–16:00 · Sat–Sun Closed")
+        ),
+        servedAt = listOf(
+            RoasterLocation("Syv Ni 13", "Kalkværksvej 5", "Aarhus C, Denmark", "Café serving Sydhavnskaffe coffee")
+        ),
+        aliases = listOf("Sydhavn Kaffe")
+    ),
+    RoasterProfile(
         name = "EUROPA Kaffe & Te", area = "Aarhus · Brabrand",
         description = "Danish coffee and tea company with its own roastery in Brabrand, established in 2019, and a flagship shop and coffee bar on Jægergårdsgade in Aarhus. Roasts selected coffees for private and business customers, with a focus on sourcing, roasting craft and sharing coffee knowledge.",
         instagram = "https://www.instagram.com/europakaffeogte.dk/",
