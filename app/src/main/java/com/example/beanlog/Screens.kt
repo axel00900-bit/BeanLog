@@ -1999,7 +1999,7 @@ private fun SectionSwitchBar(
         ) {
             Surface(
                 onClick = onClick,
-                modifier = Modifier.width(116.dp).height(54.dp),
+                modifier = Modifier.width(if (isRoasters) 132.dp else 116.dp).height(54.dp),
                 color = BeanLogNavButtonSurface,
                 contentColor = BeanLogNavButtonText,
                 shape = MaterialTheme.shapes.large,
@@ -2021,7 +2021,7 @@ private fun SectionSwitchBar(
                         Icon(Icons.Default.Storefront, contentDescription = "Roasters", modifier = Modifier.size(24.dp))
                     }
                     Spacer(Modifier.width(8.dp))
-                    Text(label, style = MaterialTheme.typography.labelLarge)
+                    Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false)
                 }
             }
             if (onAdd != null) {
