@@ -3268,7 +3268,7 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
   val savedPrice = price.num() ?: 0.0
   val newWeight=weight.toInt()
   val bag=initial?.copy(roastDate=savedDate,weightG=newWeight,remainingWeightG=(initial.remainingWeightG+(newWeight-initial.weightG)).coerceIn(0.0,newWeight.toDouble()),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=null)
-   ?:Bag(beanId=0,roastDate=savedDate,weightG=newWeight,remainingWeightG=newWeight.toDouble(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
+   ?:Bag(beanId=0,roastDate=savedDate,weightG=newWeight,remainingWeightG=newWeight.toDouble(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=null)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
  dismissButton={TextButton(onClick=dismiss){Text("Cancel")}},
