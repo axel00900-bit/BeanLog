@@ -921,15 +921,17 @@ private val ROASTERS = listOf(
         note = "Customer-facing locations and additional company details have not yet been collected. No website is currently listed."
     ),
     RoasterProfile(
-        name = "Aoife Coffee", area = "Ebeltoft · Aarhus",
-        description = "Specialty coffee from a harbour-side roastery. The name is Irish for 'beauty'. The Aarhus shop offers naturally processed beans and pastries from a neighbouring bakery.",
+        name = "Aoife Coffee", area = "Aarhus",
+        description = "Specialty coffee roaster founded in Ebeltoft in 2019, now based in Aarhus’ Latin Quarter. Focuses on carefully sourced coffees, including naturally processed beans, and serves espresso, V60 and batch brew at its café on Volden. The space is dog-friendly and community-driven, and the Aarhus location operates in partnership with Et Brød Bakery and Wine Collective Denmark.",
         instagram = "https://www.instagram.com/aoife.coffee/",
+        website = "https://aoifecoffee.dk/",
         locations = listOf(
-            RoasterLocation("Ebeltoft", "Stockflethsvej 14", "Ebeltoft, Denmark", "Coffee shop / roastery"),
-            RoasterLocation("Aarhus", "Volden 21", "Aarhus C, Denmark", "Coffee shop")
+            RoasterLocation("Aoife Coffee", "Volden 21", "Aarhus C, Denmark", "Coffee shop / roastery", "Every day 10:00–17:00 (provisional)")
         ),
-        awards = listOf("European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark."),
-        note = "No website listed, as requested."
+        awards = listOf(
+            "European Coffee Trip Awards 2025 — Top 10 specialty cafés in Denmark",
+            "Falstaff Coffee Guide Nordics 2026 — 91 points"
+        )
     ),
     RoasterProfile(
         name = "Komma Kaffe", area = "Værløse",
