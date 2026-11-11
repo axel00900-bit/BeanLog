@@ -781,7 +781,7 @@ private data class RoasterProfile(
     val website: String? = null,
     val locations: List<RoasterLocation> = emptyList(),
     val aliases: List<String> = emptyList(),
-    val awards: String = "",
+    val awards: List<String> = emptyList(),
     val extraLinks: List<RoasterLink> = emptyList(),
     val note: String = "",
     val ectUrl: String? = null
@@ -799,7 +799,7 @@ private val ROASTERS = listOf(
             RoasterLocation("Graven", "Graven 20, 8000", "Aarhus C, Denmark", "Café / coffee shop", "Mon–Sat 08:00–18:00 · Sun 09:00–17:00")
         ),
         aliases = listOf("La Cabra Coffee"),
-        awards = "Top 10 specialty cafés in Denmark, European Coffee Trip Awards 2025. OAD Cheap Eats in Europe: #19 in 2024 and #30 in 2025. Reported international exports to 60+ countries."
+        awards = listOf("Top 10 specialty cafés in Denmark — European Coffee Trip Awards 2025")
     ),
     RoasterProfile(
         name = "Stillers Coffee", area = "Aarhus", micro = "No",
@@ -831,14 +831,14 @@ private val ROASTERS = listOf(
             RoasterLocation("Aarhus shop", "Guldsmedgade 13", "Aarhus, Denmark", "Coffee shop")
         ),
         aliases = listOf("Coffee Collective Aarhus"),
-        awards = "Klaus Thomsen: World Barista Champion 2006. Casper Rasmussen: World Cup Tasters Champion 2008. Sprudgie Best Packaging 2015. Bernikow café in ECT Awards 2025 top 10. Also reported #2 in a Roastful ranking; year not specified."
+        awards = listOf("Klaus Thomsen — World Barista Champion 2006", "Casper Rasmussen — World Cup Tasters Champion 2008", "Sprudgie Awards — Best Packaging 2015", "Bernikow café — European Coffee Trip Awards 2025 top 10")
     ),
     RoasterProfile(
         name = "April Coffee Roasters", area = "Copenhagen", micro = "Unknown",
         description = "Founded in 2016 by Patrik Rolf. Very light, delicate, tea-like coffees and close collaboration with coffee farms.",
         instagram = "https://www.instagram.com/aprilcoffeecph/",
         aliases = listOf("April Coffee"),
-        awards = "Danish Roasting Championship 2019; reported World Brewers Cup silver 2019; Patrik Rolf was a 2022 World Brewers Cup finalist. Café in ECT Awards 2025 top 10.",
+        awards = listOf("Danish Roasting Championship 2019", "World Brewers Cup — silver medal 2019", "Patrik Rolf — World Brewers Cup finalist 2022", "Café — European Coffee Trip Awards 2025 top 10"),
         note = "Website and customer-facing address have not yet been verified. Micro-roastery status is unclear."
     ),
     RoasterProfile(
@@ -846,7 +846,7 @@ private val ROASTERS = listOf(
         description = "Founded in 2016 by Sebastian Quistorff and Jonas Gehl. Focuses on precise filter and espresso in a relaxed coffee bar.",
         instagram = "https://www.instagram.com/prologcoffee.cph/",
         locations = listOf(RoasterLocation("Høkerboderne", "Høkerboderne 16", "Copenhagen, Denmark", "Coffee bar")),
-        awards = "Prolog Coffee Bar in the European Coffee Trip Awards 2025 top 10.",
+        awards = listOf("Prolog Coffee Bar — European Coffee Trip Awards 2025 top 10"),
         note = "Refshaleøen has been mentioned as a roasting area, but roasting-facility addresses are deliberately not recorded."
     ),
     RoasterProfile(
@@ -860,7 +860,7 @@ private val ROASTERS = listOf(
         description = "Small coffee bar and micro-roastery opened in 2025 by Brian Christie and Andreas May. Roasts tiny batches on a 1 kg machine. House espresso: Hidden Hour.",
         instagram = "https://www.instagram.com/pontes_coffee/",
         locations = listOf(RoasterLocation("Toftegårds Plads", "Toftegårds Plads 2", "Copenhagen, Denmark", "Coffee bar / micro-roastery")),
-        awards = "European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark."
+        awards = listOf("European Coffee Trip Awards 2025 — top 10 specialty cafés in Denmark")
     ),
     RoasterProfile(
         name = "Kontra Coffee", area = "Copenhagen", micro = "Unknown",
@@ -979,13 +979,13 @@ private val ROASTERS = listOf(
         description = "Experimental coffee lab and brunch spot focused on creative roasting, origin transparency and sustainable practices. Sells beans, brewing accessories and roasting experiences, shipping to Portugal and Spain.",
         website = "https://solobrewing.pt",
         locations = listOf(RoasterLocation("SoLo Brewing", "R. Pinheiro Chagas 16B", "Lisbon, Portugal", "Coffee lab / brunch / coffee shop")),
-        awards = "Best Coffee Roaster in Portugal 2025, Porto Coffee Week.",
+        awards = listOf("Best Coffee Roaster in Portugal 2025 — Porto Coffee Week"),
         note = "Micro-roastery status and Instagram still need verification."
     ),
     RoasterProfile(
         name = "Unity Coffee Roasters", area = "Cascais · Oeiras", country = "Portugal", micro = "Unknown",
         description = "Roastery using a Giesen roaster, with a flagship café in Cascais and an Oeiras café opened in December 2024.",
-        awards = "Finalist for Best Coffee Roaster in Portugal 2025, Porto Coffee Week.",
+        awards = listOf("Finalist — Best Coffee Roaster in Portugal 2025, Porto Coffee Week"),
         note = "Exact customer-facing addresses, website and Instagram still need verification. Micro-roastery status is unconfirmed."
     ),
     RoasterProfile(
@@ -998,7 +998,7 @@ private val ROASTERS = listOf(
         name = "Senzu Coffee Roasters", area = "Porto", country = "Portugal", micro = "Yes",
         description = "High-end specialty coffee roaster focused on coffee education. Supplies Michelin-starred restaurants and collaborates with craft brewers and chocolate makers. Roasting is led by Diogo Amorim, who also teaches roasting; founded around 2017–2019, originally as Luso Coffee Roasters.",
         locations = listOf(RoasterLocation("Senzu", "Rua do Rosário 211", "Porto, Portugal", "Coffee shop / roastery")),
-        awards = "Portuguese Roaster of the Year 2023; Best Coffee Roaster in Portugal 2024, Porto Coffee Week; also reported as Best Coffee Roaster at Lisbon Coffee Week.",
+        awards = listOf("Portuguese Roaster of the Year 2023", "Best Coffee Roaster in Portugal 2024 — Porto Coffee Week", "Best Coffee Roaster — Lisbon Coffee Week (year to verify)"),
         note = "Micro-roaster description reported. Website and Instagram still need verification."
     ),
     RoasterProfile(
@@ -1008,7 +1008,7 @@ private val ROASTERS = listOf(
             RoasterLocation("Sá de Noronha", "R. de Sá de Noronha 119", "Porto, Portugal", "Coffee shop / roastery"),
             RoasterLocation("Rua da Restauração", "Rua da Restauração 455", "Porto, Portugal", "Coffee shop")
         ),
-        awards = "Team members won the Portuguese Barista Championship 2022 (Rui Pedrosa) and SCA Portugal Brewers Cup 2024 (Luiz Lahutte Motta).",
+        awards = listOf("Rui Pedrosa — Portuguese Barista Championship 2022", "Luiz Lahutte Motta — SCA Portugal Brewers Cup 2024"),
         note = "A Lisbon shop was also reported, but its address has not yet been supplied. Micro-roastery status, website and Instagram still need verification."
     ),
     RoasterProfile(
@@ -1030,7 +1030,7 @@ private val ROASTERS = listOf(
         name = "Al-Gharb Coffee Roasters", area = "Albufeira · Algarve", country = "Portugal", micro = "Yes",
         description = "Micro-roastery, coffee shop and brunch restaurant bringing specialty coffee to the Algarve. Roasts on a hot-air (fluid-bed) roaster; co-founder and roast master is Henning Schlueter.",
         locations = listOf(RoasterLocation("Al-Gharb", "Beco do Sol 3", "Albufeira, Portugal", "Coffee shop / micro-roastery / brunch")),
-        awards = "Best Challenge Roast at Porto Coffee Week's Best Coffee Roaster Competition; finalist for Best Coffee Roaster in Portugal 2025.",
+        awards = listOf("Best Challenge Roast — Porto Coffee Week Best Coffee Roaster Competition", "Finalist — Best Coffee Roaster in Portugal 2025"),
         note = "Micro-roastery status reported. Website and Instagram still need verification."
     ),
     RoasterProfile(
@@ -1551,7 +1551,7 @@ private val ROASTERS = listOf(
         description = "Independent Stockholm specialty roastery and café, roasting in small batches since 2013. Known for transparent sourcing and clear, bright roast profiles.",
         website = "https://www.dropcoffee.com",
         locations = listOf(RoasterLocation("Mariatorget Café", "Wollmar Yxkullsgatan 10, 118 50", "Stockholm, Sweden", "Coffee shop / roastery café")),
-        awards = "Silver medal at the World Coffee Roasting Championship.",
+        awards = listOf("Silver medal — World Coffee Roasting Championship"),
         ectUrl = "https://europeancoffeetrip.com/roaster/dropcoffeeroasters/"
     ),
     RoasterProfile(
@@ -1793,9 +1793,20 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                     Text("${roaster.area} · ${roaster.country}", color = DarkRoast.copy(alpha = .72f), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
                     Text(roaster.description, color = DarkRoast, style = MaterialTheme.typography.bodyLarge)
-                    if (roaster.awards.isNotBlank()) {
+                    if (roaster.awards.isNotEmpty()) {
                         Text("Awards & recognition", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
-                        Text(roaster.awards, color = DarkRoast)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            roaster.awards.forEach { award ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Text("•", color = DarkRoast)
+                                    Text(award, modifier = Modifier.weight(1f), color = DarkRoast)
+                                }
+                            }
+                        }
                     }
                     if (roaster.note.isNotBlank()) {
                         Text(roaster.note, color = DarkRoast.copy(alpha = .78f), style = MaterialTheme.typography.bodySmall)
