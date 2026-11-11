@@ -866,11 +866,15 @@ private val ROASTERS = listOf(
     ),
     RoasterProfile(
         name = "Coffee Collective", area = "Copenhagen · Frederiksberg · Aarhus",
-        description = "Founded in 2007. Focuses on transparent farmer relationships and its Direct Trade approach, with light roasts and filter coffee.",
+        description = "Danish specialty coffee roaster founded in 2007, built around long-term relationships with coffee producers and its Direct Trade approach. Roasts carefully selected coffees with an emphasis on clarity, traceability and expressive flavours. Operates coffee shops in Copenhagen, Frederiksberg and Aarhus, and supplies selected café partners.",
         instagram = "https://www.instagram.com/coffeecollectif/", website = "https://coffeecollective.dk",
         locations = listOf(
             RoasterLocation("Godthåbsvej", "Godthåbsvej 34 B", "Frederiksberg, Denmark", "Roastery café"),
-            RoasterLocation("Aarhus shop", "Guldsmedgade 13", "Aarhus, Denmark", "Coffee shop")
+            RoasterLocation("Aarhus shop", "Guldsmedgade 13", "Aarhus, Denmark", "Coffee shop",
+                "Mon–Fri 07:00–19:00 · Sat–Sun 08:00–19:00")
+        ),
+        servedAt = listOf(
+            RoasterLocation("RS28 Kaffebar", "Ryesgade 28", "Aarhus, Denmark", "Café serving Coffee Collective coffee")
         ),
         aliases = listOf("Coffee Collective Aarhus"),
         awards = listOf("Klaus Thomsen — World Barista Champion 2006", "Casper Rasmussen — World Cup Tasters Champion 2008", "Sprudgie Awards — Best Packaging 2015", "Bernikow café — European Coffee Trip Awards 2025 top 10")
