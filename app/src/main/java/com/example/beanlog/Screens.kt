@@ -877,7 +877,7 @@ private val ROASTERS = listOf(
         instagram = "https://www.instagram.com/aprilcoffeecph/",
         aliases = listOf("April Coffee"),
         awards = listOf("Danish Roasting Championship 2019", "World Brewers Cup — silver medal 2019", "Patrik Rolf — World Brewers Cup finalist 2022", "Café — European Coffee Trip Awards 2025 top 10"),
-        note = "Website and customer-facing address have not yet been verified."
+        note = ""
     ),
     RoasterProfile(
         name = "Prolog Coffee", area = "Copenhagen",
@@ -910,7 +910,7 @@ private val ROASTERS = listOf(
         name = "Copenhagen Coffee Lab", area = "Copenhagen",
         description = "Described as a growing coffee wholesaler.",
         instagram = "https://www.instagram.com/cphcoffeelab/",
-        note = "Customer-facing locations and additional company details have not yet been collected. No website is currently listed."
+        note = "Customer-facing locations and additional company details have not yet been collected."
     ),
     RoasterProfile(
         name = "Aoife Coffee", area = "Aarhus",
@@ -928,7 +928,7 @@ private val ROASTERS = listOf(
     RoasterProfile(
         name = "Komma Kaffe", area = "Værløse",
         description = "Family-owned, founded in 2020 by Omar and Mathilde. Direct-trade specialty coffee from an organic-certified roastery.",
-        note = "Approx. two employees according to the supplied information. Website, Instagram and customer-facing shop address still needed."
+        note = "Approx. two employees according to the supplied information."
     ),
     RoasterProfile(
         name = "KaffeBrænderiet", area = "Charlottenlund",
@@ -940,7 +940,7 @@ private val ROASTERS = listOf(
         name = "Clever Coffee", area = "Odder",
         description = "Specialty coffee with a positive impact. Based in Odder since 2014, founded by Lars Frello. Certified B Corp; one coffee was reportedly purchased at 175% of the market price.",
         instagram = "https://www.instagram.com/clevercoffee/",
-        note = "B Corp is a company certification, not a competition award. Website and customer-facing address still needed."
+        note = "B Corp is a company certification, not a competition award."
     ),
     RoasterProfile(
         name = "Sydhavnskaffe", area = "Aarhus",
@@ -986,12 +986,12 @@ private val ROASTERS = listOf(
     RoasterProfile(
         name = "Holy Bean Coffee Roasters", area = "Aarup · Funen",
         description = "Well-established, women-owned roastery on Funen, supplying several Odense cafés with single-origin coffees.",
-        note = "Customer-facing address, website and Instagram still needed."
+        note = ""
     ),
     RoasterProfile(
         name = "Kaffe Lars", area = "Near Odense",
         description = "Traditional roaster slow-roasting since 1912, using a vintage German gas-powered drum roaster from 1941.",
-        note = "Customer-facing address, website and Instagram still needed."
+        note = ""
     ),
     RoasterProfile(
         name = "Karma Kaffe", area = "Odense",
@@ -1001,7 +1001,7 @@ private val ROASTERS = listOf(
     RoasterProfile(
         name = "Strandvejsristeriet", area = "Helsingør",
         description = "A roastery reported to supply the Lagoni coffee bar in Helsingør.",
-        note = "Customer-facing address, website and Instagram still needed."
+        note = ""
     )
 ,
     // Portugal
@@ -1013,25 +1013,25 @@ private val ROASTERS = listOf(
             RoasterLocation("Portas de Santo Antão", "R. das Portas de Santo Antão 136", "Lisbon, Portugal", "Coffee shop"),
             RoasterLocation("Rua do Comércio", "R. do Comércio 111", "Lisbon, Portugal", "Coffee shop")
         ),
-        note = "Website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "Comete Coffee Roasters", area = "Lisbon", country = "Portugal",
         description = "Roaster and coffee shop known for light, Scandinavian-style roasts. Part of the specialty coffee movement since 2022, shipping across Portugal and Europe.",
         locations = listOf(RoasterLocation("Comete", "R. Dr. Almeida Amaral 15A", "Lisbon, Portugal", "Coffee shop / roastery")),
-        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded."
     ),
     RoasterProfile(
         name = "Olisipo Coffee Roasters", area = "Lisbon", country = "Portugal",
         description = "Small-batch roaster focused on sustainable, seasonal specialty coffee, also supplying other specialty cafés. Founded by Antony Watson and Sofia Gonçalves.",
         locations = listOf(RoasterLocation("Olisipo", "Rua do Cruzeiro 84", "Lisbon, Portugal", "Coffee shop / roastery")),
-        note = "Opening hours are unclear: reports mention Saturdays only, while map listings show weekday hours. Check before visiting. No prizes recorded; website and Instagram still need verification."
+        note = "Opening hours are unclear: reports mention Saturdays only, while map listings show weekday hours. Check before visiting."
     ),
     RoasterProfile(
         name = "Torra Roasting & Coffee", area = "Lisbon", country = "Portugal",
         description = "Lisbon specialty coffee roaster.",
         locations = listOf(RoasterLocation("Torra", "Tv. do Conde da Ponte 1", "Lisbon, Portugal", "Coffee shop")),
-        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded."
     ),
     RoasterProfile(
         name = "Baobá Specialty Coffee Roasters", area = "Lisbon · Marvila", country = "Portugal",
@@ -1040,7 +1040,7 @@ private val ROASTERS = listOf(
             RoasterLocation("Marvila roastery shop", "R. Zófimo Pedroso 18-22", "Marvila, Lisbon, Portugal", "Coffee shop / roastery"),
             RoasterLocation("Baobá Café Bica", "Rua de S. Paulo 256-258", "Lisbon, Portugal", "Coffee shop")
         ),
-        note = "Website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "Simpli Coffee Roasters", area = "Lisbon · Picoas", country = "Portugal",
@@ -1049,7 +1049,7 @@ private val ROASTERS = listOf(
             RoasterLocation("Picoas", "Av. Fontes Pereira de Melo 41", "Picoas, Lisbon, Portugal", "Coffee shop"),
             RoasterLocation("Braamcamp", "R. Braamcamp 64", "Lisbon, Portugal", "Coffee shop")
         ),
-        note = "Website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "SoLo Brewing", area = "Lisbon", country = "Portugal",
@@ -1063,20 +1063,20 @@ private val ROASTERS = listOf(
         name = "Unity Coffee Roasters", area = "Cascais · Oeiras", country = "Portugal",
         description = "Roastery using a Giesen roaster, with a flagship café in Cascais and an Oeiras café opened in December 2024.",
         awards = listOf("Finalist — Best Coffee Roaster in Portugal 2025, Porto Coffee Week"),
-        note = "Exact customer-facing addresses, website and Instagram still need verification. "
+        note = ""
     ),
     RoasterProfile(
         name = "Buraca Roasters", area = "São Domingos de Rana", country = "Portugal",
         description = "Roastery and coffee shop with brunch, where visitors can watch the beans being roasted. Also supplies wholesale.",
         locations = listOf(RoasterLocation("Buraca", "Jardins do Buzano 148 A", "São Domingos de Rana, Portugal", "Coffee shop / roastery")),
-        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded."
     ),
     RoasterProfile(
         name = "Senzu Coffee Roasters", area = "Porto", country = "Portugal",
         description = "High-end specialty coffee roaster focused on coffee education. Supplies Michelin-starred restaurants and collaborates with craft brewers and chocolate makers. Roasting is led by Diogo Amorim, who also teaches roasting; founded around 2017–2019, originally as Luso Coffee Roasters.",
         locations = listOf(RoasterLocation("Senzu", "Rua do Rosário 211", "Porto, Portugal", "Coffee shop / roastery")),
         awards = listOf("Portuguese Roaster of the Year 2023", "Best Coffee Roaster in Portugal 2024 — Porto Coffee Week", "Best Coffee Roaster — Lisbon Coffee Week (year to verify)"),
-        note = "Website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "SO Coffee Roasters", area = "Porto · Lisbon", country = "Portugal",
@@ -1086,13 +1086,13 @@ private val ROASTERS = listOf(
             RoasterLocation("Rua da Restauração", "Rua da Restauração 455", "Porto, Portugal", "Coffee shop")
         ),
         awards = listOf("Rui Pedrosa — Portuguese Barista Championship 2022", "Luiz Lahutte Motta — SCA Portugal Brewers Cup 2024"),
-        note = "A Lisbon shop was also reported, but its address has not yet been supplied. Website and Instagram still need verification."
+        note = "A Lisbon shop was also reported, but its address has not yet been supplied."
     ),
     RoasterProfile(
         name = "Combi Coffee Roasters", area = "Porto", country = "Portugal",
         description = "Porto specialty coffee roaster that opened a second, larger location with its roasting operation.",
         locations = listOf(RoasterLocation("Combi", "R. do Morgado de Mateus 29", "Porto, Portugal", "Coffee shop / roastery")),
-        note = "Awards, website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "7g Roaster", area = "Vila Nova de Gaia", country = "Portugal",
@@ -1101,14 +1101,14 @@ private val ROASTERS = listOf(
             RoasterLocation("Rua de França 10", "R. de França 10", "Vila Nova de Gaia, Portugal", "Coffee shop"),
             RoasterLocation("Rua de França 52", "R. de França 52", "Vila Nova de Gaia, Portugal", "Coffee shop")
         ),
-        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded. Website and Instagram still need verification."
+        note = "Entered the 2024 Best Coffee Roaster competition; no prize recorded."
     ),
     RoasterProfile(
         name = "Al-Gharb Coffee Roasters", area = "Albufeira · Algarve", country = "Portugal",
         description = "Coffee shop and brunch restaurant bringing specialty coffee to the Algarve. Roasts on a hot-air (fluid-bed) roaster; co-founder and roast master is Henning Schlueter.",
         locations = listOf(RoasterLocation("Al-Gharb", "Beco do Sol 3", "Albufeira, Portugal", "Coffee shop / roastery / brunch")),
         awards = listOf("Best Challenge Roast — Porto Coffee Week Best Coffee Roaster Competition", "Finalist — Best Coffee Roaster in Portugal 2025"),
-        note = "Website and Instagram still need verification."
+        note = ""
     ),
     RoasterProfile(
         name = "Clifftop Coffee Roasters", area = "Lagos · Algarve", country = "Portugal",
