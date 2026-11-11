@@ -951,9 +951,21 @@ private val ROASTERS = listOf(
         note = "B Corp is a company certification, not a competition award. Website and customer-facing address still needed."
     ),
     RoasterProfile(
-        name = "Behag din smag", area = "Aalborg",
-        description = "Award-winning café, named Denmark's winning café at the European Coffee Trip Awards 2025.",
-        note = "It is not yet confirmed whether the café roasts its own coffee. Kept as an unverified roaster candidate."
+        name = "EUROPA Kaffe & Te", area = "Aarhus · Brabrand",
+        description = "Danish coffee and tea company with its own roastery in Brabrand, established in 2019, and a flagship shop and coffee bar on Jægergårdsgade in Aarhus. Roasts selected coffees for private and business customers, with a focus on sourcing, roasting craft and sharing coffee knowledge.",
+        instagram = "https://www.instagram.com/europakaffeogte.dk/",
+        website = "https://europakaffeogte.dk",
+        locations = listOf(
+            RoasterLocation("Brabrand roastery", "Karen Blixens Boulevard 5", "Brabrand, Denmark", "Roastery"),
+            RoasterLocation("Jægergårdsgade", "Jægergårdsgade 90A", "Aarhus C, Denmark", "Shop / coffee bar",
+                "Mon–Fri 07:30–18:00 · Sat–Sun 10:00–15:00")
+        ),
+        servedAt = listOf(
+            RoasterLocation("Behag Din Smag", "Slotsgade 16A", "Aalborg, Denmark", "Café serving EUROPA Kaffe & Te coffee",
+                "Tue–Fri 07:15–17:00 · Sat 08:30–16:00 · Sun–Mon Closed")
+        ),
+        aliases = listOf("Europa Kaffe og Te", "EUROPA Kaffe og Te"),
+        awards = listOf("EUROPA Kaffe & Te — 91 points, Falstaff Coffee Guide Nordics 2026")
     ),
     RoasterProfile(
         name = "Holy Bean Coffee Roasters", area = "Aarup · Funen",
@@ -1617,7 +1629,7 @@ private fun roasterBroadArea(roaster: RoasterProfile): String {
         .joinToString(" ").lowercase()
     return when (roaster.country.lowercase()) {
         "denmark" -> when {
-            listOf("aarhus", "odder", "silkeborg", "herning").any { it in places } -> "Greater Aarhus"
+            listOf("aarhus", "brabrand", "odder", "silkeborg", "herning").any { it in places } -> "Greater Aarhus"
             listOf("copenhagen", "frederiksberg", "nordhavn", "charlottenlund").any { it in places } -> "Greater Copenhagen"
             listOf("aalborg").any { it in places } -> "North Jutland"
             listOf("aarup", "odense", "funen").any { it in places } -> "Funen"
