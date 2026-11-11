@@ -779,6 +779,7 @@ private data class RoasterProfile(
     val instagram: String? = null,
     val website: String? = null,
     val locations: List<RoasterLocation> = emptyList(),
+    val servedAt: List<RoasterLocation> = emptyList(),
     val aliases: List<String> = emptyList(),
     val awards: List<String> = emptyList(),
     val extraLinks: List<RoasterLink> = emptyList(),
@@ -842,16 +843,25 @@ private val ROASTERS = listOf(
         instagram = "https://www.instagram.com/moodcoffee_aarhus/", website = "https://moodcoffeeroasters.dk",
         locations = listOf(
             RoasterLocation(
-                "Ankersgade", "Ankersgade 12B", "Aarhus C, Denmark", "Beanstore / coffee shop",
+                "Ankersgade", "Ankersgade 12B", "Aarhus C, Denmark", "Beanstore",
                 "Tue 11:00–16:00 · Wed Closed · Thu 11:00–16:00 · Fri 11:00–16:00 · Sat 10:00–14:00 · Sun–Mon Closed"
             )
+        ),
+        servedAt = listOf(
+            RoasterLocation("BIRK Kaffe", "Jægergårdsgade 5", "Aarhus C, Denmark", "Café serving Mood coffee")
         )
     ),
     RoasterProfile(
         name = "Berry & Bean", area = "Aarhus",
-        description = "Roastery and wholesaler selling coffee, equipment, tea and specialty products. Customer feedback mentions helpful service and consistent roasts.",
+        description = "Aarhus-based coffee roaster and wholesaler offering freshly roasted coffee, tea, brewing equipment and coffee accessories for home and professional use. Also supplies cafés and businesses.",
         instagram = "https://www.instagram.com/berrybeandk/", website = "https://berrybean.dk",
-        locations = listOf(RoasterLocation("KaffeMekka", "Bredskiftevej 22B, 8210", "Aarhus V, Denmark", "Shop / wholesale")),
+        locations = listOf(
+            RoasterLocation("KaffeMekka", "Bredskiftevej 22B, 8210", "Aarhus V, Denmark", "Shop / wholesale",
+                "Mon–Fri 10:00–18:00 · Sat 10:00–14:00 · Sun Closed")
+        ),
+        servedAt = listOf(
+            RoasterLocation("OS Kaffe og Vin", "M. P. Bruuns Gade 46B", "Aarhus C, Denmark", "Café serving Berry & Bean coffee")
+        ),
         aliases = listOf("KaffeMekka", "Berry and Bean")
     ),
     RoasterProfile(
@@ -1884,6 +1894,34 @@ private fun RoasterDirectoryScreen(dao: BeanDao, onBack: () -> Unit) {
                                 Icon(Icons.Default.Map, contentDescription = null)
                                 Spacer(Modifier.width(5.dp))
                                 Text("Open in Maps")
+                            }
+                        }
+                    }
+                }
+                if (roaster.servedAt.isNotEmpty()) {
+                    item {
+                        Text("Served at", style = MaterialTheme.typography.titleMedium, color = DarkRoast)
+                        Text("Selected cafés confirmed to serve this roaster’s coffee.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .72f))
+                    }
+                    items(roaster.servedAt) { cafe ->
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = LatteVariant),
+                            border = BorderStroke(1.dp, DarkRoast.copy(alpha = .2f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                Text(cafe.name, style = MaterialTheme.typography.titleSmall, color = DarkRoast)
+                                Text(cafe.type, style = MaterialTheme.typography.labelSmall, color = DarkRoast.copy(alpha = .7f))
+                                Text(cafe.address, color = DarkRoast)
+                                Text(cafe.city, color = DarkRoast)
+                                TextButton(onClick = {
+                                    val query = Uri.encode("${cafe.address}, ${cafe.city}")
+                                    uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$query")
+                                }) {
+                                    Icon(Icons.Default.Map, contentDescription = null)
+                                    Spacer(Modifier.width(5.dp))
+                                    Text("Open in Maps")
+                                }
                             }
                         }
                     }
