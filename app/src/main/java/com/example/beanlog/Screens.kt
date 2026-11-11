@@ -479,12 +479,6 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
             if (label.isNotBlank()) {
                 var liked = if (bean.liked) 3 else 0
                 var total = if (bean.liked) 3 else 0
-                (bagsByBean[bean.id] ?: emptyList()).forEach { bag ->
-                    if (bag.liked != null) {
-                        total += 3
-                        if (bag.liked == true) liked += 3
-                    }
-                }
                 (brewsByBean[bean.id] ?: emptyList()).forEach { brew ->
                     if (brew.liked != null) {
                         total += 1
@@ -538,7 +532,7 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     item {
                         Text("Your taste profile", style = MaterialTheme.typography.titleLarge, color = DarkRoast)
-                        Text("Bean and bag ratings count as 3 votes each. Each Brew rating counts as 1 vote.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
+                        Text("A bean Like counts as 3 votes. Each Brew rating counts as 1 vote.", style = MaterialTheme.typography.bodySmall, color = DarkRoast.copy(alpha = .76f))
                     }
                     item {
                         Row(
@@ -654,9 +648,8 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
         }
         val matchingBeans = beans.filter { bean ->
             val matchesValue = valueOf(bean).trim().equals(value, ignoreCase = true)
-            val ratedBags = (bagsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
             val brewVotes = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
-            matchesValue && (bean.liked || ratedBags.isNotEmpty() || brewVotes.isNotEmpty())
+            matchesValue && (bean.liked || brewVotes.isNotEmpty())
         }
         AlertDialog(
             onDismissRequest = { selectedTasteDetail = null },
@@ -671,10 +664,9 @@ private fun InsightsScreen(dao: BeanDao, onBack: () -> Unit, onOpenCoffee: (Long
                     }
                     matchingBeans.forEachIndexed { index, bean ->
                         val ratedBrews = (brewsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
-                        val ratedBags = (bagsByBean[bean.id] ?: emptyList()).filter { it.liked != null }
                         val likedVotes = (if (bean.liked) 3 else 0) +
-                            ratedBags.count { it.liked == true } * 3 + ratedBrews.count { it.liked == true }
-                        val totalVotes = (if (bean.liked) 3 else 0) + ratedBags.size * 3 + ratedBrews.size
+                            ratedBrews.count { it.liked == true }
+                        val totalVotes = (if (bean.liked) 3 else 0) + ratedBrews.size
                         Column(
                             Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
                                 .clickable {
@@ -2870,22 +2862,28 @@ private fun shotSummary(shot:Shot):String =
 private fun shotTasteTips(note: String): List<String> {
     val text = note.lowercase()
     val tips = mutableListOf<String>()
-    if (listOf("bitter", "harsh", "over-extract").any { it in text })
+    fun mentionedPositively(term: String): Boolean {
+        val escaped = Regex.escape(term)
+        val negated = Regex("\\b(?:not|no|never|without|isn't|wasn't|aren't|doesn't|don't)\\s+(?:too\\s+)?(?:very\\s+)?(?:\\w+\\s+){0,2}$escaped\\b")
+        return Regex("\\b$escaped\\b").findAll(text).any { match ->
+            !negated.containsMatchIn(text.substring(0, match.range.last + 1))
+        }
+    }
+    if (listOf("bitter", "harsh", "over-extract").any { mentionedPositively(it) })
         tips += "Bitter or harsh: try grinding a little coarser, shortening extraction, or lowering water temperature. Change one variable at a time."
-    if (listOf("sour", "sharp", "under-extract", "acidic").any { it in text })
+    if (listOf("sour", "sharp", "under-extract", "acidic").any { mentionedPositively(it) })
         tips += "Sour or sharp: try grinding a little finer, extending extraction, or raising water temperature. Naturally bright coffee can still taste pleasantly acidic."
-    if (listOf("watery", "weak", "thin").any { it in text })
+    if (listOf("watery", "weak", "thin").any { mentionedPositively(it) })
         tips += "Watery or weak: check dose and yield, and make sure the coffee is extracting evenly. A shorter yield can increase strength."
-    if (listOf("dry", "astringent").any { it in text })
+    if (listOf("dry", "astringent").any { mentionedPositively(it) })
         tips += "Dry or astringent: check for uneven extraction and channeling. Improve distribution and puck preparation before changing several variables."
-    if (listOf("smooth", "balanced", "sweet", "nice").any { it in text })
+    if (listOf("smooth", "balanced", "sweet", "nice").any { mentionedPositively(it) })
         tips += "You described a pleasant cup. Save this recipe as a reference and change only one thing when experimenting."
     tips += "Tamping: distribute the grounds evenly, keep the tamper level, and press straight down with consistent pressure. A level puck matters more than pressing as hard as possible."
     tips += "Puck preparation: break up clumps and distribute grounds evenly to reduce channeling. Keep the basket and portafilter clean."
     tips += "These are starting points, not universal rules. Coffee, roast, grinder, water and personal taste all affect the result."
     return tips
 }
-
 @Composable
 private fun BagHistoryDialog(bag:Bag,shots:List<Shot>,dismiss:()->Unit,edit:()->Unit,scope:kotlinx.coroutines.CoroutineScope,dao:BeanDao,focusBrewId:Long?=null) {
  val context = LocalContext.current
@@ -3196,7 +3194,6 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
  var currency by remember(initial?.id){mutableStateOf(initial?.currency?:"EUR")}
  var currencyMenuOpen by remember(initial?.id){mutableStateOf(false)}
  var finished by remember(initial?.id){mutableStateOf(initial?.isFinished?:false)}
- var bagRating by remember(initial?.id){mutableStateOf(initial?.liked)}
  var recommendedGrind by remember(initial?.id){mutableStateOf(initial?.recommendedGrindSetting?:"")}
  AlertDialog(onDismissRequest=dismiss,title={Text(if(initial==null)"New bag" else "Edit bag",color=DarkRoast)},
  text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
@@ -3264,19 +3261,13 @@ private fun BagDialog(initial:Bag?,dismiss:()->Unit,save:(Bag)->Unit) {
    }
   }
   if(initial!=null) Row(verticalAlignment=Alignment.CenterVertically){Text("Finished bag",modifier=Modifier.weight(1f));Switch(finished,{finished=it})}
-  Text("Bag rating")
-  Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-   FilterChip(selected=bagRating==true,onClick={bagRating=true},label={Text("👍 Like")})
-   FilterChip(selected=bagRating==false,onClick={bagRating=false},label={Text("👎 Dislike")})
-   if(bagRating!=null) TextButton(onClick={bagRating=null}) { Text("Clear") }
-  }
  }},
 
  confirmButton={TextButton(enabled=(weight.toIntOrNull()?:0)>0,onClick={
   val savedDate = if (unknownDate) "" else date
   val savedPrice = price.num() ?: 0.0
   val newWeight=weight.toInt()
-  val bag=initial?.copy(roastDate=savedDate,weightG=newWeight,remainingWeightG=(initial.remainingWeightG+(newWeight-initial.weightG)).coerceIn(0.0,newWeight.toDouble()),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
+  val bag=initial?.copy(roastDate=savedDate,weightG=newWeight,remainingWeightG=(initial.remainingWeightG+(newWeight-initial.weightG)).coerceIn(0.0,newWeight.toDouble()),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=null)
    ?:Bag(beanId=0,roastDate=savedDate,weightG=newWeight,remainingWeightG=newWeight.toDouble(),price=savedPrice,currency=currency,isFinished=finished,recommendedGrindSetting=recommendedGrind,liked=bagRating)
   save(bag)
  }){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){BeanActionIcon(BeanIconAction.SAVE,"Save",Modifier.size(18.dp));Text("Save")}}},
@@ -3304,9 +3295,9 @@ private fun ShotDialog(initial:Shot?,dismiss:()->Unit,save:(Shot)->Unit) {
   title={Text("Add brew",color=DarkRoast)},
   text={Column(Modifier.imePadding().heightIn(max=520.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)){
    Text("BREW DETAILS",style=MaterialTheme.typography.labelMedium,color=DarkRoast)
-   OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-   OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
-   OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
+   OutlinedTextField(input,{input=it},label={Text("Ground coffee (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+   OutlinedTextField(output,{output=it},label={Text("Yield (g)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+   OutlinedTextField(seconds,{seconds=it},label={Text("Time (seconds)")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors(), keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
    OutlinedTextField(grind,{grind=it},label={Text("Grind setting used")},modifier=Modifier.fillMaxWidth(), colors = beanTextFieldColors())
 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
     TextButton(onClick={showFeedback=!showFeedback},contentPadding=PaddingValues(horizontal=4.dp)) {
