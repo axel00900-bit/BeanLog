@@ -921,7 +921,7 @@ private val ROASTERS = listOf(
     RoasterProfile(
         name = "KaffeBrænderiet", area = "Charlottenlund",
         description = "A roastery whose café was listed among Denmark's top 10 specialty cafés at the European Coffee Trip Awards 2025.",
-        awards = "European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark.",
+        awards = listOf("European Coffee Trip Awards 2025 top 10 specialty cafés in Denmark."),
         note = "Further company details, links and customer-facing address still needed."
     ),
     RoasterProfile(
