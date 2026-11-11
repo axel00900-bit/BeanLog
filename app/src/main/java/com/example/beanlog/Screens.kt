@@ -965,6 +965,16 @@ private val ROASTERS = listOf(
         aliases = listOf("Sydhavn Kaffe")
     ),
     RoasterProfile(
+        name = "Lajmi Coffee Roasters", area = "Greater Aarhus · Sabro",
+        description = "Family-founded Danish specialty coffee roastery established in 2020 by Zouhair and Sofian Lajmi. Focuses on freshly roasted specialty coffee, traceable sourcing and responsible relationships with producers and suppliers. Offers espresso and filter coffees, capsules, tasting boxes and subscriptions, and also supplies businesses. Provides coffee courses, equipment, machine servicing and professional guidance.",
+        instagram = "https://www.instagram.com/lajmicoffee/",
+        website = "https://lajmi.dk/",
+        locations = listOf(
+            RoasterLocation("Lajmi Coffee Roasters", "Skjoldhøjvej 39", "Sabro, Denmark", "Roastery / shop / coffee bar",
+                "Mon–Fri 09:30–15:00 · Sat–Sun Closed")
+        )
+    ),
+    RoasterProfile(
         name = "EUROPA Kaffe & Te", area = "Aarhus · Brabrand",
         description = "Danish coffee and tea company with its own roastery in Brabrand, established in 2019, and a flagship shop and coffee bar on Jægergårdsgade in Aarhus. Roasts selected coffees for private and business customers, with a focus on sourcing, roasting craft and sharing coffee knowledge.",
         instagram = "https://www.instagram.com/europakaffeogte.dk/",
