@@ -838,10 +838,14 @@ private val ROASTERS = listOf(
     ),
     RoasterProfile(
         name = "Mood Coffee Roasters", area = "Aarhus",
-        description = "A coffee shop where customers can taste and smell coffee before buying.",
+        description = "Specialty coffee roaster based in Aarhus, sourcing tasty, traceable coffees and roasting them locally. Offers balanced medium roasts, clean and expressive light roasts, and fruit-forward coffees with more experimental flavour profiles. Also supplies cafés and businesses, with online coffee subscriptions and a local beanstore.",
         instagram = "https://www.instagram.com/moodcoffee_aarhus/", website = "https://moodcoffeeroasters.dk",
-        locations = listOf(RoasterLocation("Ankersgade", "Ankersgade 12B", "Aarhus C, Denmark", "Coffee shop")),
-
+        locations = listOf(
+            RoasterLocation(
+                "Ankersgade", "Ankersgade 12B", "Aarhus C, Denmark", "Beanstore / coffee shop",
+                "Tue 11:00–16:00 · Wed Closed · Thu 11:00–16:00 · Fri 11:00–16:00 · Sat 10:00–14:00 · Sun–Mon Closed"
+            )
+        )
     ),
     RoasterProfile(
         name = "Berry & Bean", area = "Aarhus",
